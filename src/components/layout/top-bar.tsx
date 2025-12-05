@@ -30,7 +30,7 @@ const TopBar = ({ toggleSidebar, isSidebarOpen }: TopBarProps) => {
           <Bot size={20} />
         </div>
         ATARC Agentic AI Lab
-        <span className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full border border-primary/20 uppercase font-bold tracking-wider">
+        <span className="bg-yellow-100 text-yellow-800 text-[10px] px-2 py-0.5 rounded-full border border-yellow-200 uppercase font-bold tracking-wider">
           Demo
         </span>
       </div>
