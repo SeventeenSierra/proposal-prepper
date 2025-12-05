@@ -1,22 +1,28 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Bot,
   FileCheck,
   CheckCircle2,
   Loader2,
   ChevronRight,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { chat, ChatInput } from "@/ai/flows/chat";
 
 type AnalysisStep = {
   id: number;
   title: string;
   description: string;
   status: "pending" | "loading" | "complete";
+};
+
+type Message = {
+  role: "user" | "bot";
+  content: string;
 };
 
 type AgentInterfaceProps = {
@@ -27,6 +33,10 @@ type AgentInterfaceProps = {
 const AgentInterface = ({ activeProject, startDemo }: AgentInterfaceProps) => {
   const [inputValue, setInputValue] = useState("");
   const [activeTab, setActiveTab] = useState<"results" | "steps">("results");
+  const [isSending, setIsSending] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
   const [steps, setSteps] = useState<AnalysisStep[]>([
     {
       id: 1,
@@ -65,7 +75,7 @@ const AgentInterface = ({ activeProject, startDemo }: AgentInterfaceProps) => {
   useEffect(() => {
     if (activeProject === "demo-running") {
       setActiveTab("steps");
-
+      setMessages([]);
       const runSteps = async () => {
         setSteps((s) => s.map((step) => ({ ...step, status: "pending" })));
 
@@ -78,14 +88,61 @@ const AgentInterface = ({ activeProject, startDemo }: AgentInterfaceProps) => {
             prev.map((s, idx) => (idx === i ? { ...s, status: "complete" } : s))
           );
         }
+        setMessages([
+          {
+            role: "bot",
+            content:
+              "I've completed the compliance review. The proposal scored 92%. I found one minor warning regarding the budget justification length, but all mandatory FAR clauses are present. The detailed report is available on the right.",
+          },
+        ]);
       };
 
       runSteps();
     } else if (activeProject) {
-        setSteps(s => s.map(step => ({ ...step, status: 'complete' })));
-        setActiveTab('results');
+      setSteps((s) => s.map((step) => ({ ...step, status: "complete" })));
+      setActiveTab("results");
+      setMessages([
+        {
+          role: "bot",
+          content:
+            "I've completed the compliance review. The proposal scored 92%. I found one minor warning regarding the budget justification length, but all mandatory FAR clauses are present. The detailed report is available on the right.",
+        },
+      ]);
+    } else {
+      setMessages([]);
     }
   }, [activeProject]);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const handleSendMessage = async () => {
+    if (!inputValue.trim() || isSending) return;
+
+    const userMessage: Message = { role: "user", content: inputValue };
+    setMessages((prev) => [...prev, userMessage]);
+    setInputValue("");
+    setIsSending(true);
+
+    try {
+      const chatInput: ChatInput = { message: userMessage.content };
+      const result = await chat(chatInput);
+      const botMessage: Message = { role: "bot", content: result.response };
+      setMessages((prev) => [...prev, botMessage]);
+    } catch (error) {
+      console.error("Error calling chat flow:", error);
+      const errorMessage: Message = {
+        role: "bot",
+        content: "Sorry, I encountered an error. Please try again.",
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   return (
     <div
@@ -93,7 +150,7 @@ const AgentInterface = ({ activeProject, startDemo }: AgentInterfaceProps) => {
         activeProject ? "w-full md:w-1/2 border-r border-gray-200" : "w-full"
       }`}
     >
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-32">
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-32" ref={scrollRef}>
         <div className="max-w-3xl mx-auto w-full">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-slate-900 mb-2">
@@ -217,28 +274,72 @@ const AgentInterface = ({ activeProject, startDemo }: AgentInterfaceProps) => {
 
               {activeTab === "results" && (
                 <div className="space-y-6 animate-in fade-in duration-300">
-                  <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center shrink-0 p-1">
-                      <Bot size={20} className="text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="bg-slate-50 border border-gray-200 p-4 rounded-2xl rounded-tl-none text-slate-800 leading-relaxed text-sm">
-                        {isAnalysisComplete
-                          ? "I've completed the compliance review. The proposal scored 92%. I found one minor warning regarding the budget justification length, but all mandatory FAR clauses are present. The detailed report is available on the right."
-                          : "I am currently analyzing the document. You can track my progress in the 'Analysis steps' tab."}
+                  {messages.map((message, index) => (
+                    <div
+                      key={index}
+                      className={`flex gap-4 ${
+                        message.role === "user" ? "justify-end" : ""
+                      }`}
+                    >
+                      {message.role === "bot" && (
+                        <div className="w-8 h-8 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center shrink-0 p-1">
+                          <Bot size={20} className="text-primary" />
+                        </div>
+                      )}
+                      <div
+                        className={`flex-1 max-w-xl ${
+                          message.role === "user" ? "flex justify-end" : ""
+                        }`}
+                      >
+                        <div
+                          className={`p-4 rounded-2xl text-slate-800 leading-relaxed text-sm ${
+                            message.role === "bot"
+                              ? "bg-slate-50 border border-gray-200 rounded-tl-none"
+                              : "bg-primary text-white rounded-br-none"
+                          }`}
+                        >
+                          {message.content}
+                        </div>
+                        {message.role === "bot" &&
+                          isAnalysisComplete &&
+                          index === 0 && ( // Show buttons only under the first bot message
+                            <div className="mt-2 flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs h-auto py-1.5"
+                              >
+                                Email to Officer
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs h-auto py-1.5"
+                              >
+                                Fix Budget Page
+                              </Button>
+                            </div>
+                          )}
                       </div>
-                      {isAnalysisComplete && (
-                        <div className="mt-2 flex gap-2">
-                          <Button variant="outline" size="sm" className="text-xs h-auto py-1.5">
-                            Email to Officer
-                          </Button>
-                          <Button variant="outline" size="sm" className="text-xs h-auto py-1.5">
-                            Fix Budget Page
-                          </Button>
+                      {message.role === "user" && (
+                        <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center shrink-0">
+                          <User size={18} className="text-slate-600" />
                         </div>
                       )}
                     </div>
-                  </div>
+                  ))}
+                   {isSending && (
+                    <div className="flex gap-4">
+                      <div className="w-8 h-8 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center shrink-0 p-1">
+                        <Bot size={20} className="text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="bg-slate-50 border border-gray-200 p-4 rounded-2xl rounded-tl-none text-slate-800 leading-relaxed text-sm">
+                          <Loader2 size={16} className="animate-spin" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -252,15 +353,23 @@ const AgentInterface = ({ activeProject, startDemo }: AgentInterfaceProps) => {
             <Textarea
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Ask follow-up questions..."
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              placeholder={activeProject ? "Ask follow-up questions..." : "Select a compliance check to start."}
               className="w-full p-3 pr-12 text-sm resize-none bg-white min-h-[50px] shadow-sm"
               rows={1}
+              disabled={!activeProject || isSending}
             />
             <div className="absolute bottom-2.5 right-2.5">
               <Button
                 size="icon"
                 className="h-8 w-8"
-                disabled={!inputValue}
+                disabled={!inputValue || isSending || !activeProject}
+                onClick={handleSendMessage}
               >
                 <ChevronRight size={16} />
               </Button>
