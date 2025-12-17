@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
+
+packages:
+  - "packages/*"
+  - "proposal-prepper-web"
+  - "proposal-prepper-middleware"
+  - "proposal-prepper-services"
+  - "proposal-prepper-tests"
+
+  # Note: strands-agent is Python-based
+  # Note: inbox/ is excluded

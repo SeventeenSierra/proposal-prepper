@@ -1,0 +1,15 @@
+{
+    "name": "proposal-prepper-services",
+    "version": "0.1.0",
+    "private": true,
+    "license": "AGPL-3.0-or-later",
+    "main": "src/index.ts",
+    "types": "src/index.ts",
+    "dependencies": {
+        "zod": "^4.1.13"
+    },
+    "devDependencies": {
+        "typescript": "^5.9.3",
+        "@types/node": "^22.10.2"
+    }
+}
