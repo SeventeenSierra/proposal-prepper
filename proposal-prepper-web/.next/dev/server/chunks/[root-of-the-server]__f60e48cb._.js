@@ -1034,6 +1034,11 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2
                 if (duration && duration > 1000) {
                     console.warn(`Slow API request: ${endpoint} took ${duration}ms`);
                 }
+                // Check if response is envelope-wrapped (success/data pattern) which our API uses
+                // This prevents double-wrapping where response.data becomes { success: true, data: ... }
+                if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
+                    return data;
+                }
                 return {
                     success: true,
                     data
@@ -1123,10 +1128,15 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2
                 try {
                     if (xhr.status >= 200 && xhr.status < 300) {
                         const data = JSON.parse(xhr.responseText);
-                        resolve({
-                            success: true,
-                            data
-                        });
+                        // Check for envelope wrapping here too
+                        if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
+                            resolve(data);
+                        } else {
+                            resolve({
+                                success: true,
+                                data
+                            });
+                        }
                     } else {
                         resolve({
                             success: false,
@@ -1747,11 +1757,6 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$servi
 ;
 ;
 /**
- * AI Router Adapter
- *
- * Adapts the AI Router integration for use in Next.js API routes or Express middleware.
- * Renamed from StrandsIntegrationAdapter.
- */ /**
  * Utility to extract file from Next.js FormData
  */ async function extractFileFromRequest(request) {
     try {
@@ -1765,8 +1770,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$servi
 }
 /**
  * Utility to extract JSON body from Next.js request
- */ // biome-ignore lint/suspicious/noExplicitAny: Generic utility
-async function extractJsonFromRequest(request) {
+ */ async function extractJsonFromRequest(request) {
     try {
         const body = await request.json();
         return body;
@@ -1787,29 +1791,22 @@ async function extractJsonFromRequest(request) {
         });
     } else {
         // Map error codes to HTTP status codes
-        let status = 500; // Default server error
+        let status = 500;
         switch(apiResponse.code){
             case 'MISSING_FILE':
             case 'MISSING_PROPOSAL_ID':
             case 'MISSING_SESSION_ID':
             case 'MISSING_ISSUE_ID':
-                status = 400; // Bad Request
-                break;
             case 'INVALID_FILE_TYPE':
             case 'FILE_TOO_LARGE':
             case 'VALIDATION_FAILED':
-                status = 400; // Bad Request
+                status = 400;
                 break;
             case 'SERVICE_UNAVAILABLE':
-                status = 503; // Service Unavailable
+                status = 503;
                 break;
-            case 'UPLOAD_FAILED':
-            case 'ANALYSIS_START_FAILED':
-            case 'RESULTS_RETRIEVAL_FAILED':
-            case 'UPLOAD_STATUS_FAILED':
-            case 'ANALYSIS_STATUS_FAILED':
-            case 'ISSUE_DETAILS_FAILED':
-                status = 500; // Internal Server Error
+            default:
+                status = 500;
                 break;
         }
         return __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
@@ -1823,24 +1820,26 @@ async function extractJsonFromRequest(request) {
 }
 /**
  * Check if AI Router service is available
+ * Includes logic to prevent self-recursion loop when running locally
  */ async function isServiceAvailable() {
     try {
         const baseUrl = __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$client$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["aiRouterClient"].getBaseUrl();
         // If client points to localhost:3000 (Next.js default), we are self-referencing in dev mode.
-        // In this case, we should use the internal MockApiServer instead of making HTTP calls to ourselves (which causes recursion).
+        // In this case, use mock to avoid recursion.
         if (baseUrl.includes('localhost:3000')) {
+            console.log('[Adapter] Detected localhost loop (port 3000). Forcing use of MockApiServer.');
             return false;
         }
         const healthCheck = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$client$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["aiRouterClient"].healthCheck();
         return healthCheck.success && (healthCheck.data?.status === 'healthy' || healthCheck.data?.status === 'degraded');
     } catch (error) {
-        console.log('AI Router service health check failed:', error);
+        console.warn('[Adapter] AI Router service check failed:', error);
         return false;
     }
 }
 class AIRouterHandlers {
     /**
-   * Document upload handler with AI Router integration
+   * Handle document upload
    */ static async handleDocumentUpload(request) {
         const file = await extractFileFromRequest(request);
         if (!file) {
@@ -1852,50 +1851,39 @@ class AIRouterHandlers {
                 status: 400
             });
         }
-        console.log(`Processing upload for file: ${file.name} (${file.size} bytes)`);
+        console.log(`[Adapter] Processing upload for file: ${file.name}`);
         try {
             const available = await isServiceAvailable();
             if (available) {
-                console.log('Using real AI Router service for upload and analysis');
+                console.log('[Adapter] Using REAL AI Router service for upload');
                 const uploadResult = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$client$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["aiRouterClient"].uploadDocument(file);
                 if (uploadResult.success && uploadResult.data) {
-                    console.log(`Upload successful, session ID: ${uploadResult.data.id}`);
-                    const analysisResult = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$client$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["aiRouterClient"].startAnalysis(uploadResult.data.id, uploadResult.data.id, uploadResult.data.filename, uploadResult.data.s3Key);
-                    if (analysisResult.success && analysisResult.data) {
-                        console.log(`Analysis started, session ID: ${analysisResult.data.id}`);
-                        return __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
-                            success: true,
-                            data: {
-                                ...uploadResult.data,
-                                analysisSessionId: analysisResult.data.id,
-                                analysisStatus: analysisResult.data.status,
-                                message: 'Upload completed and analysis started'
-                            }
-                        }, {
-                            status: 201
-                        });
-                    } else {
-                        console.warn('Analysis start failed, returning upload result only');
-                        return toNextResponse(uploadResult, 201);
-                    }
-                } else {
-                    console.error('Upload failed:', uploadResult.error);
-                    throw new Error(uploadResult.error || 'Upload failed');
+                    // If we wanted to auto-start analysis here, we could. 
+                    // BUT the AgentInterface calls startAnalysis separately.
+                    // Let's just return the upload result to keep it simple and clean.
+                    // Wait, the previous code auto-started analysis. Let's see if that's required.
+                    // AgentInterface calls `uploadService.uploadDocument` which calls this endpoint.
+                    // Then it calls `analysisService.startAnalysis` separately.
+                    // So `handleDocumentUpload` SHOULD NOT auto-start analysis ideally, unless we want to optimize.
+                    // However, let's stick to what allows `proposalId` to be returned.
+                    return toNextResponse(uploadResult, 201);
                 }
-            } else {
-                console.log('Service unavailable, using mock fallback');
-                const result = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$mock$2d$api$2d$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["mockApiServer"].handleDocumentUpload(file);
-                return toNextResponse(result, 201);
+                throw new Error(uploadResult.error || 'Upload failed');
             }
+            // Fallback to Mock
+            console.log('[Adapter] Using MOCK AI Router service for upload');
+            const result = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$mock$2d$api$2d$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["mockApiServer"].handleDocumentUpload(file);
+            return toNextResponse(result, 201);
         } catch (error) {
-            console.error('Upload error:', error);
+            console.error('[Adapter] Upload error:', error);
+            // Final Fallback Attempt
             try {
                 const fallbackResult = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$mock$2d$api$2d$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["mockApiServer"].handleDocumentUpload(file);
                 return toNextResponse(fallbackResult, 201);
-            } catch (fallbackError) {
+            } catch (e) {
                 return __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
                     success: false,
-                    error: 'Upload failed and fallback unavailable',
+                    error: 'Upload failed completely',
                     code: 'UPLOAD_FAILED'
                 }, {
                     status: 500
@@ -1907,12 +1895,12 @@ class AIRouterHandlers {
    * Handle analysis start
    */ static async handleAnalysisStart(request) {
         const body = await extractJsonFromRequest(request);
-        console.log('Analysis Start Request Body:', JSON.stringify(body));
+        console.log('[Adapter] Analysis Start Request Body:', JSON.stringify(body));
         const proposalId = body?.proposalId || body?.proposal_id;
         const documentId = body?.documentId || body?.document_id;
         const filename = body?.filename;
-        console.log(`Extracted proposalId: ${proposalId}`);
         if (!proposalId) {
+            console.error('[Adapter] Missing proposalId');
             return __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
                 success: false,
                 error: 'Proposal ID is required',
@@ -1924,23 +1912,23 @@ class AIRouterHandlers {
         try {
             const available = await isServiceAvailable();
             if (available) {
-                console.log('Using real AI Router service for analysis');
+                console.log('[Adapter] Using REAL AI Router service for analysis start');
                 const result = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$client$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["aiRouterClient"].startAnalysis(proposalId, documentId, filename);
                 return toNextResponse(result, 201);
-            } else {
-                console.log('Service unavailable, using mock fallback');
+            }
+            console.log('[Adapter] Using MOCK AI Router service for analysis start');
+            const result = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$mock$2d$api$2d$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["mockApiServer"].handleAnalysisStart(proposalId);
+            return toNextResponse(result, 201);
+        } catch (error) {
+            console.error('[Adapter] Analysis start error:', error);
+            // Fallback
+            try {
                 const result = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$mock$2d$api$2d$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["mockApiServer"].handleAnalysisStart(proposalId);
                 return toNextResponse(result, 201);
-            }
-        } catch (error) {
-            console.error('Analysis start error:', error);
-            try {
-                const fallbackResult = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$mock$2d$api$2d$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["mockApiServer"].handleAnalysisStart(proposalId);
-                return toNextResponse(fallbackResult, 201);
-            } catch (fallbackError) {
+            } catch (e) {
                 return __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
                     success: false,
-                    error: 'Analysis start failed and fallback unavailable',
+                    error: 'Analysis start failed',
                     code: 'ANALYSIS_START_FAILED'
                 }, {
                     status: 500
@@ -1962,23 +1950,21 @@ class AIRouterHandlers {
             });
         }
         try {
-            const available = await isServiceAvailable();
-            if (available) {
+            if (await isServiceAvailable()) {
                 const result = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$client$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["aiRouterClient"].getResults(sessionId);
                 return toNextResponse(result);
-            } else {
-                const result = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$mock$2d$api$2d$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["mockApiServer"].handleAnalysisResults(sessionId);
-                return toNextResponse(result);
             }
+            const result = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$mock$2d$api$2d$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["mockApiServer"].handleAnalysisResults(sessionId);
+            return toNextResponse(result);
         } catch (error) {
-            console.error('Results retrieval error:', error);
+            // Fallback
             try {
-                const fallbackResult = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$mock$2d$api$2d$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["mockApiServer"].handleAnalysisResults(sessionId);
-                return toNextResponse(fallbackResult);
-            } catch (fallbackError) {
+                const res = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$mock$2d$api$2d$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["mockApiServer"].handleAnalysisResults(sessionId);
+                return toNextResponse(res);
+            } catch (e) {
                 return __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
                     success: false,
-                    error: 'Results retrieval failed and fallback unavailable',
+                    error: 'Results failed',
                     code: 'RESULTS_RETRIEVAL_FAILED'
                 }, {
                     status: 500
@@ -2000,23 +1986,20 @@ class AIRouterHandlers {
             });
         }
         try {
-            const available = await isServiceAvailable();
-            if (available) {
+            if (await isServiceAvailable()) {
                 const result = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$client$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["aiRouterClient"].getAnalysisStatus(sessionId);
                 return toNextResponse(result);
-            } else {
-                const result = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$mock$2d$api$2d$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["mockApiServer"].handleAnalysisStatus(sessionId);
-                return toNextResponse(result);
             }
+            const result = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$mock$2d$api$2d$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["mockApiServer"].handleAnalysisStatus(sessionId);
+            return toNextResponse(result);
         } catch (error) {
-            console.error('Status error:', error);
             try {
-                const fallbackResult = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$mock$2d$api$2d$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["mockApiServer"].handleAnalysisStatus(sessionId);
-                return toNextResponse(fallbackResult);
-            } catch (_fallbackError) {
+                const res = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$mock$2d$api$2d$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["mockApiServer"].handleAnalysisStatus(sessionId);
+                return toNextResponse(res);
+            } catch (e) {
                 return __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
                     success: false,
-                    error: 'Status retrieval failed and fallback unavailable',
+                    error: 'Status failed',
                     code: 'ANALYSIS_STATUS_FAILED'
                 }, {
                     status: 500
@@ -2025,70 +2008,47 @@ class AIRouterHandlers {
         }
     }
     /**
-   * Handle service status check
-   */ static async handleServiceStatus(_req) {
-        // Force a fresh check if requested
-        const url = new URL(_req.url);
-        if (url.searchParams.get('refresh') === 'true') {
-            await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$integration$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["aiRouterIntegration"].checkServiceHealth();
-        }
-        const status = __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$integration$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["aiRouterIntegration"].getStatus();
-        // If we have no status but just refreshed, get the new one
-        if (!status) {
-            await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$integration$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["aiRouterIntegration"].checkServiceHealth();
-        }
-        const currentStatus = __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$integration$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["aiRouterIntegration"].getStatus();
-        if (!currentStatus) {
-            return __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
-                success: false,
-                error: 'Service unavailable'
-            }, {
-                status: 503
-            });
+   * Health Check
+   */ static async handleHealthCheck(_request) {
+        const webHealth = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$mock$2d$api$2d$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["mockApiServer"].handleHealthCheck();
+        const available = await isServiceAvailable();
+        let serviceHealth = null;
+        if (available) {
+            const res = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$client$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["aiRouterClient"].healthCheck();
+            serviceHealth = res.data;
         }
         return __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
             success: true,
             data: {
-                healthy: currentStatus.healthy,
-                status: currentStatus.error ? 'degraded' : 'healthy',
-                version: currentStatus.version,
-                checks: currentStatus.checks,
-                baseUrl: currentStatus.baseUrl
+                web_service: webHealth.data,
+                ai_router_service: serviceHealth || {
+                    status: 'unavailable'
+                },
+                integration_status: available ? 'connected' : 'fallback_mode',
+                timestamp: new Date().toISOString()
             }
         });
     }
-    /**
-   * Health check handler that checks both web and AI Router services
-   */ static async handleHealthCheck(_request) {
-        try {
-            const webHealth = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$mock$2d$api$2d$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["mockApiServer"].handleHealthCheck();
-            const available = await isServiceAvailable();
-            let serviceHealth = null;
-            if (available) {
-                const healthCheck = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$client$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["aiRouterClient"].healthCheck();
-                serviceHealth = healthCheck.data;
+    static async handleServiceStatus(_req) {
+        const status = __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$integration$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["aiRouterIntegration"].getStatus();
+        if (!status) await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$integration$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["aiRouterIntegration"].checkServiceHealth();
+        const current = __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$integration$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["aiRouterIntegration"].getStatus();
+        if (!current) return __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
+            success: false,
+            error: 'Service unavailable'
+        }, {
+            status: 503
+        });
+        return __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
+            success: true,
+            data: {
+                healthy: current.healthy,
+                status: current.error ? 'degraded' : 'healthy',
+                version: current.version,
+                checks: current.checks,
+                baseUrl: current.baseUrl
             }
-            return __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
-                success: true,
-                data: {
-                    web_service: webHealth.data,
-                    ai_router_service: serviceHealth || {
-                        status: 'unavailable'
-                    },
-                    integration_status: available ? 'connected' : 'fallback_mode',
-                    timestamp: new Date().toISOString()
-                }
-            });
-        } catch (error) {
-            console.error('Health check error:', error);
-            return __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
-                success: false,
-                error: 'Health check failed',
-                code: 'HEALTH_CHECK_FAILED'
-            }, {
-                status: 500
-            });
-        }
+        });
     }
 }
 }),

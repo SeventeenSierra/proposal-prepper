@@ -35,325 +35,6 @@ const mod = __turbopack_context__.x("next/dist/server/app-render/after-task-asyn
 
 module.exports = mod;
 }),
-"[project]/proposal-prepper-services/src/mock-api-server.ts [app-route] (ecmascript)", ((__turbopack_context__) => {
-"use strict";
-
-/*
- * SPDX-License-Identifier: AGPL-3.0-or-later
- * SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
- */ __turbopack_context__.s([
-    "MockApiServer",
-    ()=>MockApiServer,
-    "mockApiServer",
-    ()=>mockApiServer
-]);
-class MockApiServer {
-    mockDelay;
-    constructor(mockDelay = 1000){
-        this.mockDelay = mockDelay;
-    }
-    async simulateDelay(customDelay) {
-        const delay = customDelay ?? this.mockDelay;
-        return new Promise((resolve)=>setTimeout(resolve, delay));
-    }
-    /**
-   * Handle document upload
-   * Extracted from src/app/api/documents/upload/route.ts
-   */ async handleDocumentUpload(file) {
-        try {
-            // Validate file presence
-            if (!file) {
-                return {
-                    success: false,
-                    error: 'No file provided',
-                    code: 'MISSING_FILE'
-                };
-            }
-            // Validate file type
-            if (file.type !== 'application/pdf') {
-                return {
-                    success: false,
-                    error: 'Only PDF files are accepted',
-                    code: 'INVALID_FILE_TYPE'
-                };
-            }
-            // Validate file size (100MB limit)
-            if (file.size > 100 * 1024 * 1024) {
-                return {
-                    success: false,
-                    error: 'File size exceeds 100MB limit',
-                    code: 'FILE_TOO_LARGE'
-                };
-            }
-            // Simulate processing delay
-            await this.simulateDelay();
-            // Generate mock upload session
-            const uploadSession = {
-                id: `upload_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
-                filename: file.name,
-                fileSize: file.size,
-                mimeType: file.type,
-                status: 'completed',
-                progress: 100,
-                startedAt: new Date().toISOString(),
-                completedAt: new Date().toISOString()
-            };
-            return {
-                success: true,
-                data: uploadSession
-            };
-        } catch (error) {
-            console.error('Upload error:', error);
-            return {
-                success: false,
-                error: 'Upload failed',
-                code: 'UPLOAD_FAILED'
-            };
-        }
-    }
-    /**
-   * Handle analysis start
-   * Extracted from src/app/api/analysis/start/route.ts
-   */ async handleAnalysisStart(proposalId) {
-        try {
-            if (!proposalId) {
-                return {
-                    success: false,
-                    error: 'Proposal ID is required',
-                    code: 'MISSING_PROPOSAL_ID'
-                };
-            }
-            // Simulate processing delay
-            await this.simulateDelay(500);
-            // Generate mock analysis session
-            const analysisSession = {
-                id: `analysis_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
-                proposalId,
-                status: 'analyzing',
-                progress: 0,
-                startedAt: new Date().toISOString(),
-                estimatedCompletion: new Date(Date.now() + 30000).toISOString(),
-                currentStep: 'Starting compliance analysis...'
-            };
-            return {
-                success: true,
-                data: analysisSession
-            };
-        } catch (error) {
-            console.error('Analysis start error:', error);
-            return {
-                success: false,
-                error: 'Failed to start analysis',
-                code: 'ANALYSIS_START_FAILED'
-            };
-        }
-    }
-    /**
-   * Handle analysis results retrieval
-   * Extracted from src/app/api/analysis/[sessionId]/results/route.ts
-   */ async handleAnalysisResults(sessionId) {
-        try {
-            if (!sessionId) {
-                return {
-                    success: false,
-                    error: 'Session ID is required',
-                    code: 'MISSING_SESSION_ID'
-                };
-            }
-            // Simulate processing delay
-            await this.simulateDelay(500);
-            // Generate mock compliance issues with proper structure
-            const mockIssues = [
-                {
-                    id: 'issue_1',
-                    severity: 'warning',
-                    title: 'Budget Justification Format',
-                    description: 'Budget justification follows standard format but could include more detail on equipment costs',
-                    location: {
-                        page: 8,
-                        section: 'Budget Justification',
-                        text: 'Equipment costs section'
-                    },
-                    regulation: {
-                        framework: 'FAR',
-                        section: '15.204-5',
-                        reference: 'FAR 15.204-5 - Budget Justification Requirements'
-                    },
-                    remediation: 'Consider adding more detailed breakdown of equipment and personnel costs'
-                },
-                {
-                    id: 'issue_2',
-                    severity: 'info',
-                    title: 'Data Management Plan',
-                    description: 'Data management plan is present and meets basic requirements',
-                    location: {
-                        page: 15,
-                        section: 'Data Management Plan',
-                        text: 'Data management section'
-                    },
-                    regulation: {
-                        framework: 'FAR',
-                        section: '19-069',
-                        reference: 'NSF 19-069 - Data Management Plan Requirements'
-                    },
-                    remediation: 'Plan is compliant with current requirements'
-                }
-            ];
-            // Randomly include issues (70% chance)
-            const issues = Math.random() > 0.3 ? mockIssues : [];
-            // Generate mock analysis results
-            const analysisResults = {
-                id: sessionId,
-                proposalId: `proposal_${sessionId}`,
-                status: issues.length === 0 ? 'pass' : 'warning',
-                issues,
-                summary: {
-                    totalIssues: issues.length,
-                    criticalIssues: issues.filter((i)=>i.severity === 'critical').length,
-                    warningIssues: issues.filter((i)=>i.severity === 'warning').length
-                },
-                generatedAt: new Date().toISOString()
-            };
-            return {
-                success: true,
-                data: analysisResults
-            };
-        } catch (error) {
-            console.error('Results retrieval error:', error);
-            return {
-                success: false,
-                error: 'Failed to retrieve results',
-                code: 'RESULTS_RETRIEVAL_FAILED'
-            };
-        }
-    }
-    /**
-   * Handle upload status check
-   */ async handleUploadStatus(sessionId) {
-        try {
-            if (!sessionId) {
-                return {
-                    success: false,
-                    error: 'Session ID is required',
-                    code: 'MISSING_SESSION_ID'
-                };
-            }
-            await this.simulateDelay(200);
-            const uploadSession = {
-                id: sessionId,
-                filename: 'mock-proposal.pdf',
-                fileSize: 1024000,
-                mimeType: 'application/pdf',
-                status: 'completed',
-                progress: 100,
-                startedAt: new Date(Date.now() - 10000).toISOString(),
-                completedAt: new Date().toISOString()
-            };
-            return {
-                success: true,
-                data: uploadSession
-            };
-        } catch (error) {
-            console.error('Upload status error:', error);
-            return {
-                success: false,
-                error: 'Failed to get upload status',
-                code: 'UPLOAD_STATUS_FAILED'
-            };
-        }
-    }
-    /**
-   * Handle analysis status check
-   */ async handleAnalysisStatus(sessionId) {
-        try {
-            if (!sessionId) {
-                return {
-                    success: false,
-                    error: 'Session ID is required',
-                    code: 'MISSING_SESSION_ID'
-                };
-            }
-            await this.simulateDelay(300);
-            const analysisSession = {
-                id: sessionId,
-                proposalId: `proposal_${sessionId}`,
-                status: 'completed',
-                progress: 100,
-                startedAt: new Date(Date.now() - 30000).toISOString(),
-                completedAt: new Date().toISOString(),
-                currentStep: 'Analysis completed'
-            };
-            return {
-                success: true,
-                data: analysisSession
-            };
-        } catch (error) {
-            console.error('Analysis status error:', error);
-            return {
-                success: false,
-                error: 'Failed to get analysis status',
-                code: 'ANALYSIS_STATUS_FAILED'
-            };
-        }
-    }
-    /**
-   * Health check endpoint
-   */ async handleHealthCheck() {
-        await this.simulateDelay(100);
-        return {
-            success: true,
-            data: {
-                status: 'healthy',
-                version: '1.0.0-mock',
-                timestamp: new Date().toISOString()
-            }
-        };
-    }
-    /**
-   * Get issue details
-   */ async handleIssueDetails(issueId) {
-        try {
-            if (!issueId) {
-                return {
-                    success: false,
-                    error: 'Issue ID is required',
-                    code: 'MISSING_ISSUE_ID'
-                };
-            }
-            await this.simulateDelay(200);
-            const issue = {
-                id: issueId,
-                severity: 'warning',
-                title: 'Sample Compliance Issue',
-                description: 'This is a detailed description of the compliance issue found in the document.',
-                location: {
-                    page: 5,
-                    section: 'Technical Approach',
-                    text: 'Relevant text excerpt from the document'
-                },
-                regulation: {
-                    framework: 'FAR',
-                    section: '52.204-8',
-                    reference: 'FAR 52.204-8 - Annual Representations and Certifications'
-                },
-                remediation: 'Recommended steps to address this compliance issue.'
-            };
-            return {
-                success: true,
-                data: issue
-            };
-        } catch (error) {
-            console.error('Issue details error:', error);
-            return {
-                success: false,
-                error: 'Failed to get issue details',
-                code: 'ISSUE_DETAILS_FAILED'
-            };
-        }
-    }
-}
-const mockApiServer = new MockApiServer();
-}),
 "[project]/proposal-prepper-web/src/config/app.ts [app-route] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
@@ -1749,14 +1430,21 @@ const AIRouterIntegrationUtils = {
     ()=>AIRouterHandlers
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/proposal-prepper-web/node_modules/.pnpm/next@16.0.10_@babel+core@7.28.5_@opentelemetry+api@1.9.0_@playwright+test@1.57.0_react-_71e9c2d2cf8cafae81b603ed19f33f35/node_modules/next/server.js [app-route] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$mock$2d$api$2d$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/proposal-prepper-services/src/mock-api-server.ts [app-route] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$client$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/proposal-prepper-services/src/ai-router-client.ts [app-route] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$integration$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/proposal-prepper-services/src/ai-router-integration.ts [app-route] (ecmascript)");
 ;
 ;
 ;
-;
+// Create a dedicated client for server-to-server communication
+// This points directly to the python backend, bypassing Next.js API routes to avoid loops
+const BACKEND_URL = process.env.STRANDS_API_URL || 'http://127.0.0.1:8080';
+const backendClient = (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$client$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["createAIRouterClientWithConfig"])(BACKEND_URL);
 /**
+ * AI Router Adapter
+ *
+ * Adapts the AI Router integration for use in Next.js API routes or Express middleware.
+ * Renamed from StrandsIntegrationAdapter.
+ */ /**
  * Utility to extract file from Next.js FormData
  */ async function extractFileFromRequest(request) {
     try {
@@ -1818,25 +1506,6 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$servi
         });
     }
 }
-/**
- * Check if AI Router service is available
- * Includes logic to prevent self-recursion loop when running locally
- */ async function isServiceAvailable() {
-    try {
-        const baseUrl = __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$client$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["aiRouterClient"].getBaseUrl();
-        // If client points to localhost:3000 (Next.js default), we are self-referencing in dev mode.
-        // In this case, use mock to avoid recursion.
-        if (baseUrl.includes('localhost:3000')) {
-            console.log('[Adapter] Detected localhost loop (port 3000). Forcing use of MockApiServer.');
-            return false;
-        }
-        const healthCheck = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$client$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["aiRouterClient"].healthCheck();
-        return healthCheck.success && (healthCheck.data?.status === 'healthy' || healthCheck.data?.status === 'degraded');
-    } catch (error) {
-        console.warn('[Adapter] AI Router service check failed:', error);
-        return false;
-    }
-}
 class AIRouterHandlers {
     /**
    * Handle document upload
@@ -1853,42 +1522,21 @@ class AIRouterHandlers {
         }
         console.log(`[Adapter] Processing upload for file: ${file.name}`);
         try {
-            const available = await isServiceAvailable();
-            if (available) {
-                console.log('[Adapter] Using REAL AI Router service for upload');
-                const uploadResult = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$client$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["aiRouterClient"].uploadDocument(file);
-                if (uploadResult.success && uploadResult.data) {
-                    // If we wanted to auto-start analysis here, we could. 
-                    // BUT the AgentInterface calls startAnalysis separately.
-                    // Let's just return the upload result to keep it simple and clean.
-                    // Wait, the previous code auto-started analysis. Let's see if that's required.
-                    // AgentInterface calls `uploadService.uploadDocument` which calls this endpoint.
-                    // Then it calls `analysisService.startAnalysis` separately.
-                    // So `handleDocumentUpload` SHOULD NOT auto-start analysis ideally, unless we want to optimize.
-                    // However, let's stick to what allows `proposalId` to be returned.
-                    return toNextResponse(uploadResult, 201);
-                }
-                throw new Error(uploadResult.error || 'Upload failed');
+            console.log('[Adapter] Using REAL AI Router service for upload');
+            const uploadResult = await backendClient.uploadDocument(file);
+            if (uploadResult.success && uploadResult.data) {
+                return toNextResponse(uploadResult, 201);
             }
-            // Fallback to Mock
-            console.log('[Adapter] Using MOCK AI Router service for upload');
-            const result = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$mock$2d$api$2d$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["mockApiServer"].handleDocumentUpload(file);
-            return toNextResponse(result, 201);
+            throw new Error(uploadResult.error || 'Upload failed');
         } catch (error) {
             console.error('[Adapter] Upload error:', error);
-            // Final Fallback Attempt
-            try {
-                const fallbackResult = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$mock$2d$api$2d$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["mockApiServer"].handleDocumentUpload(file);
-                return toNextResponse(fallbackResult, 201);
-            } catch (e) {
-                return __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
-                    success: false,
-                    error: 'Upload failed completely',
-                    code: 'UPLOAD_FAILED'
-                }, {
-                    status: 500
-                });
-            }
+            return __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
+                success: false,
+                error: 'Upload failed',
+                code: 'UPLOAD_FAILED'
+            }, {
+                status: 500
+            });
         }
     }
     /**
@@ -1910,30 +1558,18 @@ class AIRouterHandlers {
             });
         }
         try {
-            const available = await isServiceAvailable();
-            if (available) {
-                console.log('[Adapter] Using REAL AI Router service for analysis start');
-                const result = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$client$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["aiRouterClient"].startAnalysis(proposalId, documentId, filename);
-                return toNextResponse(result, 201);
-            }
-            console.log('[Adapter] Using MOCK AI Router service for analysis start');
-            const result = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$mock$2d$api$2d$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["mockApiServer"].handleAnalysisStart(proposalId);
+            console.log('[Adapter] Using REAL AI Router service for analysis start');
+            const result = await backendClient.startAnalysis(proposalId, documentId, filename);
             return toNextResponse(result, 201);
         } catch (error) {
             console.error('[Adapter] Analysis start error:', error);
-            // Fallback
-            try {
-                const result = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$mock$2d$api$2d$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["mockApiServer"].handleAnalysisStart(proposalId);
-                return toNextResponse(result, 201);
-            } catch (e) {
-                return __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
-                    success: false,
-                    error: 'Analysis start failed',
-                    code: 'ANALYSIS_START_FAILED'
-                }, {
-                    status: 500
-                });
-            }
+            return __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
+                success: false,
+                error: 'Analysis start failed',
+                code: 'ANALYSIS_START_FAILED'
+            }, {
+                status: 500
+            });
         }
     }
     /**
@@ -1950,26 +1586,16 @@ class AIRouterHandlers {
             });
         }
         try {
-            if (await isServiceAvailable()) {
-                const result = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$client$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["aiRouterClient"].getResults(sessionId);
-                return toNextResponse(result);
-            }
-            const result = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$mock$2d$api$2d$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["mockApiServer"].handleAnalysisResults(sessionId);
+            const result = await backendClient.getResults(sessionId);
             return toNextResponse(result);
         } catch (error) {
-            // Fallback
-            try {
-                const res = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$mock$2d$api$2d$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["mockApiServer"].handleAnalysisResults(sessionId);
-                return toNextResponse(res);
-            } catch (e) {
-                return __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
-                    success: false,
-                    error: 'Results failed',
-                    code: 'RESULTS_RETRIEVAL_FAILED'
-                }, {
-                    status: 500
-                });
-            }
+            return __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
+                success: false,
+                error: 'Results failed',
+                code: 'RESULTS_RETRIEVAL_FAILED'
+            }, {
+                status: 500
+            });
         }
     }
     /**
@@ -1986,48 +1612,42 @@ class AIRouterHandlers {
             });
         }
         try {
-            if (await isServiceAvailable()) {
-                const result = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$client$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["aiRouterClient"].getAnalysisStatus(sessionId);
-                return toNextResponse(result);
-            }
-            const result = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$mock$2d$api$2d$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["mockApiServer"].handleAnalysisStatus(sessionId);
+            const result = await backendClient.getAnalysisStatus(sessionId);
             return toNextResponse(result);
         } catch (error) {
-            try {
-                const res = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$mock$2d$api$2d$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["mockApiServer"].handleAnalysisStatus(sessionId);
-                return toNextResponse(res);
-            } catch (e) {
-                return __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
-                    success: false,
-                    error: 'Status failed',
-                    code: 'ANALYSIS_STATUS_FAILED'
-                }, {
-                    status: 500
-                });
-            }
+            return __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
+                success: false,
+                error: 'Status failed',
+                code: 'ANALYSIS_STATUS_FAILED'
+            }, {
+                status: 500
+            });
         }
     }
     /**
    * Health Check
    */ static async handleHealthCheck(_request) {
-        const webHealth = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$mock$2d$api$2d$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["mockApiServer"].handleHealthCheck();
-        const available = await isServiceAvailable();
-        let serviceHealth = null;
-        if (available) {
-            const res = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$client$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["aiRouterClient"].healthCheck();
-            serviceHealth = res.data;
+        try {
+            const res = await backendClient.healthCheck();
+            return __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
+                success: true,
+                data: {
+                    ai_router_service: res.data || {
+                        status: 'unavailable'
+                    },
+                    integration_status: 'connected',
+                    timestamp: new Date().toISOString()
+                }
+            });
+        } catch (err) {
+            return __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
+                success: false,
+                data: {
+                    integration_status: 'error',
+                    error: err
+                }
+            });
         }
-        return __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
-            success: true,
-            data: {
-                web_service: webHealth.data,
-                ai_router_service: serviceHealth || {
-                    status: 'unavailable'
-                },
-                integration_status: available ? 'connected' : 'fallback_mode',
-                timestamp: new Date().toISOString()
-            }
-        });
     }
     static async handleServiceStatus(_req) {
         const status = __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$ai$2d$router$2d$integration$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["aiRouterIntegration"].getStatus();
@@ -2075,4 +1695,4 @@ async function POST(req) {
 }),
 ];
 
-//# sourceMappingURL=%5Broot-of-the-server%5D__8dc89f8d._.js.map
+//# sourceMappingURL=%5Broot-of-the-server%5D__08488840._.js.map

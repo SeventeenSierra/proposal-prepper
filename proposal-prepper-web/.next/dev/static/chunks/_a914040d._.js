@@ -614,6 +614,11 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2
                 if (duration && duration > 1000) {
                     console.warn(`Slow API request: ${endpoint} took ${duration}ms`);
                 }
+                // Check if response is envelope-wrapped (success/data pattern) which our API uses
+                // This prevents double-wrapping where response.data becomes { success: true, data: ... }
+                if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
+                    return data;
+                }
                 return {
                     success: true,
                     data
@@ -703,10 +708,15 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2
                 try {
                     if (xhr.status >= 200 && xhr.status < 300) {
                         const data = JSON.parse(xhr.responseText);
-                        resolve({
-                            success: true,
-                            data
-                        });
+                        // Check for envelope wrapping here too
+                        if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
+                            resolve(data);
+                        } else {
+                            resolve({
+                                success: true,
+                                data
+                            });
+                        }
                     } else {
                         resolve({
                             success: false,
@@ -2800,6 +2810,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                         status: 'running'
                     } : step));
             const uploadResult = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$upload$2d$service$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["uploadService"].uploadDocument(selectedFile);
+            console.log('Upload Result in AgentInterface:', JSON.stringify(uploadResult, null, 2));
             if (!uploadResult.success) {
                 throw new Error(uploadResult.error || 'Upload failed');
             }
@@ -2811,6 +2822,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                         ...step,
                         status: 'running'
                     } : step));
+            console.log('Starting Analysis with Proposal ID:', uploadResult.sessionId);
             // Step 2-5: Start analysis
             const analysisResult = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$analysis$2d$service$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["analysisService"].startAnalysis({
                 proposalId: uploadResult.sessionId,
@@ -2941,7 +2953,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                     className: "text-blue-500"
                 }, void 0, false, {
                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                    lineNumber: 268,
+                    lineNumber: 272,
                     columnNumber: 16
                 }, ("TURBOPACK compile-time value", void 0));
             case 'rag':
@@ -2950,7 +2962,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                     className: "text-purple-500"
                 }, void 0, false, {
                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                    lineNumber: 270,
+                    lineNumber: 274,
                     columnNumber: 16
                 }, ("TURBOPACK compile-time value", void 0));
             case 'compliance':
@@ -2959,7 +2971,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                     className: "text-green-500"
                 }, void 0, false, {
                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                    lineNumber: 272,
+                    lineNumber: 276,
                     columnNumber: 16
                 }, ("TURBOPACK compile-time value", void 0));
             case 'writer':
@@ -2968,7 +2980,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                     className: "text-orange-500"
                 }, void 0, false, {
                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                    lineNumber: 274,
+                    lineNumber: 278,
                     columnNumber: 16
                 }, ("TURBOPACK compile-time value", void 0));
             default:
@@ -2977,7 +2989,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                     className: "text-gray-500"
                 }, void 0, false, {
                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                    lineNumber: 276,
+                    lineNumber: 280,
                     columnNumber: 16
                 }, ("TURBOPACK compile-time value", void 0));
         }
@@ -3002,20 +3014,20 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                     r: "8"
                 }, void 0, false, {
                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                    lineNumber: 295,
+                    lineNumber: 299,
                     columnNumber: 7
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
                     d: "m21 21-4.3-4.3"
                 }, void 0, false, {
                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                    lineNumber: 296,
+                    lineNumber: 300,
                     columnNumber: 7
                 }, ("TURBOPACK compile-time value", void 0))
             ]
         }, void 0, true, {
             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-            lineNumber: 282,
+            lineNumber: 286,
             columnNumber: 5
         }, ("TURBOPACK compile-time value", void 0));
     const getStepIcon = (status)=>{
@@ -3026,7 +3038,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                     className: "text-green-500"
                 }, void 0, false, {
                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                    lineNumber: 303,
+                    lineNumber: 307,
                     columnNumber: 16
                 }, ("TURBOPACK compile-time value", void 0));
             case 'running':
@@ -3035,7 +3047,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                     className: "text-blue-500 animate-spin"
                 }, void 0, false, {
                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                    lineNumber: 305,
+                    lineNumber: 309,
                     columnNumber: 16
                 }, ("TURBOPACK compile-time value", void 0));
             case 'error':
@@ -3044,7 +3056,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                     className: "text-red-500"
                 }, void 0, false, {
                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                    lineNumber: 307,
+                    lineNumber: 311,
                     columnNumber: 16
                 }, ("TURBOPACK compile-time value", void 0));
             default:
@@ -3052,7 +3064,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                     className: "w-5 h-5 rounded-full border-2 border-gray-200"
                 }, void 0, false, {
                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                    lineNumber: 309,
+                    lineNumber: 313,
                     columnNumber: 16
                 }, ("TURBOPACK compile-time value", void 0));
         }
@@ -3074,12 +3086,12 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                         size: 40
                                     }, void 0, false, {
                                         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                        lineNumber: 320,
+                                        lineNumber: 324,
                                         columnNumber: 17
                                     }, ("TURBOPACK compile-time value", void 0))
                                 }, void 0, false, {
                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                    lineNumber: 319,
+                                    lineNumber: 323,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
@@ -3087,7 +3099,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                     children: "AI Regulatory Assistant"
                                 }, void 0, false, {
                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                    lineNumber: 322,
+                                    lineNumber: 326,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3095,7 +3107,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                     children: "Upload your proposal to analyze against FAR/DFARS requirements using our multi-agent compliance engine."
                                 }, void 0, false, {
                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                    lineNumber: 325,
+                                    lineNumber: 329,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3109,7 +3121,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                             className: "hidden"
                                         }, void 0, false, {
                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                            lineNumber: 331,
+                                            lineNumber: 335,
                                             columnNumber: 17
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3123,12 +3135,12 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                                         size: 24
                                                     }, void 0, false, {
                                                         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                        lineNumber: 345,
+                                                        lineNumber: 349,
                                                         columnNumber: 21
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 }, void 0, false, {
                                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                    lineNumber: 344,
+                                                    lineNumber: 348,
                                                     columnNumber: 19
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3139,7 +3151,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                                             children: selectedFile ? selectedFile.name : 'Select Proposal PDF'
                                                         }, void 0, false, {
                                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                            lineNumber: 348,
+                                                            lineNumber: 352,
                                                             columnNumber: 21
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3147,19 +3159,19 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                                             children: selectedFile ? `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB` : 'Upload a PDF document for compliance analysis'
                                                         }, void 0, false, {
                                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                            lineNumber: 351,
+                                                            lineNumber: 355,
                                                             columnNumber: 21
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                    lineNumber: 347,
+                                                    lineNumber: 351,
                                                     columnNumber: 19
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                            lineNumber: 339,
+                                            lineNumber: 343,
                                             columnNumber: 17
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         uploadError && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3169,14 +3181,14 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                                     size: 16
                                                 }, void 0, false, {
                                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                    lineNumber: 362,
+                                                    lineNumber: 366,
                                                     columnNumber: 21
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 uploadError
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                            lineNumber: 361,
+                                            lineNumber: 365,
                                             columnNumber: 19
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         selectedFile && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f40$17sierra$2b$ui$40$0$2e$2$2e$5_$40$types$2b$react$2d$dom$40$19$2e$2$2e$3_$40$types$2b$react$40$19$2e$2$2e$7_$5f40$types$2b$react$40$19$2e$2$2e$7_rea_bff31ee3cb8c4d9acca46be2761aafb7$2f$node_modules$2f40$17sierra$2f$ui$2f$dist$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["Button"], {
@@ -3190,7 +3202,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                                         className: "animate-spin mr-2"
                                                     }, void 0, false, {
                                                         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                        lineNumber: 375,
+                                                        lineNumber: 379,
                                                         columnNumber: 25
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     "Analyzing..."
@@ -3202,7 +3214,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                                         className: "mr-2"
                                                     }, void 0, false, {
                                                         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                        lineNumber: 380,
+                                                        lineNumber: 384,
                                                         columnNumber: 25
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     "Start Compliance Analysis"
@@ -3210,19 +3222,19 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                             }, void 0, true)
                                         }, void 0, false, {
                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                            lineNumber: 368,
+                                            lineNumber: 372,
                                             columnNumber: 19
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                    lineNumber: 330,
+                                    lineNumber: 334,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                            lineNumber: 318,
+                            lineNumber: 322,
                             columnNumber: 13
                         }, ("TURBOPACK compile-time value", void 0)),
                         activeProject && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3238,7 +3250,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                             children: "Live Analysis"
                                         }, void 0, false, {
                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                            lineNumber: 393,
+                                            lineNumber: 397,
                                             columnNumber: 17
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3248,13 +3260,13 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                             children: "Results & Chat"
                                         }, void 0, false, {
                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                            lineNumber: 403,
+                                            lineNumber: 407,
                                             columnNumber: 17
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                    lineNumber: 392,
+                                    lineNumber: 396,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 activeTab === 'steps' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3268,7 +3280,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                                         children: getStepIcon(step.status)
                                                     }, void 0, false, {
                                                         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                        lineNumber: 425,
+                                                        lineNumber: 429,
                                                         columnNumber: 23
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3283,13 +3295,13 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                                                         children: step.details
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                                        lineNumber: 431,
+                                                                        lineNumber: 435,
                                                                         columnNumber: 27
                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                                lineNumber: 429,
+                                                                lineNumber: 433,
                                                                 columnNumber: 25
                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3297,19 +3309,19 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                                                 children: step.message
                                                             }, void 0, false, {
                                                                 fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                                lineNumber: 435,
+                                                                lineNumber: 439,
                                                                 columnNumber: 25
                                                             }, ("TURBOPACK compile-time value", void 0))
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                        lineNumber: 428,
+                                                        lineNumber: 432,
                                                         columnNumber: 23
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 ]
                                             }, step.id, true, {
                                                 fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                lineNumber: 418,
+                                                lineNumber: 422,
                                                 columnNumber: 21
                                             }, ("TURBOPACK compile-time value", void 0))),
                                         isAnalysisComplete && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3321,12 +3333,12 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                                         size: 20
                                                     }, void 0, false, {
                                                         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                        lineNumber: 450,
+                                                        lineNumber: 454,
                                                         columnNumber: 25
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 }, void 0, false, {
                                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                    lineNumber: 449,
+                                                    lineNumber: 453,
                                                     columnNumber: 23
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3336,7 +3348,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                                             children: "Analysis Complete"
                                                         }, void 0, false, {
                                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                            lineNumber: 453,
+                                                            lineNumber: 457,
                                                             columnNumber: 25
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3344,25 +3356,25 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                                             children: "All compliance checks have finished. View results in the chat tab."
                                                         }, void 0, false, {
                                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                            lineNumber: 454,
+                                                            lineNumber: 458,
                                                             columnNumber: 25
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                    lineNumber: 452,
+                                                    lineNumber: 456,
                                                     columnNumber: 23
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                            lineNumber: 448,
+                                            lineNumber: 452,
                                             columnNumber: 21
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                    lineNumber: 416,
+                                    lineNumber: 420,
                                     columnNumber: 17
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 activeTab === 'results' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3378,12 +3390,12 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                                             className: "text-indigo-600"
                                                         }, void 0, false, {
                                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                            lineNumber: 473,
+                                                            lineNumber: 477,
                                                             columnNumber: 27
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     }, void 0, false, {
                                                         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                        lineNumber: 472,
+                                                        lineNumber: 476,
                                                         columnNumber: 25
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3393,18 +3405,18 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                                             children: message.content
                                                         }, void 0, false, {
                                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                            lineNumber: 481,
+                                                            lineNumber: 485,
                                                             columnNumber: 25
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     }, void 0, false, {
                                                         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                        lineNumber: 477,
+                                                        lineNumber: 481,
                                                         columnNumber: 23
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 ]
                                             }, index, true, {
                                                 fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                lineNumber: 466,
+                                                lineNumber: 470,
                                                 columnNumber: 21
                                             }, ("TURBOPACK compile-time value", void 0))),
                                         isSending && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3417,12 +3429,12 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                                         className: "text-indigo-600"
                                                     }, void 0, false, {
                                                         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                        lineNumber: 495,
+                                                        lineNumber: 499,
                                                         columnNumber: 25
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 }, void 0, false, {
                                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                    lineNumber: 494,
+                                                    lineNumber: 498,
                                                     columnNumber: 23
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3439,7 +3451,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                                                     }
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                                    lineNumber: 500,
+                                                                    lineNumber: 504,
                                                                     columnNumber: 29
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3449,7 +3461,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                                                     }
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                                    lineNumber: 504,
+                                                                    lineNumber: 508,
                                                                     columnNumber: 29
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3459,59 +3471,59 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                                                     }
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                                    lineNumber: 508,
+                                                                    lineNumber: 512,
                                                                     columnNumber: 29
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                            lineNumber: 499,
+                                                            lineNumber: 503,
                                                             columnNumber: 27
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     }, void 0, false, {
                                                         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                        lineNumber: 498,
+                                                        lineNumber: 502,
                                                         columnNumber: 25
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 }, void 0, false, {
                                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                    lineNumber: 497,
+                                                    lineNumber: 501,
                                                     columnNumber: 23
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                            lineNumber: 493,
+                                            lineNumber: 497,
                                             columnNumber: 21
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             ref: messagesEndRef
                                         }, void 0, false, {
                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                            lineNumber: 517,
+                                            lineNumber: 521,
                                             columnNumber: 19
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                    lineNumber: 464,
+                                    lineNumber: 468,
                                     columnNumber: 17
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                            lineNumber: 391,
+                            lineNumber: 395,
                             columnNumber: 13
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                    lineNumber: 316,
+                    lineNumber: 320,
                     columnNumber: 9
                 }, ("TURBOPACK compile-time value", void 0))
             }, void 0, false, {
                 fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                lineNumber: 315,
+                lineNumber: 319,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3537,7 +3549,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                     disabled: !activeProject || isSending
                                 }, void 0, false, {
                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                    lineNumber: 528,
+                                    lineNumber: 532,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3552,29 +3564,29 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                             className: "animate-spin"
                                         }, void 0, false, {
                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                            lineNumber: 551,
+                                            lineNumber: 555,
                                             columnNumber: 30
                                         }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$561$2e$0_react$40$19$2e$2$2e$3$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$send$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Send$3e$__["Send"], {
                                             size: 16
                                         }, void 0, false, {
                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                            lineNumber: 551,
+                                            lineNumber: 555,
                                             columnNumber: 79
                                         }, ("TURBOPACK compile-time value", void 0))
                                     }, void 0, false, {
                                         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                        lineNumber: 545,
+                                        lineNumber: 549,
                                         columnNumber: 15
                                     }, ("TURBOPACK compile-time value", void 0))
                                 }, void 0, false, {
                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                    lineNumber: 544,
+                                    lineNumber: 548,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                            lineNumber: 527,
+                            lineNumber: 531,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3584,29 +3596,29 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                                 children: "AI can make mistakes. Review generated compliance reports."
                             }, void 0, false, {
                                 fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                lineNumber: 556,
+                                lineNumber: 560,
                                 columnNumber: 13
                             }, ("TURBOPACK compile-time value", void 0))
                         }, void 0, false, {
                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                            lineNumber: 555,
+                            lineNumber: 559,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                    lineNumber: 526,
+                    lineNumber: 530,
                     columnNumber: 9
                 }, ("TURBOPACK compile-time value", void 0))
             }, void 0, false, {
                 fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                lineNumber: 525,
+                lineNumber: 529,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-        lineNumber: 314,
+        lineNumber: 318,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 };
