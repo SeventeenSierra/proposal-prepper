@@ -21,12 +21,10 @@ describe('Module Path Resolution Property Tests', () => {
     fc.assert(
       fc.property(
         fc.constantFrom(
-          'proposal-prepper-services',
           '@/types/app',
           '@/utils',
           '@/components',
           '@/seed-data',
-          '@/test-utils',
           '@/config'
         ),
         (importPath) => {
@@ -57,10 +55,8 @@ describe('Module Path Resolution Property Tests', () => {
         fc.constantFrom(
           '@/components/analysis/types',
           '@/components/upload/upload-manager',
-          'proposal-prepper-services/analysis-service',
           '@/utils/upload-validation',
-          '@/seed-data/grants',
-          '@/test-utils/mock-strands-api'
+          '@/seed-data/grants'
         ),
         (nestedImportPath) => {
           // Test that nested imports resolve correctly
@@ -89,7 +85,6 @@ describe('Module Path Resolution Property Tests', () => {
       () => import('@/components/analysis/types'),
       () => import('@/utils/upload-validation'),
       () => import('@/seed-data/grants'),
-      () => import('@/test-utils/mock-strands-api'),
     ];
 
     // All imports should resolve successfully
@@ -108,7 +103,7 @@ describe('Module Path Resolution Property Tests', () => {
     fc.assert(
       fc.property(
         fc.array(
-          fc.constantFrom('proposal-prepper-services', '@/types/app', '@/utils', '@/components', '@/seed-data'),
+          fc.constantFrom('@/types/app', '@/utils', '@/components', '@/seed-data'),
           { minLength: 1, maxLength: 5 }
         ),
         (importPaths) => {
@@ -128,5 +123,26 @@ describe('Module Path Resolution Property Tests', () => {
       ),
       { numRuns: 100 }
     );
+  });
+
+  it('Property 1: Module path resolution consistency - proposal-prepper-services should be importable', async () => {
+    /**
+     * **Feature: test-infrastructure-fixes, Property 1: Module path resolution consistency**
+     * **Validates: Requirements 1.1, 1.2, 1.3, 1.4, 1.5**
+     *
+     * Test that proposal-prepper-services modules can be imported
+     */
+
+    // Test actual imports for proposal-prepper-services
+    const testImports = [
+      () => import('proposal-prepper-services/analysis-service'),
+      () => import('proposal-prepper-services/upload-service'),
+      () => import('proposal-prepper-services/ai-router-client'),
+    ];
+
+    // All imports should resolve successfully
+    for (const importFn of testImports) {
+      await expect(importFn()).resolves.toBeDefined();
+    }
   });
 });

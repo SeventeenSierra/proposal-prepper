@@ -1,13 +1,17 @@
 'use client';
 
-import { Bot, CheckCircle2, FileCheck, Loader2, Send, Sparkles, Zap } from 'lucide-react';
+import { Bot, CheckCircle2, FileCheck, Loader2, Send, Sparkles, Upload, Zap, AlertCircle } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Textarea } from '@/components/ui';
+import { uploadService } from 'proposal-prepper-services/upload-service';
+import { analysisService } from 'proposal-prepper-services/analysis-service';
+import { resultsService } from 'proposal-prepper-services/results-service';
+import { AnalysisStatus } from '@/components/analysis/types';
 
 type Step = {
   id: number;
   message: string;
-  status: 'pending' | 'running' | 'complete';
+  status: 'pending' | 'running' | 'complete' | 'error';
   agent?: 'coordinator' | 'rag' | 'compliance' | 'writer';
   details?: string;
 };
@@ -22,6 +26,65 @@ type AgentInterfaceProps = {
   startDemo: () => void;
 };
 
+// Map analysis status to step information
+const analysisSteps: Step[] = [
+  {
+    id: 1,
+    message: 'Uploading and processing document...',
+    status: 'pending',
+    agent: 'coordinator',
+    details: 'Document Upload',
+  },
+  {
+    id: 2,
+    message: 'Extracting document structure and text...',
+    status: 'pending',
+    agent: 'rag',
+    details: 'Text Extraction',
+  },
+  {
+    id: 3,
+    message: 'Validating against FAR/DFARS requirements...',
+    status: 'pending',
+    agent: 'compliance',
+    details: 'Compliance Analysis',
+  },
+  {
+    id: 4,
+    message: 'Checking regulatory clause compliance...',
+    status: 'pending',
+    agent: 'compliance',
+    details: 'Validation Check',
+  },
+  {
+    id: 5,
+    message: 'Synthesizing compliance report...',
+    status: 'pending',
+    agent: 'writer',
+    details: 'Report Generation',
+  },
+];
+
+// Map AnalysisStatus to step index
+function getStepIndexFromStatus(status: AnalysisStatus): number {
+  switch (status) {
+    case AnalysisStatus.QUEUED:
+      return 0;
+    case AnalysisStatus.EXTRACTING:
+      return 1;
+    case AnalysisStatus.ANALYZING:
+      return 2;
+    case AnalysisStatus.VALIDATING:
+      return 3;
+    case AnalysisStatus.COMPLETED:
+      return 4;
+    case AnalysisStatus.FAILED:
+      return -1;
+    default:
+      return 0;
+  }
+}
+
 const AgentInterface = ({ activeProject, startDemo }: AgentInterfaceProps) => {
   const [activeTab, setActiveTab] = useState<'steps' | 'results'>('steps');
   const [steps, setSteps] = useState<Step[]>([]);
@@ -29,7 +92,12 @@ const AgentInterface = ({ activeProject, startDemo }: AgentInterfaceProps) => {
   const [inputValue, setInputValue] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isAnalysisComplete, setIsAnalysisComplete] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [analysisSessionId, setAnalysisSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -39,104 +107,129 @@ const AgentInterface = ({ activeProject, startDemo }: AgentInterfaceProps) => {
     scrollToBottom();
   }, [scrollToBottom]);
 
-  // Demo Simulation Logic
-  useEffect(() => {
-    if (activeProject === 'demo-running') {
-      setSteps([]);
-      setMessages([]);
-      setIsAnalysisComplete(false);
-      setActiveTab('steps');
-
-      const demoSteps: Step[] = [
-        {
-          id: 1,
-          message: 'Ingesting proposal document structure...',
-          status: 'pending',
-          agent: 'coordinator',
-          details: 'Structure Analysis',
-        },
-        {
-          id: 2,
-          message: 'Retrieving relevant FAR/DFARS clauses...',
-          status: 'pending',
-          agent: 'rag',
-          details: 'Regulatory Search',
-        },
-        {
-          id: 3,
-          message: 'Validating Telecommunications compliance (52.204-24)...',
-          status: 'pending',
-          agent: 'compliance',
-          details: 'Clause Validation',
-        },
-        {
-          id: 4,
-          message: 'Checking Key Personnel Biosketch format...',
-          status: 'pending',
-          agent: 'compliance',
-          details: 'Format Check',
-        },
-        {
-          id: 5,
-          message: 'Synthesizing compliance report...',
-          status: 'pending',
-          agent: 'writer',
-          details: 'Report Generation',
-        },
-      ];
-
-      setSteps(demoSteps);
-
-      // Simulate Step Execution
-      let currentStep = 0;
-      const interval = setInterval(() => {
-        if (currentStep >= demoSteps.length) {
-          clearInterval(interval);
-          setIsAnalysisComplete(true);
-
-          // Switch to results tab only after a delay so user sees completion
-          setTimeout(() => {
-            setActiveTab('results');
-            setMessages([
-              {
-                role: 'bot',
-                content:
-                  "Analysis complete. I've found 2 compliance issues and verified 14 mandatory clauses. The proposal has a 92% compliance score. You can view the full details in the report panel.",
-              },
-            ]);
-          }, 1500);
-          return;
-        }
-
-        setSteps((prev) =>
-          prev.map((step, index) => {
-            if (index === currentStep) return { ...step, status: 'running' };
-            if (index === currentStep - 1) return { ...step, status: 'complete' };
-            return step;
-          })
-        );
-
-        // Mark previous step as complete when starting next
-        if (currentStep > 0) {
-          setSteps((prev) =>
-            prev.map((step, index) => {
-              if (index === currentStep - 1) return { ...step, status: 'complete' };
-              return step;
-            })
-          );
-        }
-
-        currentStep++;
-      }, 1500);
-
-      return () => clearInterval(interval);
-    } else if (activeProject) {
-      // Reset for non-demo projects (if we had real logic)
-      setSteps([]);
-      setMessages([]);
-      setIsAnalysisComplete(false);
+  // Handle file selection
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file
+      const validation = uploadService.validateFile(file);
+      if (!validation.isValid) {
+        setUploadError(validation.error || 'Invalid file');
+        return;
+      }
+      setSelectedFile(file);
+      setUploadError(null);
     }
-  }, [activeProject]);
+  };
+
+  // Handle upload and analysis
+  const handleUploadAndAnalyze = async () => {
+    if (!selectedFile) return;
+
+    setIsUploading(true);
+    setUploadError(null);
+    setSteps(analysisSteps.map(step => ({ ...step, status: 'pending' })));
+    setIsAnalysisComplete(false);
+    setMessages([]);
+
+    // Trigger the parent's startDemo to set activeProject
+    startDemo();
+
+    try {
+      // Step 1: Upload document
+      setSteps(prev => prev.map((step, idx) =>
+        idx === 0 ? { ...step, status: 'running' } : step
+      ));
+
+      const uploadResult = await uploadService.uploadDocument(selectedFile);
+
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.error || 'Upload failed');
+      }
+
+      // Mark upload complete, start analysis
+      setSteps(prev => prev.map((step, idx) =>
+        idx === 0 ? { ...step, status: 'complete' } :
+          idx === 1 ? { ...step, status: 'running' } : step
+      ));
+
+      // Step 2-5: Start analysis
+      const analysisResult = await analysisService.startAnalysis({
+        proposalId: uploadResult.sessionId,
+        documentId: uploadResult.sessionId,
+        frameworks: ['FAR', 'DFARS'],
+      });
+
+      if (!analysisResult.success) {
+        throw new Error(analysisResult.error || 'Analysis failed to start');
+      }
+
+      setAnalysisSessionId(analysisResult.sessionId);
+
+      // Set up event handlers for progress updates
+      analysisService.setEventHandlers({
+        onProgress: (sessionId, progress, currentStep) => {
+          // Update steps based on current step info
+          const session = analysisService.getActiveSessions().find(s => s.id === sessionId);
+          if (session) {
+            const stepIndex = getStepIndexFromStatus(session.status);
+            setSteps(prev => prev.map((step, idx) => {
+              if (idx < stepIndex) return { ...step, status: 'complete' };
+              if (idx === stepIndex) return { ...step, status: 'running' };
+              return step;
+            }));
+          }
+        },
+        onComplete: async (sessionId, session) => {
+          // Mark all steps complete
+          setSteps(prev => prev.map(step => ({ ...step, status: 'complete' })));
+          setIsAnalysisComplete(true);
+          setIsUploading(false);
+
+          // Fetch results
+          try {
+            const resultsResponse = await resultsService.getResults(session.proposalId);
+            if (resultsResponse.success && resultsResponse.results) {
+              const results = resultsResponse.results;
+              const issueCount = results.issues.length;
+              const criticalCount = results.issues.filter(i => i.severity === 'critical').length;
+
+              setMessages([{
+                role: 'bot',
+                content: `Analysis complete. I found ${issueCount} compliance issue${issueCount !== 1 ? 's' : ''} (${criticalCount} critical). The proposal has a ${results.overallScore}% compliance score. You can view the full details in the report panel.`,
+              }]);
+              setActiveTab('results');
+            }
+          } catch (err) {
+            console.error('Failed to fetch results:', err);
+          }
+        },
+        onError: (sessionId, error) => {
+          setSteps(prev => prev.map((step, idx) => {
+            const runningIdx = prev.findIndex(s => s.status === 'running');
+            if (idx === runningIdx || (runningIdx === -1 && idx === prev.length - 1)) {
+              return { ...step, status: 'error' };
+            }
+            return step;
+          }));
+          setUploadError(error);
+          setIsUploading(false);
+        },
+      });
+
+      // Start monitoring (polling for progress)
+      // The analysis service handles this internally
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      setUploadError(errorMessage);
+      setSteps(prev => prev.map((step, idx) => {
+        if (step.status === 'running') return { ...step, status: 'error' };
+        return step;
+      }));
+      setIsUploading(false);
+    }
+  };
 
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
@@ -146,12 +239,13 @@ const AgentInterface = ({ activeProject, startDemo }: AgentInterfaceProps) => {
     setInputValue('');
     setIsSending(true);
 
-    // Simulate Network / AI Delay
+    // For now, provide a contextual response
+    // In full implementation, this would query an AI for follow-up questions
     setTimeout(() => {
       const botMessage: Message = {
         role: 'bot',
         content:
-          "I'm currently running in demo mode, but fully functional I would query the vector database for specific regulatory nuances related to your question.",
+          "I can help you understand the compliance findings. Ask me about specific FAR/DFARS clauses, remediation steps, or how to address the identified issues.",
       };
       setMessages((prev) => [...prev, botMessage]);
       setIsSending(false);
@@ -163,7 +257,7 @@ const AgentInterface = ({ activeProject, startDemo }: AgentInterfaceProps) => {
       case 'coordinator':
         return <Zap size={14} className="text-blue-500" />;
       case 'rag':
-        return <SearchIcon size={14} className="text-purple-500" />; // Custom icon helper below
+        return <SearchIcon size={14} className="text-purple-500" />;
       case 'compliance':
         return <CheckCircle2 size={14} className="text-green-500" />;
       case 'writer':
@@ -173,7 +267,7 @@ const AgentInterface = ({ activeProject, startDemo }: AgentInterfaceProps) => {
     }
   };
 
-  // Helper for SearchIcon since it might not be imported or standard
+  // Helper for SearchIcon
   const SearchIcon = ({ size, className }: { size: number; className: string }) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -193,6 +287,19 @@ const AgentInterface = ({ activeProject, startDemo }: AgentInterfaceProps) => {
     </svg>
   );
 
+  const getStepIcon = (status: Step['status']) => {
+    switch (status) {
+      case 'complete':
+        return <CheckCircle2 size={20} className="text-green-500" />;
+      case 'running':
+        return <Loader2 size={20} className="text-blue-500 animate-spin" />;
+      case 'error':
+        return <AlertCircle size={20} className="text-red-500" />;
+      default:
+        return <div className="w-5 h-5 rounded-full border-2 border-gray-200" />;
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col h-full bg-white relative">
       <div className="flex-1 overflow-y-auto scrollbar-hide p-6">
@@ -206,28 +313,66 @@ const AgentInterface = ({ activeProject, startDemo }: AgentInterfaceProps) => {
                 AI Regulatory Assistant
               </h2>
               <p className="text-gray-500 max-w-md mx-auto mb-10 text-lg leading-relaxed">
-                I can analyze proposals against FAR/DFARS requirements using a multi-agent mesh
-                architecture.
+                Upload your proposal to analyze against FAR/DFARS requirements using our multi-agent compliance engine.
               </p>
 
-              <div className="flex justify-center max-w-2xl mx-auto text-left">
+              {/* File Upload Section */}
+              <div className="flex flex-col items-center gap-4 max-w-md mx-auto">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+
                 <button
                   type="button"
-                  onClick={startDemo}
-                  className="flex items-start gap-4 p-5 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md hover:bg-blue-50/30 transition-all group bg-white"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-4 p-5 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md hover:bg-blue-50/30 transition-all group bg-white w-full"
                 >
                   <div className="p-3 bg-blue-100 text-blue-600 rounded-lg group-hover:scale-110 transition-transform">
-                    <FileCheck size={24} />
+                    <Upload size={24} />
                   </div>
-                  <div>
-                    <div className="font-semibold text-slate-800 text-base">Run Analysis Demo</div>
+                  <div className="text-left">
+                    <div className="font-semibold text-slate-800 text-base">
+                      {selectedFile ? selectedFile.name : 'Select Proposal PDF'}
+                    </div>
                     <p className="text-sm text-gray-500 mt-1 leading-relaxed">
-                      Visualize the Multi-Agent workflow checking FAR/DFARS compliance.
+                      {selectedFile
+                        ? `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB`
+                        : 'Upload a PDF document for compliance analysis'
+                      }
                     </p>
                   </div>
                 </button>
 
+                {uploadError && (
+                  <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg w-full">
+                    <AlertCircle size={16} />
+                    {uploadError}
+                  </div>
+                )}
 
+                {selectedFile && (
+                  <Button
+                    onClick={handleUploadAndAnalyze}
+                    disabled={isUploading}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
+                  >
+                    {isUploading ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin mr-2" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        <FileCheck size={16} className="mr-2" />
+                        Start Compliance Analysis
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
             </div>
           )}
@@ -262,18 +407,13 @@ const AgentInterface = ({ activeProject, startDemo }: AgentInterfaceProps) => {
                   {steps.map((step) => (
                     <div
                       key={step.id}
-                      className={`flex gap-3 p-4 rounded-xl border transition-all ${step.status === 'running' ? 'bg-blue-50/50 border-blue-100 shadow-sm' : 'bg-white border-gray-100'}`}
+                      className={`flex gap-3 p-4 rounded-xl border transition-all ${step.status === 'running' ? 'bg-blue-50/50 border-blue-100 shadow-sm' :
+                        step.status === 'error' ? 'bg-red-50/50 border-red-100' :
+                          'bg-white border-gray-100'
+                        }`}
                     >
                       <div className="mt-1 shrink-0">
-                        {step.status === 'complete' && (
-                          <CheckCircle2 size={20} className="text-green-500" />
-                        )}
-                        {step.status === 'running' && (
-                          <Loader2 size={20} className="text-blue-500 animate-spin" />
-                        )}
-                        {step.status === 'pending' && (
-                          <div className="w-5 h-5 rounded-full border-2 border-gray-200" />
-                        )}
+                        {getStepIcon(step.status)}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -283,7 +423,10 @@ const AgentInterface = ({ activeProject, startDemo }: AgentInterfaceProps) => {
                           </span>
                         </div>
                         <div
-                          className={`text-sm font-medium ${step.status === 'pending' ? 'text-gray-400' : 'text-slate-700'}`}
+                          className={`text-sm font-medium ${step.status === 'pending' ? 'text-gray-400' :
+                            step.status === 'error' ? 'text-red-600' :
+                              'text-slate-700'
+                            }`}
                         >
                           {step.message}
                         </div>
@@ -299,7 +442,7 @@ const AgentInterface = ({ activeProject, startDemo }: AgentInterfaceProps) => {
                       <div>
                         <div className="font-semibold">Analysis Complete</div>
                         <div className="text-green-700">
-                          All agents have reported their findings.
+                          All compliance checks have finished. View results in the chat tab.
                         </div>
                       </div>
                     </div>
@@ -382,7 +525,7 @@ const AgentInterface = ({ activeProject, startDemo }: AgentInterfaceProps) => {
                 }
               }}
               placeholder={
-                activeProject ? 'Ask follow-up questions...' : 'Select a compliance check to start.'
+                activeProject ? 'Ask follow-up questions...' : 'Upload a proposal to start analysis.'
               }
               className="w-full p-4 pr-14 text-sm resize-none bg-white min-h-[56px] shadow-sm border-gray-200 focus:border-blue-400 focus:ring-blue-100 rounded-xl transition-all"
               rows={1}

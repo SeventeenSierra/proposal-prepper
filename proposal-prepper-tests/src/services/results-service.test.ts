@@ -1,5 +1,5 @@
 // @ts-nocheck
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: PolyForm-Strict-1.0.0
 // SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 /**
@@ -12,10 +12,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ComplianceStatus, IssueSeverity } from '@/components/results/types';
 import { ResultsService } from 'proposal-prepper-services/results-service';
-import type { StrandsApiClient } from './strands-api-client';
-import * as strandsApiModule from './strands-api-client';
+import { aiRouterClient } from 'proposal-prepper-services/ai-router-client';
 
-// Mock the Strands API client
+// Mock the AI Router client with all needed methods
 vi.mock('proposal-prepper-services/ai-router-client', () => ({
   aiRouterClient: {
     getResults: vi.fn(),
@@ -23,14 +22,15 @@ vi.mock('proposal-prepper-services/ai-router-client', () => ({
   },
 }));
 
+// Get the mocked client for test setup
+const mockAiRouterClient = vi.mocked(aiRouterClient);
+
 describe('ResultsService', () => {
   let resultsService: ResultsService;
-  let mockStrandsApi: Partial<StrandsApiClient>;
 
   beforeEach(() => {
     resultsService = new ResultsService();
     resultsService.clearCache();
-    mockStrandsApi = strandsApiModule.strandsApiClient;
     vi.clearAllMocks();
   });
 
@@ -69,7 +69,7 @@ describe('ResultsService', () => {
         },
       };
 
-      mockStrandsApi.getResults.mockResolvedValueOnce(mockApiResponse);
+      mockAiRouterClient.getResults.mockResolvedValueOnce(mockApiResponse);
 
       const result = await resultsService.getResults('proposal-456');
 
@@ -78,7 +78,7 @@ describe('ResultsService', () => {
       expect(result.results?.proposalId).toBe('proposal-456');
       expect(result.results?.status).toBe(ComplianceStatus.WARNING);
       expect(result.results?.issues).toHaveLength(1);
-      expect(mockStrandsApi.getResults).toHaveBeenCalledWith('proposal-456');
+      expect(mockAiRouterClient.getResults).toHaveBeenCalledWith('proposal-456');
     });
 
     it('should handle results retrieval failures', async () => {
@@ -87,7 +87,7 @@ describe('ResultsService', () => {
         error: 'Results not found',
       };
 
-      mockStrandsApi.getResults.mockResolvedValueOnce(mockResponse);
+      mockAiRouterClient.getResults.mockResolvedValueOnce(mockResponse);
 
       const result = await resultsService.getResults('proposal-456');
 
@@ -96,7 +96,7 @@ describe('ResultsService', () => {
     });
 
     it('should handle results retrieval exceptions', async () => {
-      mockStrandsApi.getResults.mockRejectedValueOnce(new Error('Network error'));
+      mockAiRouterClient.getResults.mockRejectedValueOnce(new Error('Network error'));
 
       const result = await resultsService.getResults('proposal-456');
 
@@ -121,16 +121,16 @@ describe('ResultsService', () => {
         },
       };
 
-      mockStrandsApi.getResults.mockResolvedValueOnce(mockApiResponse);
+      mockAiRouterClient.getResults.mockResolvedValueOnce(mockApiResponse);
 
       // First call - should hit API
       await resultsService.getResults('proposal-456');
-      expect(mockStrandsApi.getResults).toHaveBeenCalledTimes(1);
+      expect(mockAiRouterClient.getResults).toHaveBeenCalledTimes(1);
 
       // Second call - should use cache
       const result = await resultsService.getResults('proposal-456', true);
       expect(result.success).toBe(true);
-      expect(mockStrandsApi.getResults).toHaveBeenCalledTimes(1); // No additional API call
+      expect(mockAiRouterClient.getResults).toHaveBeenCalledTimes(1); // No additional API call
     });
 
     it('should bypass cache when requested', async () => {
@@ -150,15 +150,15 @@ describe('ResultsService', () => {
         },
       };
 
-      mockStrandsApi.getResults.mockResolvedValue(mockApiResponse);
+      mockAiRouterClient.getResults.mockResolvedValue(mockApiResponse);
 
       // First call
       await resultsService.getResults('proposal-456');
-      expect(mockStrandsApi.getResults).toHaveBeenCalledTimes(1);
+      expect(mockAiRouterClient.getResults).toHaveBeenCalledTimes(1);
 
       // Second call with cache bypass
       await resultsService.getResults('proposal-456', false);
-      expect(mockStrandsApi.getResults).toHaveBeenCalledTimes(2);
+      expect(mockAiRouterClient.getResults).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -182,25 +182,25 @@ describe('ResultsService', () => {
         remediation: 'Add the required FAR clause',
       };
 
-      mockStrandsApi.getIssueDetails.mockResolvedValueOnce({
+      mockAiRouterClient.getIssueDetails.mockResolvedValueOnce({
         success: true,
         data: mockIssue,
       });
 
-      const result = await resultsService.getIssueDetails('issue-1');
+      const result = await resultsService.getIssueDetails('session-123', 'issue-1');
 
       expect(result.success).toBe(true);
       expect(result.issue).toEqual(mockIssue);
-      expect(mockStrandsApi.getIssueDetails).toHaveBeenCalledWith('issue-1');
+      expect(mockAiRouterClient.getIssueDetails).toHaveBeenCalledWith('issue-1');
     });
 
     it('should handle issue details retrieval failures', async () => {
-      mockStrandsApi.getIssueDetails.mockResolvedValueOnce({
+      mockAiRouterClient.getIssueDetails.mockResolvedValueOnce({
         success: false,
         error: 'Issue not found',
       });
 
-      const result = await resultsService.getIssueDetails('issue-1');
+      const result = await resultsService.getIssueDetails('session-123', 'issue-1');
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Issue not found');
@@ -405,7 +405,7 @@ describe('ResultsService', () => {
         },
       };
 
-      mockStrandsApi.getResults.mockResolvedValueOnce(mockApiResponse);
+      mockAiRouterClient.getResults.mockResolvedValueOnce(mockApiResponse);
 
       const result = await resultsService.exportResults('proposal-456', 'json');
 
@@ -444,7 +444,7 @@ describe('ResultsService', () => {
         },
       };
 
-      mockStrandsApi.getResults.mockResolvedValueOnce(mockApiResponse);
+      mockAiRouterClient.getResults.mockResolvedValueOnce(mockApiResponse);
 
       const result = await resultsService.exportResults('proposal-456', 'csv');
 
@@ -455,7 +455,7 @@ describe('ResultsService', () => {
     });
 
     it('should handle export failures', async () => {
-      mockStrandsApi.getResults.mockResolvedValueOnce({
+      mockAiRouterClient.getResults.mockResolvedValueOnce({
         success: false,
         error: 'Results not found',
       });
@@ -485,7 +485,7 @@ describe('ResultsService', () => {
         },
       };
 
-      mockStrandsApi.getResults.mockResolvedValueOnce(mockApiResponse);
+      mockAiRouterClient.getResults.mockResolvedValueOnce(mockApiResponse);
 
       // Load results into cache
       await resultsService.getResults('proposal-456');
@@ -518,7 +518,7 @@ describe('ResultsService', () => {
         },
       };
 
-      mockStrandsApi.getResults.mockResolvedValue(mockApiResponse);
+      mockAiRouterClient.getResults.mockResolvedValue(mockApiResponse);
 
       // Load multiple results
       await resultsService.getResults('proposal-1');
@@ -558,7 +558,7 @@ describe('ResultsService', () => {
         },
       };
 
-      mockStrandsApi.getResults.mockResolvedValueOnce(mockApiResponse);
+      mockAiRouterClient.getResults.mockResolvedValueOnce(mockApiResponse);
 
       await resultsService.getResults('proposal-456');
 

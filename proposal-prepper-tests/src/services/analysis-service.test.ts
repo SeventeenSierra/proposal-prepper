@@ -1,5 +1,5 @@
 // @ts-nocheck
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: PolyForm-Strict-1.0.0
 // SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 /**
@@ -10,28 +10,32 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { type AnalysisSession, AnalysisStatus } from '../components/analysis/types';
-import {
-  createMockStrandsApiClient,
-  type MockStrandsApiClient,
-} from '../test-utils/mock-strands-api';
+import { type AnalysisSession, AnalysisStatus } from '@/components/analysis/types';
 import { type AnalysisRequest, AnalysisService } from 'proposal-prepper-services/analysis-service';
+import { aiRouterClient } from 'proposal-prepper-services/ai-router-client';
 
-// Mock the Strands API client
+// Mock the AI Router client with all needed methods
 vi.mock('proposal-prepper-services/ai-router-client', () => ({
   aiRouterClient: {
     startAnalysis: vi.fn(),
     getAnalysisStatus: vi.fn(),
+    cancelAnalysis: vi.fn(),
+    getResults: vi.fn(),
+    connectWebSocket: vi.fn(),
+    disconnectWebSocket: vi.fn(),
+    subscribeToAnalysisProgress: vi.fn(),
+    subscribeToAnalysisComplete: vi.fn(),
+    subscribeToErrors: vi.fn(),
   },
 }));
 
-// Mock the Strands integration utilities
-vi.mock('proposal-prepper-services/strands-integration', () => ({
-  strandsIntegration: {
+// Mock the AI Router integration utilities (correct module path)
+vi.mock('proposal-prepper-services/ai-router-integration', () => ({
+  aiRouterIntegration: {
     getStatus: vi.fn(() => ({ healthy: true })),
     getStatusMessage: vi.fn(() => 'Service healthy'),
   },
-  StrandsIntegrationUtils: {
+  AIRouterIntegrationUtils: {
     ensureServiceReady: vi.fn(() => Promise.resolve({ ready: true })),
     getServiceConfig: vi.fn(() => ({
       baseUrl: 'http://localhost:8080',
@@ -42,14 +46,15 @@ vi.mock('proposal-prepper-services/strands-integration', () => ({
   },
 }));
 
+// Get the mocked client for test setup
+const mockAiRouterClient = vi.mocked(aiRouterClient);
+
 describe('AnalysisService', () => {
   let analysisService: AnalysisService;
-  let mockStrandsApi: MockStrandsApiClient;
 
   beforeEach(() => {
     analysisService = new AnalysisService();
     analysisService.clearAllSessions();
-    mockStrandsApi = strandsApiModule.strandsApiClient as MockStrandsApiClient;
     vi.clearAllMocks();
   });
 
@@ -109,6 +114,7 @@ describe('AnalysisService', () => {
     it('should start analysis successfully', async () => {
       const request: AnalysisRequest = {
         proposalId: 'proposal-123',
+        documentId: 'doc-456',
         frameworks: ['FAR', 'DFARS'],
       };
 
@@ -124,16 +130,16 @@ describe('AnalysisService', () => {
         },
       };
 
-      mockStrandsApi.startAnalysis.mockResolvedValueOnce(mockResponse);
+      mockAiRouterClient.startAnalysis.mockResolvedValueOnce(mockResponse);
 
       const result = await analysisService.startAnalysis(request);
 
       expect(result.success).toBe(true);
       expect(result.sessionId).toBe('analysis-456');
-      expect(mockStrandsApi.startAnalysis).toHaveBeenCalledWith(
+      expect(mockAiRouterClient.startAnalysis).toHaveBeenCalledWith(
         'proposal-123',
         'proposal-123',
-        'proposal_proposal-123.pdf'
+        'doc-456'
       );
     });
 
@@ -147,7 +153,7 @@ describe('AnalysisService', () => {
         error: 'Server error',
       };
 
-      mockStrandsApi.startAnalysis.mockResolvedValueOnce(mockResponse);
+      mockAiRouterClient.startAnalysis.mockResolvedValueOnce(mockResponse);
 
       const result = await analysisService.startAnalysis(request);
 
@@ -160,7 +166,7 @@ describe('AnalysisService', () => {
         proposalId: 'proposal-123',
       };
 
-      mockStrandsApi.startAnalysis.mockRejectedValueOnce(new Error('Network error'));
+      mockAiRouterClient.startAnalysis.mockRejectedValueOnce(new Error('Network error'));
 
       const result = await analysisService.startAnalysis(request);
 
@@ -175,7 +181,7 @@ describe('AnalysisService', () => {
         proposalId: 'proposal-123',
       };
 
-      mockStrandsApi.startAnalysis.mockResolvedValueOnce({
+      mockAiRouterClient.startAnalysis.mockResolvedValueOnce({
         success: true,
         data: {
           id: 'analysis-456',
@@ -208,7 +214,7 @@ describe('AnalysisService', () => {
         },
       };
 
-      mockStrandsApi.getAnalysisStatus.mockResolvedValueOnce(mockResponse);
+      mockAiRouterClient.getAnalysisStatus.mockResolvedValueOnce(mockResponse);
 
       const session = await analysisService.getAnalysisStatus('analysis-456');
 
@@ -220,7 +226,7 @@ describe('AnalysisService', () => {
 
     it('should cancel analysis sessions', async () => {
       // First start an analysis
-      mockStrandsApi.startAnalysis.mockResolvedValueOnce({
+      mockAiRouterClient.startAnalysis.mockResolvedValueOnce({
         success: true,
         data: {
           id: 'analysis-456',
@@ -235,7 +241,7 @@ describe('AnalysisService', () => {
       await analysisService.startAnalysis({ proposalId: 'proposal-123' });
 
       // Then cancel it
-      mockStrandsApi.cancelAnalysis.mockResolvedValueOnce({ success: true });
+      mockAiRouterClient.cancelAnalysis.mockResolvedValueOnce({ success: true });
 
       const result = await analysisService.cancelAnalysis('analysis-456');
       const sessions = analysisService.getActiveSessions();
@@ -324,7 +330,7 @@ describe('AnalysisService', () => {
       });
 
       // Mock successful retry
-      mockStrandsApi.startAnalysis.mockResolvedValueOnce({
+      mockAiRouterClient.startAnalysis.mockResolvedValueOnce({
         success: true,
         data: {
           id: 'analysis-789',
@@ -371,21 +377,21 @@ describe('AnalysisService', () => {
 
   describe('Real-time Updates', () => {
     it('should subscribe to WebSocket updates', async () => {
-      mockStrandsApi.connectWebSocket.mockResolvedValueOnce(undefined);
-      mockStrandsApi.subscribeToAnalysisProgress.mockImplementationOnce(() => { });
-      mockStrandsApi.subscribeToAnalysisComplete.mockImplementationOnce(() => { });
-      mockStrandsApi.subscribeToErrors.mockImplementationOnce(() => { });
+      mockAiRouterClient.connectWebSocket.mockResolvedValueOnce(undefined);
+      mockAiRouterClient.subscribeToAnalysisProgress.mockImplementationOnce(() => { });
+      mockAiRouterClient.subscribeToAnalysisComplete.mockImplementationOnce(() => { });
+      mockAiRouterClient.subscribeToErrors.mockImplementationOnce(() => { });
 
       await analysisService.subscribeToRealTimeUpdates();
 
-      expect(mockStrandsApi.connectWebSocket).toHaveBeenCalled();
-      expect(mockStrandsApi.subscribeToAnalysisProgress).toHaveBeenCalled();
-      expect(mockStrandsApi.subscribeToAnalysisComplete).toHaveBeenCalled();
-      expect(mockStrandsApi.subscribeToErrors).toHaveBeenCalled();
+      expect(mockAiRouterClient.connectWebSocket).toHaveBeenCalled();
+      expect(mockAiRouterClient.subscribeToAnalysisProgress).toHaveBeenCalled();
+      expect(mockAiRouterClient.subscribeToAnalysisComplete).toHaveBeenCalled();
+      expect(mockAiRouterClient.subscribeToErrors).toHaveBeenCalled();
     });
 
     it('should handle WebSocket connection errors', async () => {
-      mockStrandsApi.connectWebSocket.mockRejectedValueOnce(new Error('Connection failed'));
+      mockAiRouterClient.connectWebSocket.mockRejectedValueOnce(new Error('Connection failed'));
 
       // Should not throw
       await expect(analysisService.subscribeToRealTimeUpdates()).resolves.toBeUndefined();
@@ -394,7 +400,7 @@ describe('AnalysisService', () => {
     it('should unsubscribe from WebSocket updates', () => {
       analysisService.unsubscribeFromRealTimeUpdates();
 
-      expect(mockStrandsApi.disconnectWebSocket).toHaveBeenCalled();
+      expect(mockAiRouterClient.disconnectWebSocket).toHaveBeenCalled();
     });
   });
 
