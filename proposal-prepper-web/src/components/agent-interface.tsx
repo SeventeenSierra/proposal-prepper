@@ -146,6 +146,8 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
 
       const uploadResult = await uploadService.uploadDocument(selectedFile);
 
+      console.log('Upload Result in AgentInterface:', JSON.stringify(uploadResult, null, 2));
+
       if (!uploadResult.success) {
         throw new Error(uploadResult.error || 'Upload failed');
       }
@@ -155,6 +157,8 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
         idx === 0 ? { ...step, status: 'complete' } :
           idx === 1 ? { ...step, status: 'running' } : step
       ));
+
+      console.log('Starting Analysis with Proposal ID:', uploadResult.sessionId);
 
       // Step 2-5: Start analysis
       const analysisResult = await analysisService.startAnalysis({

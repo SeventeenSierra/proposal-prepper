@@ -1,31 +1,6 @@
 {
   "pages": {
-    "/_app": [
-      "static/chunks/ef997_next_dist_compiled_aeaa5d7c._.js",
-      "static/chunks/ef997_next_dist_shared_lib_f6afa04c._.js",
-      "static/chunks/ef997_next_dist_client_6ab1bf32._.js",
-      "static/chunks/ef997_next_dist_d1b4c41f._.js",
-      "static/chunks/ef997_next_app_a061231a.js",
-      "static/chunks/[next]_entry_page-loader_ts_0c97a773._.js",
-      "static/chunks/e4fd4_react-dom_348120b2._.js",
-      "static/chunks/e70e2__pnpm_b6245b85._.js",
-      "static/chunks/[root-of-the-server]__b42a1c02._.js",
-      "static/chunks/proposal-prepper-web_pages__app_2da965e7._.js",
-      "static/chunks/turbopack-proposal-prepper-web_pages__app_9916e390._.js"
-    ],
-    "/_error": [
-      "static/chunks/ef997_next_dist_compiled_aeaa5d7c._.js",
-      "static/chunks/ef997_next_dist_shared_lib_51b221ae._.js",
-      "static/chunks/ef997_next_dist_client_6ab1bf32._.js",
-      "static/chunks/ef997_next_dist_c5cf00ea._.js",
-      "static/chunks/ef997_next_error_75a9c043.js",
-      "static/chunks/[next]_entry_page-loader_ts_5defcc74._.js",
-      "static/chunks/e4fd4_react-dom_348120b2._.js",
-      "static/chunks/e70e2__pnpm_b6245b85._.js",
-      "static/chunks/[root-of-the-server]__56b21842._.js",
-      "static/chunks/proposal-prepper-web_pages__error_2da965e7._.js",
-      "static/chunks/turbopack-proposal-prepper-web_pages__error_ddd4f54b._.js"
-    ]
+    "/_app": []
   },
   "devFiles": [],
   "polyfillFiles": [],
