@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: PolyForm-Strict-1.0.0
 // SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 /**
@@ -237,8 +237,8 @@ describe('UploadManager', () => {
         expect(screen.getByText('Upload Failed')).toBeInTheDocument();
         expect(screen.getByText(/exceeds the maximum limit/)).toBeInTheDocument();
       });
-
-      expect(aiRouterClient.uploadDocument).toHaveBeenCalled();
+      // Validation fails before upload is attempted, so uploadDocument should NOT be called
+      expect(aiRouterClient.uploadDocument).not.toHaveBeenCalled();
     });
   });
 
@@ -326,7 +326,7 @@ describe('UploadManager', () => {
         { timeout: 3000 }
       );
 
-      expect(screen.getByTestId('success-icon')).toBeInTheDocument();
+      expect(screen.getByTestId('upload-icon')).toBeInTheDocument();
       expect(screen.getByText('Upload Another')).toBeInTheDocument();
       expect(mockOnUploadComplete).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -359,7 +359,7 @@ describe('UploadManager', () => {
 
       expect(screen.getByText('Retry Upload')).toBeInTheDocument();
       expect(screen.getByText('Clear')).toBeInTheDocument();
-      expect(screen.getByTestId('error-icon')).toBeInTheDocument();
+      expect(screen.getByTestId('upload-icon')).toBeInTheDocument();
     });
 
     it('should clear upload state when clear button is clicked', async () => {

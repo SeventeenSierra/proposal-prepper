@@ -1,5 +1,5 @@
 // @ts-nocheck
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: PolyForm-Strict-1.0.0
 // SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 /**
@@ -10,16 +10,13 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { type UploadSession, UploadStatus } from '../types/app';
-import type { StrandsApiClient } from 'proposal-prepper-services/strands-api-client';
-import type { AIRouterClient } from 'proposal-prepper-services/ai-router-client';
-import * as strandsApiModule from 'proposal-prepper-services/strands-api-client';
-import * as aiRouterModule from 'proposal-prepper-services/ai-router-client';
-import { UploadService } from './upload-service';
+import { type UploadSession, UploadStatus } from '@/types/app';
+import { UploadService } from 'proposal-prepper-services/upload-service';
+import { aiRouterClient } from 'proposal-prepper-services/ai-router-client';
 
-// Mock the dependencies
-vi.mock('proposal-prepper-services/strands-api-client', () => ({
-  strandsApiClient: {
+// Mock the AI Router client with all needed methods
+vi.mock('proposal-prepper-services/ai-router-client', () => ({
+  aiRouterClient: {
     uploadDocument: vi.fn(),
     getUploadStatus: vi.fn(),
     connectWebSocket: vi.fn(),
@@ -28,27 +25,17 @@ vi.mock('proposal-prepper-services/strands-api-client', () => ({
   },
 }));
 
-vi.mock('proposal-prepper-services/ai-router-client', () => ({
-  aiRouterClient: {
-    uploadDocument: vi.fn(),
-    getUploadStatus: vi.fn(),
-  },
-}));
+// Get the mocked client
+const mockAiRouterClient = vi.mocked(aiRouterClient);
 
 describe('UploadService', () => {
   let uploadService: UploadService;
-  let mockStrandsApi: Partial<StrandsApiClient>;
-  let mockClient: Partial<AIRouterClient>;
 
   beforeEach(() => {
     uploadService = new UploadService();
     uploadService.clearAllSessions(); // Ensure clean state
     // Reset all mocks
     vi.clearAllMocks();
-
-    // Setup mock client
-    mockClient = aiRouterModule.aiRouterClient as unknown as AIRouterClient;
-    mockStrandsApi = strandsApiModule.strandsApiClient;
   });
 
   afterEach(() => {
@@ -129,13 +116,13 @@ describe('UploadService', () => {
         },
       };
 
-      mockStrandsApi.uploadDocument.mockResolvedValueOnce(mockResponse);
+      mockAiRouterClient.uploadDocument.mockResolvedValueOnce(mockResponse);
 
       const result = await uploadService.uploadDocument(file);
 
       expect(result.success).toBe(true);
       expect(result.sessionId).toBe('upload-123');
-      expect(mockStrandsApi.uploadDocument).toHaveBeenCalledWith(file, expect.any(Function));
+      expect(mockAiRouterClient.uploadDocument).toHaveBeenCalledWith(file, expect.any(Function));
     });
 
     it('should handle upload failures', async () => {
@@ -146,7 +133,7 @@ describe('UploadService', () => {
         error: 'Server error',
       };
 
-      mockStrandsApi.uploadDocument.mockResolvedValueOnce(mockResponse);
+      mockAiRouterClient.uploadDocument.mockResolvedValueOnce(mockResponse);
 
       const result = await uploadService.uploadDocument(file);
 
@@ -163,7 +150,7 @@ describe('UploadService', () => {
         onProgress: progressCallback,
       });
 
-      mockStrandsApi.uploadDocument.mockImplementationOnce(
+      mockAiRouterClient.uploadDocument.mockImplementationOnce(
         (file: File, onProgress: (progress: number) => void) => {
           // Simulate progress updates
           onProgress(25);
@@ -198,7 +185,7 @@ describe('UploadService', () => {
       uploadService.clearAllSessions(); // Ensure clean state
       const file = new File(['test content'], 'test.pdf', { type: 'application/pdf' });
 
-      mockStrandsApi.uploadDocument.mockRejectedValueOnce(new Error('Network error'));
+      mockAiRouterClient.uploadDocument.mockRejectedValueOnce(new Error('Network error'));
 
       const result = await uploadService.uploadDocument(file);
 
@@ -215,7 +202,7 @@ describe('UploadService', () => {
       const content = 'x'.repeat(2048); // Ensure file is large enough
       const file = new File([content], 'test.pdf', { type: 'application/pdf' });
 
-      mockStrandsApi.uploadDocument.mockResolvedValueOnce({
+      mockAiRouterClient.uploadDocument.mockResolvedValueOnce({
         success: true,
         data: {
           id: 'upload-123',
@@ -250,7 +237,7 @@ describe('UploadService', () => {
         },
       };
 
-      mockStrandsApi.getUploadStatus.mockResolvedValueOnce(mockResponse);
+      mockAiRouterClient.getUploadStatus.mockResolvedValueOnce(mockResponse);
 
       const session = await uploadService.getUploadStatus('upload-123');
 
@@ -330,17 +317,17 @@ describe('UploadService', () => {
 
   describe('Real-time Updates', () => {
     it('should subscribe to WebSocket updates', async () => {
-      mockStrandsApi.connectWebSocket.mockResolvedValueOnce(undefined);
-      mockStrandsApi.subscribeToUploadProgress.mockImplementationOnce(() => { });
+      mockAiRouterClient.connectWebSocket.mockResolvedValueOnce(undefined);
+      mockAiRouterClient.subscribeToUploadProgress.mockImplementationOnce(() => { });
 
       await uploadService.subscribeToRealTimeUpdates();
 
-      expect(mockStrandsApi.connectWebSocket).toHaveBeenCalled();
-      expect(mockStrandsApi.subscribeToUploadProgress).toHaveBeenCalled();
+      expect(mockAiRouterClient.connectWebSocket).toHaveBeenCalled();
+      expect(mockAiRouterClient.subscribeToUploadProgress).toHaveBeenCalled();
     });
 
     it('should handle WebSocket connection errors', async () => {
-      mockStrandsApi.connectWebSocket.mockRejectedValueOnce(new Error('Connection failed'));
+      mockAiRouterClient.connectWebSocket.mockRejectedValueOnce(new Error('Connection failed'));
 
       // Should not throw
       await expect(uploadService.subscribeToRealTimeUpdates()).resolves.toBeUndefined();
@@ -349,7 +336,7 @@ describe('UploadService', () => {
     it('should unsubscribe from WebSocket updates', () => {
       uploadService.unsubscribeFromRealTimeUpdates();
 
-      expect(mockStrandsApi.disconnectWebSocket).toHaveBeenCalled();
+      expect(mockAiRouterClient.disconnectWebSocket).toHaveBeenCalled();
     });
   });
 
@@ -367,7 +354,7 @@ describe('UploadService', () => {
 
       const file = new File(['test content'], 'test.pdf', { type: 'application/pdf' });
 
-      mockStrandsApi.uploadDocument.mockImplementationOnce(
+      mockAiRouterClient.uploadDocument.mockImplementationOnce(
         (file: File, onProgress: (progress: number) => void) => {
           onProgress(100);
           return Promise.resolve({

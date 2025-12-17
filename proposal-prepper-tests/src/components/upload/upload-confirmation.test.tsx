@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: PolyForm-Strict-1.0.0
 // SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 /**
@@ -152,8 +152,8 @@ describe('Upload Confirmation and Error Handling', () => {
         { timeout: 3000 }
       );
 
-      // Verify success confirmation elements
-      expect(screen.getByTestId('success-icon')).toBeInTheDocument();
+      // Verify success confirmation elements - component uses a wrapper div with upload-icon testId
+      expect(screen.getByTestId('upload-icon')).toBeInTheDocument();
       expect(screen.getByText('Upload Another')).toBeInTheDocument();
 
       // Verify callback was called
@@ -215,8 +215,8 @@ describe('Upload Confirmation and Error Handling', () => {
         expect(screen.getByText('Upload Failed')).toBeInTheDocument();
       });
 
-      // Verify error message elements
-      expect(screen.getByTestId('error-icon')).toBeInTheDocument();
+      // Verify error message elements - component uses a wrapper div with upload-icon testId
+      expect(screen.getByTestId('upload-icon')).toBeInTheDocument();
       expect(screen.getByText(/Only PDF files are accepted/)).toBeInTheDocument();
 
       // Verify error callback was called

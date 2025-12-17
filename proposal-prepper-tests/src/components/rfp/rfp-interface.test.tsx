@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: AGPL-3.0-or-later
+ * SPDX-License-Identifier: PolyForm-Strict-1.0.0
  * SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
  */
 
@@ -7,11 +7,20 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RFPInterface } from '@/components/rfp/rfp-interface';
 
-// Mock the strands API client
-vi.mock('proposal-prepper-services', () => ({
-  StrandsIntegrationUtils: {
+// Mock the ai-router API client
+vi.mock('proposal-prepper-services/ai-router-client', () => ({
+  aiRouterClient: {
     uploadDocument: vi.fn(),
-    startAnalysis: vi.fn(),
+    getUploadStatus: vi.fn(),
+    startAnalysis: vi.fn().mockResolvedValue({
+      success: true,
+      data: { id: 'analysis-123' },
+    }),
+    getAnalysisStatus: vi.fn(),
+    getResults: vi.fn().mockResolvedValue({
+      success: true,
+      data: { complianceScore: 92 },
+    }),
   },
 }));
 
@@ -62,22 +71,6 @@ describe('RFPInterface', () => {
   });
 
   it('should handle upload completion and start analysis', async () => {
-    const { aiRouterClient } = await import('proposal-prepper-services/ai-router-client');
-
-    // Mock successful analysis start
-    // biome-ignore lint/suspicious/noExplicitAny: Mock overrides
-    (aiRouterClient.startAnalysis as any).mockResolvedValue({
-      success: true,
-      data: { id: 'analysis-123' },
-    });
-
-    // Mock successful results
-    // biome-ignore lint/suspicious/noExplicitAny: Mock overrides
-    (aiRouterClient.getResults as any).mockResolvedValue({
-      success: true,
-      data: { complianceScore: 92 },
-    });
-
     render(<RFPInterface {...mockProps} />);
 
     // Trigger upload completion

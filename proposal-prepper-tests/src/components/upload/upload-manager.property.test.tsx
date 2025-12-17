@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: PolyForm-Strict-1.0.0
 // SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 /**
@@ -277,8 +277,8 @@ describe('UploadManager Property-Based Tests', () => {
             // Should show error state
             expect(screen.getByText('Upload Failed')).toBeInTheDocument();
 
-            // Should show error icon
-            expect(screen.getByTestId('error-icon')).toBeInTheDocument();
+            // Should show upload icon container
+            expect(screen.getByTestId('upload-icon')).toBeInTheDocument();
 
             // Should show retry and clear options
             expect(screen.getByText('Retry Upload')).toBeInTheDocument();

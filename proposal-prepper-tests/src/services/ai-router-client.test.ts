@@ -1,5 +1,5 @@
 // @ts-nocheck
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: PolyForm-Strict-1.0.0
 // SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 /**
@@ -10,17 +10,22 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { AIRouterClient, createAIRouterClientWithConfig } from 'proposal-prepper-services/ai-router-client';
+import {
+  AIRouterClient,
+  createAIRouterClientWithConfig,
+  type UploadSessionResponse,
+} from 'proposal-prepper-services/ai-router-client';
 import { apiConfig } from '@/config/app';
+import { apiCache } from '@/utils/performance';
 
 // Mock config to speed up retries and avoid timeouts
-vi.mock('../config/app', async () => {
-  const actual = await vi.importActual('../config/app');
+vi.mock('@/config/app', async () => {
+  const actual = await vi.importActual('@/config/app');
   return {
     ...actual,
     apiConfig: {
       // @ts-ignore
-      ...actual.apiConfig,
+      ...(actual as { apiConfig: object }).apiConfig,
       retryDelay: 10, // 10ms instead of 1000ms for tests
       maxRetries: 3,
       requestTimeout: 5000,
@@ -66,11 +71,11 @@ global.WebSocket = MockWebSocket as typeof WebSocket;
 
 // XMLHttpRequest will be mocked per test
 
-describe('StrandsApiClient', () => {
-  let client: StrandsApiClient;
+describe('AIRouterClient', () => {
+  let client: AIRouterClient;
 
   beforeEach(() => {
-    client = new StrandsApiClient('http://localhost:8080');
+    client = new AIRouterClient('http://localhost:8080');
     mockFetch.mockReset();
     // Clear API cache to ensure tests don't interfere with each other
     apiCache.clear();
