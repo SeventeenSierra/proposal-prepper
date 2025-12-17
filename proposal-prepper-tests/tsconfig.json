@@ -1,0 +1,42 @@
+{
+    "compilerOptions": {
+        "lib": [
+            "dom",
+            "dom.iterable",
+            "esnext"
+        ],
+        "allowJs": true,
+        "skipLibCheck": true,
+        "strict": true,
+        "noEmit": true,
+        "esModuleInterop": true,
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "jsx": "react-jsx",
+        "baseUrl": ".",
+        "paths": {
+            "@/test-utils/*": [
+                "src/test-utils/*"
+            ],
+            "@/*": [
+                "../proposal-prepper-web/src/*"
+            ],
+            "proposal-prepper-services/*": [
+                "../proposal-prepper-services/src/*"
+            ]
+        },
+        "target": "ES2017"
+    },
+    "include": [
+        "vitest-env.d.ts",
+        "src/**/*.ts",
+        "src/**/*.tsx"
+    ],
+    "exclude": [
+        "node_modules",
+        "**/*.stories.tsx",
+        "src/test-utils/storybook-decorators.tsx"
+    ]
+}
