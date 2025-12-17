@@ -1237,9 +1237,18 @@ class AIRouterClient {
     }
 }
 /**
- * Smart API client factory that switches between real and mock APIs
- * Now uses framework-independent configuration with Docker support
+ * Smart API client factory that routes requests appropriately
+ * 
+ * SECURITY: In browser context, always use same-origin (window.location.origin)
+ * to route requests through Next.js API routes. This avoids CORS issues and
+ * keeps the backend URL private. The Next.js server-side routes will proxy
+ * to the real backend.
  */ function createAIRouterClient() {
+    // In browser context, always use same-origin to avoid CORS
+    // Requests go through Next.js API routes which proxy to backend
+    if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
+    ;
+    // Server-side: use the configured backend URL
     // Import configuration dynamically to avoid circular dependencies
     let config;
     try {
@@ -2665,7 +2674,7 @@ function getStepIndexFromStatus(status) {
             return 0;
     }
 }
-const AgentInterface = ({ activeProject, startDemo })=>{
+const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, onAnalysisError })=>{
     const [activeTab, setActiveTab] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('steps');
     const [steps, setSteps] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])([]);
     const [messages, setMessages] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])([]);
@@ -2713,8 +2722,8 @@ const AgentInterface = ({ activeProject, startDemo })=>{
             })));
         setIsAnalysisComplete(false);
         setMessages([]);
-        // Trigger the parent's startDemo to set activeProject
-        startDemo();
+        // Notify parent that analysis is starting
+        onAnalysisStart();
         try {
             // Step 1: Upload document
             setSteps((prev)=>prev.map((step, idx)=>idx === 0 ? {
@@ -2776,7 +2785,8 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                     setIsUploading(false);
                     // Fetch results
                     try {
-                        const resultsResponse = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$results$2d$service$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["resultsService"].getResults(session.proposalId);
+                        // Use sessionId (Analysis Session ID) not proposalId
+                        const resultsResponse = await __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$services$2f$src$2f$results$2d$service$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["resultsService"].getResults(sessionId);
                         if (resultsResponse.success && resultsResponse.results) {
                             const results = resultsResponse.results;
                             const issueCount = results.issues.length;
@@ -2788,9 +2798,12 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                 }
                             ]);
                             setActiveTab('results');
+                            // Notify parent with the results
+                            onAnalysisComplete(results);
                         }
                     } catch (err) {
                         console.error('Failed to fetch results:', err);
+                        onAnalysisError('Failed to fetch analysis results');
                     }
                 },
                 onError: (sessionId, error)=>{
@@ -2806,6 +2819,7 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                         }));
                     setUploadError(error);
                     setIsUploading(false);
+                    onAnalysisError(error);
                 }
             });
         // Start monitoring (polling for progress)
@@ -2821,6 +2835,7 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                     return step;
                 }));
             setIsUploading(false);
+            onAnalysisError(errorMessage);
         }
     };
     const handleSendMessage = async ()=>{
@@ -2857,7 +2872,7 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                     className: "text-blue-500"
                 }, void 0, false, {
                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                    lineNumber: 258,
+                    lineNumber: 268,
                     columnNumber: 16
                 }, ("TURBOPACK compile-time value", void 0));
             case 'rag':
@@ -2866,7 +2881,7 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                     className: "text-purple-500"
                 }, void 0, false, {
                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                    lineNumber: 260,
+                    lineNumber: 270,
                     columnNumber: 16
                 }, ("TURBOPACK compile-time value", void 0));
             case 'compliance':
@@ -2875,7 +2890,7 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                     className: "text-green-500"
                 }, void 0, false, {
                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                    lineNumber: 262,
+                    lineNumber: 272,
                     columnNumber: 16
                 }, ("TURBOPACK compile-time value", void 0));
             case 'writer':
@@ -2884,7 +2899,7 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                     className: "text-orange-500"
                 }, void 0, false, {
                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                    lineNumber: 264,
+                    lineNumber: 274,
                     columnNumber: 16
                 }, ("TURBOPACK compile-time value", void 0));
             default:
@@ -2893,7 +2908,7 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                     className: "text-gray-500"
                 }, void 0, false, {
                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                    lineNumber: 266,
+                    lineNumber: 276,
                     columnNumber: 16
                 }, ("TURBOPACK compile-time value", void 0));
         }
@@ -2918,20 +2933,20 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                     r: "8"
                 }, void 0, false, {
                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                    lineNumber: 285,
+                    lineNumber: 295,
                     columnNumber: 7
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
                     d: "m21 21-4.3-4.3"
                 }, void 0, false, {
                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                    lineNumber: 286,
+                    lineNumber: 296,
                     columnNumber: 7
                 }, ("TURBOPACK compile-time value", void 0))
             ]
         }, void 0, true, {
             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-            lineNumber: 272,
+            lineNumber: 282,
             columnNumber: 5
         }, ("TURBOPACK compile-time value", void 0));
     const getStepIcon = (status)=>{
@@ -2942,7 +2957,7 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                     className: "text-green-500"
                 }, void 0, false, {
                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                    lineNumber: 293,
+                    lineNumber: 303,
                     columnNumber: 16
                 }, ("TURBOPACK compile-time value", void 0));
             case 'running':
@@ -2951,7 +2966,7 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                     className: "text-blue-500 animate-spin"
                 }, void 0, false, {
                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                    lineNumber: 295,
+                    lineNumber: 305,
                     columnNumber: 16
                 }, ("TURBOPACK compile-time value", void 0));
             case 'error':
@@ -2960,7 +2975,7 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                     className: "text-red-500"
                 }, void 0, false, {
                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                    lineNumber: 297,
+                    lineNumber: 307,
                     columnNumber: 16
                 }, ("TURBOPACK compile-time value", void 0));
             default:
@@ -2968,7 +2983,7 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                     className: "w-5 h-5 rounded-full border-2 border-gray-200"
                 }, void 0, false, {
                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                    lineNumber: 299,
+                    lineNumber: 309,
                     columnNumber: 16
                 }, ("TURBOPACK compile-time value", void 0));
         }
@@ -2990,12 +3005,12 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                         size: 40
                                     }, void 0, false, {
                                         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                        lineNumber: 310,
+                                        lineNumber: 320,
                                         columnNumber: 17
                                     }, ("TURBOPACK compile-time value", void 0))
                                 }, void 0, false, {
                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                    lineNumber: 309,
+                                    lineNumber: 319,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
@@ -3003,7 +3018,7 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                     children: "AI Regulatory Assistant"
                                 }, void 0, false, {
                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                    lineNumber: 312,
+                                    lineNumber: 322,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3011,7 +3026,7 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                     children: "Upload your proposal to analyze against FAR/DFARS requirements using our multi-agent compliance engine."
                                 }, void 0, false, {
                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                    lineNumber: 315,
+                                    lineNumber: 325,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3025,7 +3040,7 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                             className: "hidden"
                                         }, void 0, false, {
                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                            lineNumber: 321,
+                                            lineNumber: 331,
                                             columnNumber: 17
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3039,12 +3054,12 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                                         size: 24
                                                     }, void 0, false, {
                                                         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                        lineNumber: 335,
+                                                        lineNumber: 345,
                                                         columnNumber: 21
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 }, void 0, false, {
                                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                    lineNumber: 334,
+                                                    lineNumber: 344,
                                                     columnNumber: 19
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3055,7 +3070,7 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                                             children: selectedFile ? selectedFile.name : 'Select Proposal PDF'
                                                         }, void 0, false, {
                                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                            lineNumber: 338,
+                                                            lineNumber: 348,
                                                             columnNumber: 21
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3063,19 +3078,19 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                                             children: selectedFile ? `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB` : 'Upload a PDF document for compliance analysis'
                                                         }, void 0, false, {
                                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                            lineNumber: 341,
+                                                            lineNumber: 351,
                                                             columnNumber: 21
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                    lineNumber: 337,
+                                                    lineNumber: 347,
                                                     columnNumber: 19
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                            lineNumber: 329,
+                                            lineNumber: 339,
                                             columnNumber: 17
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         uploadError && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3085,14 +3100,14 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                                     size: 16
                                                 }, void 0, false, {
                                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                    lineNumber: 352,
+                                                    lineNumber: 362,
                                                     columnNumber: 21
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 uploadError
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                            lineNumber: 351,
+                                            lineNumber: 361,
                                             columnNumber: 19
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         selectedFile && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f40$17sierra$2b$ui$40$0$2e$2$2e$5_$40$types$2b$react$2d$dom$40$19$2e$2$2e$3_$40$types$2b$react$40$19$2e$2$2e$7_$5f40$types$2b$react$40$19$2e$2$2e$7_rea_bff31ee3cb8c4d9acca46be2761aafb7$2f$node_modules$2f40$17sierra$2f$ui$2f$dist$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["Button"], {
@@ -3106,7 +3121,7 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                                         className: "animate-spin mr-2"
                                                     }, void 0, false, {
                                                         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                        lineNumber: 365,
+                                                        lineNumber: 375,
                                                         columnNumber: 25
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     "Analyzing..."
@@ -3118,7 +3133,7 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                                         className: "mr-2"
                                                     }, void 0, false, {
                                                         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                        lineNumber: 370,
+                                                        lineNumber: 380,
                                                         columnNumber: 25
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     "Start Compliance Analysis"
@@ -3126,19 +3141,19 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                             }, void 0, true)
                                         }, void 0, false, {
                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                            lineNumber: 358,
+                                            lineNumber: 368,
                                             columnNumber: 19
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                    lineNumber: 320,
+                                    lineNumber: 330,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                            lineNumber: 308,
+                            lineNumber: 318,
                             columnNumber: 13
                         }, ("TURBOPACK compile-time value", void 0)),
                         activeProject && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3154,7 +3169,7 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                             children: "Live Analysis"
                                         }, void 0, false, {
                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                            lineNumber: 383,
+                                            lineNumber: 393,
                                             columnNumber: 17
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3164,13 +3179,13 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                             children: "Results & Chat"
                                         }, void 0, false, {
                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                            lineNumber: 393,
+                                            lineNumber: 403,
                                             columnNumber: 17
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                    lineNumber: 382,
+                                    lineNumber: 392,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 activeTab === 'steps' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3184,7 +3199,7 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                                         children: getStepIcon(step.status)
                                                     }, void 0, false, {
                                                         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                        lineNumber: 415,
+                                                        lineNumber: 425,
                                                         columnNumber: 23
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3199,13 +3214,13 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                                                         children: step.details
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                                        lineNumber: 421,
+                                                                        lineNumber: 431,
                                                                         columnNumber: 27
                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                                lineNumber: 419,
+                                                                lineNumber: 429,
                                                                 columnNumber: 25
                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3213,19 +3228,19 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                                                 children: step.message
                                                             }, void 0, false, {
                                                                 fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                                lineNumber: 425,
+                                                                lineNumber: 435,
                                                                 columnNumber: 25
                                                             }, ("TURBOPACK compile-time value", void 0))
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                        lineNumber: 418,
+                                                        lineNumber: 428,
                                                         columnNumber: 23
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 ]
                                             }, step.id, true, {
                                                 fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                lineNumber: 408,
+                                                lineNumber: 418,
                                                 columnNumber: 21
                                             }, ("TURBOPACK compile-time value", void 0))),
                                         isAnalysisComplete && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3237,12 +3252,12 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                                         size: 20
                                                     }, void 0, false, {
                                                         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                        lineNumber: 440,
+                                                        lineNumber: 450,
                                                         columnNumber: 25
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 }, void 0, false, {
                                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                    lineNumber: 439,
+                                                    lineNumber: 449,
                                                     columnNumber: 23
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3252,7 +3267,7 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                                             children: "Analysis Complete"
                                                         }, void 0, false, {
                                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                            lineNumber: 443,
+                                                            lineNumber: 453,
                                                             columnNumber: 25
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3260,25 +3275,25 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                                             children: "All compliance checks have finished. View results in the chat tab."
                                                         }, void 0, false, {
                                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                            lineNumber: 444,
+                                                            lineNumber: 454,
                                                             columnNumber: 25
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                    lineNumber: 442,
+                                                    lineNumber: 452,
                                                     columnNumber: 23
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                            lineNumber: 438,
+                                            lineNumber: 448,
                                             columnNumber: 21
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                    lineNumber: 406,
+                                    lineNumber: 416,
                                     columnNumber: 17
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 activeTab === 'results' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3294,12 +3309,12 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                                             className: "text-indigo-600"
                                                         }, void 0, false, {
                                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                            lineNumber: 463,
+                                                            lineNumber: 473,
                                                             columnNumber: 27
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     }, void 0, false, {
                                                         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                        lineNumber: 462,
+                                                        lineNumber: 472,
                                                         columnNumber: 25
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3309,18 +3324,18 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                                             children: message.content
                                                         }, void 0, false, {
                                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                            lineNumber: 471,
+                                                            lineNumber: 481,
                                                             columnNumber: 25
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     }, void 0, false, {
                                                         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                        lineNumber: 467,
+                                                        lineNumber: 477,
                                                         columnNumber: 23
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 ]
                                             }, index, true, {
                                                 fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                lineNumber: 456,
+                                                lineNumber: 466,
                                                 columnNumber: 21
                                             }, ("TURBOPACK compile-time value", void 0))),
                                         isSending && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3333,12 +3348,12 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                                         className: "text-indigo-600"
                                                     }, void 0, false, {
                                                         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                        lineNumber: 485,
+                                                        lineNumber: 495,
                                                         columnNumber: 25
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 }, void 0, false, {
                                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                    lineNumber: 484,
+                                                    lineNumber: 494,
                                                     columnNumber: 23
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3355,7 +3370,7 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                                                     }
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                                    lineNumber: 490,
+                                                                    lineNumber: 500,
                                                                     columnNumber: 29
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3365,7 +3380,7 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                                                     }
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                                    lineNumber: 494,
+                                                                    lineNumber: 504,
                                                                     columnNumber: 29
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3375,59 +3390,59 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                                                     }
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                                    lineNumber: 498,
+                                                                    lineNumber: 508,
                                                                     columnNumber: 29
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                            lineNumber: 489,
+                                                            lineNumber: 499,
                                                             columnNumber: 27
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     }, void 0, false, {
                                                         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                        lineNumber: 488,
+                                                        lineNumber: 498,
                                                         columnNumber: 25
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 }, void 0, false, {
                                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                                    lineNumber: 487,
+                                                    lineNumber: 497,
                                                     columnNumber: 23
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                            lineNumber: 483,
+                                            lineNumber: 493,
                                             columnNumber: 21
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             ref: messagesEndRef
                                         }, void 0, false, {
                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                            lineNumber: 507,
+                                            lineNumber: 517,
                                             columnNumber: 19
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                    lineNumber: 454,
+                                    lineNumber: 464,
                                     columnNumber: 17
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                            lineNumber: 381,
+                            lineNumber: 391,
                             columnNumber: 13
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                    lineNumber: 306,
+                    lineNumber: 316,
                     columnNumber: 9
                 }, ("TURBOPACK compile-time value", void 0))
             }, void 0, false, {
                 fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                lineNumber: 305,
+                lineNumber: 315,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3453,7 +3468,7 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                     disabled: !activeProject || isSending
                                 }, void 0, false, {
                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                    lineNumber: 518,
+                                    lineNumber: 528,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3468,29 +3483,29 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                             className: "animate-spin"
                                         }, void 0, false, {
                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                            lineNumber: 541,
+                                            lineNumber: 551,
                                             columnNumber: 30
                                         }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$561$2e$0_react$40$19$2e$2$2e$3$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$send$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Send$3e$__["Send"], {
                                             size: 16
                                         }, void 0, false, {
                                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                            lineNumber: 541,
+                                            lineNumber: 551,
                                             columnNumber: 79
                                         }, ("TURBOPACK compile-time value", void 0))
                                     }, void 0, false, {
                                         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                        lineNumber: 535,
+                                        lineNumber: 545,
                                         columnNumber: 15
                                     }, ("TURBOPACK compile-time value", void 0))
                                 }, void 0, false, {
                                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                    lineNumber: 534,
+                                    lineNumber: 544,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                            lineNumber: 517,
+                            lineNumber: 527,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3500,29 +3515,29 @@ const AgentInterface = ({ activeProject, startDemo })=>{
                                 children: "AI can make mistakes. Review generated compliance reports."
                             }, void 0, false, {
                                 fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                                lineNumber: 546,
+                                lineNumber: 556,
                                 columnNumber: 13
                             }, ("TURBOPACK compile-time value", void 0))
                         }, void 0, false, {
                             fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                            lineNumber: 545,
+                            lineNumber: 555,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                    lineNumber: 516,
+                    lineNumber: 526,
                     columnNumber: 9
                 }, ("TURBOPACK compile-time value", void 0))
             }, void 0, false, {
                 fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-                lineNumber: 515,
+                lineNumber: 525,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/proposal-prepper-web/src/components/agent-interface.tsx",
-        lineNumber: 304,
+        lineNumber: 314,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 };
@@ -4044,8 +4059,10 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2
 ;
 ;
 ;
-const ReportPreview = ({ isVisible })=>{
+const ReportPreview = ({ isVisible, results })=>{
     if (!isVisible) return null;
+    // Use results if available, otherwise fallback (or show nothing/loading if needed)
+    if (!results) return null;
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "flex-1 bg-slate-50 border-l border-gray-200 h-full flex flex-col animate-in slide-in-from-right duration-500 z-10 shadow-xl max-w-[50%] min-w-[500px]",
         children: [
@@ -4060,7 +4077,7 @@ const ReportPreview = ({ isVisible })=>{
                                 className: "text-blue-600"
                             }, void 0, false, {
                                 fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                lineNumber: 17,
+                                lineNumber: 22,
                                 columnNumber: 11
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4068,13 +4085,13 @@ const ReportPreview = ({ isVisible })=>{
                                 children: "Compliance Report Preview"
                             }, void 0, false, {
                                 fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                lineNumber: 18,
+                                lineNumber: 23,
                                 columnNumber: 11
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                        lineNumber: 16,
+                        lineNumber: 21,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4089,14 +4106,14 @@ const ReportPreview = ({ isVisible })=>{
                                         size: 12
                                     }, void 0, false, {
                                         fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                        lineNumber: 22,
+                                        lineNumber: 27,
                                         columnNumber: 13
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     " Fullscreen"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                lineNumber: 21,
+                                lineNumber: 26,
                                 columnNumber: 11
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f40$17sierra$2b$ui$40$0$2e$2$2e$5_$40$types$2b$react$2d$dom$40$19$2e$2$2e$3_$40$types$2b$react$40$19$2e$2$2e$7_$5f40$types$2b$react$40$19$2e$2$2e$7_rea_bff31ee3cb8c4d9acca46be2761aafb7$2f$node_modules$2f40$17sierra$2f$ui$2f$dist$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["Button"], {
@@ -4107,26 +4124,26 @@ const ReportPreview = ({ isVisible })=>{
                                         size: 12
                                     }, void 0, false, {
                                         fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                        lineNumber: 25,
+                                        lineNumber: 30,
                                         columnNumber: 13
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     " Download PDF"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                lineNumber: 24,
+                                lineNumber: 29,
                                 columnNumber: 11
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                        lineNumber: 20,
+                        lineNumber: 25,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                lineNumber: 15,
+                lineNumber: 20,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4144,7 +4161,7 @@ const ReportPreview = ({ isVisible })=>{
                                             children: "Compliance Validation Report"
                                         }, void 0, false, {
                                             fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                            lineNumber: 35,
+                                            lineNumber: 40,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -4152,13 +4169,13 @@ const ReportPreview = ({ isVisible })=>{
                                             children: "Generated by ATARC Compliance Agent"
                                         }, void 0, false, {
                                             fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                            lineNumber: 38,
+                                            lineNumber: 43,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                    lineNumber: 34,
+                                    lineNumber: 39,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4169,7 +4186,7 @@ const ReportPreview = ({ isVisible })=>{
                                             children: "Ref: PROP-2024-001"
                                         }, void 0, false, {
                                             fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                            lineNumber: 43,
+                                            lineNumber: 48,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4179,26 +4196,31 @@ const ReportPreview = ({ isVisible })=>{
                                                     size: 12
                                                 }, void 0, false, {
                                                     fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                                    lineNumber: 47,
+                                                    lineNumber: 52,
                                                     columnNumber: 17
                                                 }, ("TURBOPACK compile-time value", void 0)),
-                                                " Dec 04, 2025"
+                                                " ",
+                                                new Date().toLocaleDateString('en-US', {
+                                                    month: 'short',
+                                                    day: '2-digit',
+                                                    year: 'numeric'
+                                                })
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                            lineNumber: 46,
+                                            lineNumber: 51,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                    lineNumber: 42,
+                                    lineNumber: 47,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                            lineNumber: 33,
+                            lineNumber: 38,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4211,7 +4233,7 @@ const ReportPreview = ({ isVisible })=>{
                                             className: "h-8 w-1 bg-blue-600 rounded-full"
                                         }, void 0, false, {
                                             fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                            lineNumber: 55,
+                                            lineNumber: 60,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -4219,97 +4241,100 @@ const ReportPreview = ({ isVisible })=>{
                                             children: "Executive Summary"
                                         }, void 0, false, {
                                             fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                            lineNumber: 56,
+                                            lineNumber: 61,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                    lineNumber: 54,
+                                    lineNumber: 59,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                     className: "text-sm text-gray-600 leading-relaxed mb-6 font-serif text-justify",
                                     children: [
-                                        "The submitted proposal",
-                                        ' ',
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("strong", {
-                                            className: "text-slate-900",
-                                            children: '"Cloud Modernization Initiative"'
-                                        }, void 0, false, {
-                                            fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                            lineNumber: 62,
-                                            columnNumber: 15
-                                        }, ("TURBOPACK compile-time value", void 0)),
-                                        " has been analyzed against the current Federal Acquisition Regulation (FAR) and Defense Federal Acquisition Regulation Supplement (DFARS). The document scored a",
+                                        "The submitted proposal has been analyzed against the current Federal Acquisition Regulation (FAR) and Defense Federal Acquisition Regulation Supplement (DFARS). The document scored a",
                                         ' ',
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                            className: "bg-green-100 text-green-800 px-1 py-0.5 rounded font-bold",
-                                            children: "92% compliance rating"
-                                        }, void 0, false, {
+                                            className: `px-1 py-0.5 rounded font-bold ${results.overallScore >= 90 ? 'bg-green-100 text-green-800' : results.overallScore >= 70 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`,
+                                            children: [
+                                                results.overallScore,
+                                                "% compliance rating"
+                                            ]
+                                        }, void 0, true, {
                                             fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                            lineNumber: 65,
+                                            lineNumber: 68,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         "."
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                    lineNumber: 60,
+                                    lineNumber: 65,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "bg-green-50 border border-green-200 rounded-lg p-5 flex gap-4 items-start shadow-sm",
+                                    className: `border rounded-lg p-5 flex gap-4 items-start shadow-sm ${results.status === 'pass' ? 'bg-green-50 border-green-200' : results.status === 'warning' ? 'bg-yellow-50 border-yellow-200' : 'bg-red-50 border-red-200'}`,
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                            className: "bg-green-100 p-2 rounded-full shrink-0",
-                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$561$2e$0_react$40$19$2e$2$2e$3$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle2$3e$__["CheckCircle2"], {
+                                            className: `p-2 rounded-full shrink-0 ${results.status === 'pass' ? 'bg-green-100' : results.status === 'warning' ? 'bg-yellow-100' : 'bg-red-100'}`,
+                                            children: results.status === 'pass' ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$561$2e$0_react$40$19$2e$2$2e$3$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle2$3e$__["CheckCircle2"], {
                                                 size: 24,
                                                 className: "text-green-600"
                                             }, void 0, false, {
                                                 fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                                lineNumber: 73,
-                                                columnNumber: 17
+                                                lineNumber: 83,
+                                                columnNumber: 19
+                                            }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$561$2e$0_react$40$19$2e$2$2e$3$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$triangle$2d$alert$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertTriangle$3e$__["AlertTriangle"], {
+                                                size: 24,
+                                                className: results.status === 'warning' ? 'text-yellow-600' : 'text-red-600'
+                                            }, void 0, false, {
+                                                fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
+                                                lineNumber: 85,
+                                                columnNumber: 19
                                             }, ("TURBOPACK compile-time value", void 0))
                                         }, void 0, false, {
                                             fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                            lineNumber: 72,
+                                            lineNumber: 79,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("strong", {
-                                                    className: "text-green-900 block mb-1 text-base",
-                                                    children: "Status: Compliant"
-                                                }, void 0, false, {
+                                                    className: `block mb-1 text-base ${results.status === 'pass' ? 'text-green-900' : results.status === 'warning' ? 'text-yellow-900' : 'text-red-900'}`,
+                                                    children: [
+                                                        "Status: ",
+                                                        results.status.toUpperCase()
+                                                    ]
+                                                }, void 0, true, {
                                                     fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                                    lineNumber: 76,
+                                                    lineNumber: 89,
                                                     columnNumber: 17
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                    className: "text-sm text-green-800 leading-relaxed",
-                                                    children: "This proposal meets all mandatory formatting and inclusion requirements for the targeted solicitation. No critical blocking issues were found."
+                                                    className: `text-sm leading-relaxed ${results.status === 'pass' ? 'text-green-800' : results.status === 'warning' ? 'text-yellow-800' : 'text-red-800'}`,
+                                                    children: results.status === 'pass' ? 'This proposal meets all mandatory formatting and inclusion requirements for the targeted solicitation. No critical blocking issues were found.' : `This proposal has identified ${results.status === 'warning' ? 'warnings' : 'critical issues'} that require attention.`
                                                 }, void 0, false, {
                                                     fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                                    lineNumber: 77,
+                                                    lineNumber: 94,
                                                     columnNumber: 17
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                            lineNumber: 75,
+                                            lineNumber: 88,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                    lineNumber: 71,
+                                    lineNumber: 76,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                            lineNumber: 53,
+                            lineNumber: 58,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4322,7 +4347,7 @@ const ReportPreview = ({ isVisible })=>{
                                             className: "h-8 w-1 bg-slate-800 rounded-full"
                                         }, void 0, false, {
                                             fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                            lineNumber: 88,
+                                            lineNumber: 108,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -4330,20 +4355,26 @@ const ReportPreview = ({ isVisible })=>{
                                             children: "Detailed Findings"
                                         }, void 0, false, {
                                             fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                            lineNumber: 89,
+                                            lineNumber: 109,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                    lineNumber: 87,
+                                    lineNumber: 107,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "space-y-4",
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                            className: "group border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition-all bg-white",
+                                    children: results.issues.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "text-center p-8 text-gray-500 italic",
+                                        children: "No issues found."
+                                    }, void 0, false, {
+                                        fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
+                                        lineNumber: 116,
+                                        columnNumber: 17
+                                    }, ("TURBOPACK compile-time value", void 0)) : results.issues.map((issue)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            className: `group border rounded-lg p-4 hover:shadow-md transition-all ${issue.severity === 'critical' ? 'border-red-200 bg-red-50/30' : issue.severity === 'warning' ? 'border-yellow-200 bg-yellow-50/30' : 'border-gray-200 bg-white hover:border-blue-300'}`,
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                     className: "flex justify-between items-center mb-2",
@@ -4351,204 +4382,86 @@ const ReportPreview = ({ isVisible })=>{
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                             className: "flex items-center gap-2",
                                                             children: [
-                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                issue.regulation && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                     className: "bg-gray-100 text-gray-600 text-[10px] font-mono px-1.5 py-0.5 rounded border border-gray-200",
-                                                                    children: "FAR 52.204-24"
+                                                                    children: issue.regulation
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                                                    lineNumber: 99,
-                                                                    columnNumber: 21
+                                                                    lineNumber: 128,
+                                                                    columnNumber: 27
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                     className: "font-semibold text-sm text-slate-800",
-                                                                    children: "Telecommunications Representation"
+                                                                    children: issue.title
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                                                    lineNumber: 102,
-                                                                    columnNumber: 21
+                                                                    lineNumber: 132,
+                                                                    columnNumber: 25
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                                            lineNumber: 98,
-                                                            columnNumber: 19
+                                                            lineNumber: 126,
+                                                            columnNumber: 23
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f40$17sierra$2b$ui$40$0$2e$2$2e$5_$40$types$2b$react$2d$dom$40$19$2e$2$2e$3_$40$types$2b$react$40$19$2e$2$2e$7_$5f40$types$2b$react$40$19$2e$2$2e$7_rea_bff31ee3cb8c4d9acca46be2761aafb7$2f$node_modules$2f40$17sierra$2f$ui$2f$dist$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["Badge"], {
                                                             variant: "secondary",
-                                                            className: "bg-green-100 text-green-700 border-green-200 font-bold hover:bg-green-100",
-                                                            children: "PASS"
+                                                            className: `font-bold ${issue.severity === 'critical' ? 'bg-red-100 text-red-700 border-red-200' : issue.severity === 'warning' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : 'bg-blue-100 text-blue-700 border-blue-200'}`,
+                                                            children: issue.severity.toUpperCase()
                                                         }, void 0, false, {
                                                             fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                                            lineNumber: 106,
-                                                            columnNumber: 19
+                                                            lineNumber: 136,
+                                                            columnNumber: 23
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                                    lineNumber: 97,
-                                                    columnNumber: 17
-                                                }, ("TURBOPACK compile-time value", void 0)),
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                    className: "text-xs text-gray-500 pl-1 border-l-2 border-gray-200 ml-1",
-                                                    children: "Representation Regarding Certain Telecommunications and Video Surveillance Services or Equipment is present and signed by authorized representative."
-                                                }, void 0, false, {
-                                                    fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                                    lineNumber: 113,
-                                                    columnNumber: 17
-                                                }, ("TURBOPACK compile-time value", void 0))
-                                            ]
-                                        }, void 0, true, {
-                                            fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                            lineNumber: 96,
-                                            columnNumber: 15
-                                        }, ("TURBOPACK compile-time value", void 0)),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                            className: "group border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition-all bg-white",
-                                            children: [
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                    className: "flex justify-between items-center mb-2",
-                                                    children: [
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                            className: "flex items-center gap-2",
-                                                            children: [
-                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                    className: "bg-gray-100 text-gray-600 text-[10px] font-mono px-1.5 py-0.5 rounded border border-gray-200",
-                                                                    children: "FORMAT"
-                                                                }, void 0, false, {
-                                                                    fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                                                    lineNumber: 123,
-                                                                    columnNumber: 21
-                                                                }, ("TURBOPACK compile-time value", void 0)),
-                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                    className: "font-semibold text-sm text-slate-800",
-                                                                    children: "Biosketch Format (SciENcv)"
-                                                                }, void 0, false, {
-                                                                    fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                                                    lineNumber: 126,
-                                                                    columnNumber: 21
-                                                                }, ("TURBOPACK compile-time value", void 0))
-                                                            ]
-                                                        }, void 0, true, {
-                                                            fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                                            lineNumber: 122,
-                                                            columnNumber: 19
-                                                        }, ("TURBOPACK compile-time value", void 0)),
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f40$17sierra$2b$ui$40$0$2e$2$2e$5_$40$types$2b$react$2d$dom$40$19$2e$2$2e$3_$40$types$2b$react$40$19$2e$2$2e$7_$5f40$types$2b$react$40$19$2e$2$2e$7_rea_bff31ee3cb8c4d9acca46be2761aafb7$2f$node_modules$2f40$17sierra$2f$ui$2f$dist$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["Badge"], {
-                                                            variant: "secondary",
-                                                            className: "bg-green-100 text-green-700 border-green-200 font-bold hover:bg-green-100",
-                                                            children: "PASS"
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                                            lineNumber: 130,
-                                                            columnNumber: 19
-                                                        }, ("TURBOPACK compile-time value", void 0))
-                                                    ]
-                                                }, void 0, true, {
-                                                    fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                                    lineNumber: 121,
-                                                    columnNumber: 17
-                                                }, ("TURBOPACK compile-time value", void 0)),
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                    className: "text-xs text-gray-500 pl-1 border-l-2 border-gray-200 ml-1",
-                                                    children: "All personnel biosketches adhere to the required SciENcv structure and page limits."
-                                                }, void 0, false, {
-                                                    fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                                    lineNumber: 137,
-                                                    columnNumber: 17
-                                                }, ("TURBOPACK compile-time value", void 0))
-                                            ]
-                                        }, void 0, true, {
-                                            fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                            lineNumber: 120,
-                                            columnNumber: 15
-                                        }, ("TURBOPACK compile-time value", void 0)),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                            className: "group border border-yellow-200 rounded-lg p-4 bg-yellow-50/30 hover:shadow-md transition-all",
-                                            children: [
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                    className: "flex justify-between items-center mb-2",
-                                                    children: [
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                            className: "flex items-center gap-2",
-                                                            children: [
-                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                    className: "bg-yellow-100 text-yellow-800 text-[10px] font-mono px-1.5 py-0.5 rounded border border-yellow-200",
-                                                                    children: "REVIEW"
-                                                                }, void 0, false, {
-                                                                    fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                                                    lineNumber: 147,
-                                                                    columnNumber: 21
-                                                                }, ("TURBOPACK compile-time value", void 0)),
-                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                    className: "font-semibold text-sm text-yellow-900",
-                                                                    children: "Budget Justification"
-                                                                }, void 0, false, {
-                                                                    fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                                                    lineNumber: 150,
-                                                                    columnNumber: 21
-                                                                }, ("TURBOPACK compile-time value", void 0))
-                                                            ]
-                                                        }, void 0, true, {
-                                                            fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                                            lineNumber: 146,
-                                                            columnNumber: 19
-                                                        }, ("TURBOPACK compile-time value", void 0)),
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f40$17sierra$2b$ui$40$0$2e$2$2e$5_$40$types$2b$react$2d$dom$40$19$2e$2$2e$3_$40$types$2b$react$40$19$2e$2$2e$7_$5f40$types$2b$react$40$19$2e$2$2e$7_rea_bff31ee3cb8c4d9acca46be2761aafb7$2f$node_modules$2f40$17sierra$2f$ui$2f$dist$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["Badge"], {
-                                                            variant: "secondary",
-                                                            className: "bg-yellow-100 text-yellow-800 border-yellow-200 font-bold hover:bg-yellow-100",
-                                                            children: "WARNING"
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                                            lineNumber: 154,
-                                                            columnNumber: 19
-                                                        }, ("TURBOPACK compile-time value", void 0))
-                                                    ]
-                                                }, void 0, true, {
-                                                    fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                                    lineNumber: 145,
-                                                    columnNumber: 17
+                                                    lineNumber: 125,
+                                                    columnNumber: 21
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                    className: "flex gap-2 items-start pl-1 border-l-2 border-yellow-300 ml-1",
+                                                    className: `gap-2 items-start pl-1 border-l-2 ml-1 ${issue.severity === 'critical' ? 'border-red-300' : issue.severity === 'warning' ? 'border-yellow-300' : 'border-gray-200'}`,
                                                     children: [
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$561$2e$0_react$40$19$2e$2$2e$3$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$triangle$2d$alert$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertTriangle$3e$__["AlertTriangle"], {
-                                                            size: 14,
-                                                            className: "text-yellow-600 mt-0.5"
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                                            lineNumber: 162,
-                                                            columnNumber: 19
-                                                        }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                            className: "text-xs text-yellow-800",
-                                                            children: "Budget justification length is exactly at the limit (5 pages). Review for brevity recommended to avoid potential truncation checks."
+                                                            className: "text-xs text-gray-600 mb-1",
+                                                            children: issue.description
                                                         }, void 0, false, {
                                                             fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                                            lineNumber: 163,
-                                                            columnNumber: 19
+                                                            lineNumber: 149,
+                                                            columnNumber: 23
+                                                        }, ("TURBOPACK compile-time value", void 0)),
+                                                        issue.remediation && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                            className: "text-xs text-slate-500 italic mt-1 bg-white/50 p-1.5 rounded",
+                                                            children: [
+                                                                "Recommendation: ",
+                                                                issue.remediation
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
+                                                            lineNumber: 151,
+                                                            columnNumber: 25
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                                    lineNumber: 161,
-                                                    columnNumber: 17
+                                                    lineNumber: 146,
+                                                    columnNumber: 21
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
-                                        }, void 0, true, {
+                                        }, issue.id, true, {
                                             fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                            lineNumber: 144,
-                                            columnNumber: 15
-                                        }, ("TURBOPACK compile-time value", void 0))
-                                    ]
-                                }, void 0, true, {
+                                            lineNumber: 119,
+                                            columnNumber: 19
+                                        }, ("TURBOPACK compile-time value", void 0)))
+                                }, void 0, false, {
                                     fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                                    lineNumber: 94,
+                                    lineNumber: 114,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                            lineNumber: 86,
+                            lineNumber: 106,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4556,24 +4469,24 @@ const ReportPreview = ({ isVisible })=>{
                             children: "CONFIDENTIAL - PROPRIETARY INFORMATION - DO NOT DISTRIBUTE"
                         }, void 0, false, {
                             fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                            lineNumber: 172,
+                            lineNumber: 162,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                    lineNumber: 31,
+                    lineNumber: 36,
                     columnNumber: 9
                 }, ("TURBOPACK compile-time value", void 0))
             }, void 0, false, {
                 fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-                lineNumber: 30,
+                lineNumber: 35,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/proposal-prepper-web/src/components/report-preview.tsx",
-        lineNumber: 14,
+        lineNumber: 19,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 };
@@ -4603,32 +4516,32 @@ function App() {
     const [activeProject, setActiveProject] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
     const [showReport, setShowReport] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
     const [isSidebarOpen, setSidebarOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(true);
-    // Demo Trigger
-    const startDemo = ()=>{
-        setActiveProject('demo-running');
-        // Report appears after animation finishes (approx 5 steps * 1.5s = 7.5s, cutting short for UX)
-        setTimeout(()=>{
-            setShowReport(true);
-        }, 7500);
-    };
-    const resetDemo = ()=>{
+    const [analysisResults, setAnalysisResults] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
+    // Called when analysis starts (file selected and upload begins)
+    const handleAnalysisStart = (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useCallback"])(()=>{
+        setActiveProject('analyzing');
+        setShowReport(false);
+        setAnalysisResults(null);
+    }, []);
+    // Called when analysis completes successfully with results
+    const handleAnalysisComplete = (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useCallback"])((results)=>{
+        setAnalysisResults(results);
+        setShowReport(true);
+    }, []);
+    // Called when analysis fails
+    const handleAnalysisError = (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useCallback"])((error)=>{
+        console.error('Analysis failed:', error);
+    // Keep activeProject set so user can see the error state
+    }, []);
+    const resetDemo = (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useCallback"])(()=>{
         setActiveProject(null);
         setShowReport(false);
+        setAnalysisResults(null);
         if (!isSidebarOpen) {
             setSidebarOpen(true);
         }
-    };
-    (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
-        if (activeProject) {
-            setShowReport(false);
-            if (activeProject !== 'demo-running') {
-                setTimeout(()=>{
-                    setShowReport(true);
-                }, 500);
-            }
-        }
     }, [
-        activeProject
+        isSidebarOpen
     ]);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "h-screen bg-background flex flex-col font-body text-slate-800 overflow-hidden",
@@ -4638,7 +4551,7 @@ function App() {
                 isSidebarOpen: isSidebarOpen
             }, void 0, false, {
                 fileName: "[project]/proposal-prepper-web/src/app/page.tsx",
-                lineNumber: 44,
+                lineNumber: 46,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4651,7 +4564,7 @@ function App() {
                         isOpen: isSidebarOpen
                     }, void 0, false, {
                         fileName: "[project]/proposal-prepper-web/src/app/page.tsx",
-                        lineNumber: 47,
+                        lineNumber: 49,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
@@ -4659,35 +4572,38 @@ function App() {
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$src$2f$components$2f$agent$2d$interface$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
                                 activeProject: activeProject,
-                                startDemo: startDemo
+                                onAnalysisStart: handleAnalysisStart,
+                                onAnalysisComplete: handleAnalysisComplete,
+                                onAnalysisError: handleAnalysisError
                             }, void 0, false, {
                                 fileName: "[project]/proposal-prepper-web/src/app/page.tsx",
-                                lineNumber: 55,
+                                lineNumber: 57,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$28$2e$5_$40$opentelemetry$2b$api$40$1$2e$9$2e$0_$40$playwright$2b$test$40$1$2e$57$2e$0_react$2d$_71e9c2d2cf8cafae81b603ed19f33f35$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$proposal$2d$prepper$2d$web$2f$src$2f$components$2f$report$2d$preview$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
-                                isVisible: showReport
+                                isVisible: showReport,
+                                results: analysisResults
                             }, void 0, false, {
                                 fileName: "[project]/proposal-prepper-web/src/app/page.tsx",
-                                lineNumber: 56,
+                                lineNumber: 63,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/proposal-prepper-web/src/app/page.tsx",
-                        lineNumber: 54,
+                        lineNumber: 56,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/proposal-prepper-web/src/app/page.tsx",
-                lineNumber: 46,
+                lineNumber: 48,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/proposal-prepper-web/src/app/page.tsx",
-        lineNumber: 43,
+        lineNumber: 45,
         columnNumber: 5
     }, this);
 }

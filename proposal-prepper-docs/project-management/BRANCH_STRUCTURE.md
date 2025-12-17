@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+<!-- SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC -->
+
 # Proposal Prepper Branch Structure Comparison
 
 Generated: 2025-12-14

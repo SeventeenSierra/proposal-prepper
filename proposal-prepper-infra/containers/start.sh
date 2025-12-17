@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# SPDX-License-Identifier: PolyForm-Perimeter-1.0.0
+# SPDX-License-Identifier: PolyForm-Strict-1.0.0
 # SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 # Docker Compose startup script for Proposal Prepper

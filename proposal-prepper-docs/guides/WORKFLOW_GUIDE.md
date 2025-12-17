@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+<!-- SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC -->
+
 # Proposal Prepper - Development Workflow Guide
 
 **Last Updated:** December 14, 2025  

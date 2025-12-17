@@ -101,6 +101,14 @@ function toNextResponse<T>(apiResponse: ApiResponse<T>, successStatus = 200): Ne
  */
 async function isServiceAvailable(): Promise<boolean> {
   try {
+    const baseUrl = aiRouterClient.getBaseUrl();
+    // If client points to localhost:3000 (Next.js default), we are self-referencing in dev mode.
+    // In this case, we should use the internal MockApiServer instead of making HTTP calls to ourselves (which causes recursion).
+    if (baseUrl.includes('localhost:3000')) {
+      console.log('DETECTED LOCALHOST LOOP - FORCING MOCK');
+      return false;
+    }
+
     const healthCheck = await aiRouterClient.healthCheck();
     return (
       healthCheck.success &&
@@ -146,6 +154,7 @@ export class AIRouterHandlers {
 
           const analysisResult = await aiRouterClient.startAnalysis(
             uploadResult.data.id,
+            uploadResult.data.id, // Use proposalId as documentId
             uploadResult.data.filename,
             uploadResult.data.s3Key
           );
@@ -201,12 +210,22 @@ export class AIRouterHandlers {
    */
   static async handleAnalysisStart(request: NextRequest): Promise<NextResponse> {
     const body = await extractJsonFromRequest<{
-      proposalId: string;
+      proposalId?: string;
+      proposal_id?: string;
       documentId?: string;
+      document_id?: string;
       filename?: string;
     }>(request);
 
-    if (!body?.proposalId) {
+    console.log('Analysis Start Request Body:', JSON.stringify(body));
+
+    const proposalId = body?.proposalId || body?.proposal_id;
+    const documentId = body?.documentId || body?.document_id;
+    const filename = body?.filename;
+
+    console.log(`Extracted proposalId: ${proposalId}`);
+
+    if (!proposalId) {
       return NextResponse.json(
         { success: false, error: 'Proposal ID is required', code: 'MISSING_PROPOSAL_ID' },
         { status: 400 }
@@ -220,21 +239,21 @@ export class AIRouterHandlers {
         console.log('Using real AI Router service for analysis');
 
         const result = await aiRouterClient.startAnalysis(
-          body.proposalId,
-          body.documentId,
-          body.filename
+          proposalId,
+          documentId,
+          filename
         );
 
         return toNextResponse(result, 201);
       } else {
         console.log('Service unavailable, using mock fallback');
-        const result = await mockApiServer.handleAnalysisStart(body.proposalId);
+        const result = await mockApiServer.handleAnalysisStart(proposalId);
         return toNextResponse(result, 201);
       }
     } catch (error) {
       console.error('Analysis start error:', error);
       try {
-        const fallbackResult = await mockApiServer.handleAnalysisStart(body.proposalId);
+        const fallbackResult = await mockApiServer.handleAnalysisStart(proposalId);
         return toNextResponse(fallbackResult, 201);
       } catch (fallbackError) {
         return NextResponse.json(

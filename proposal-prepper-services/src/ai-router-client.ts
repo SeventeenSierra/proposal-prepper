@@ -749,10 +749,21 @@ export class AIRouterClient {
 }
 
 /**
- * Smart API client factory that switches between real and mock APIs
- * Now uses framework-independent configuration with Docker support
+ * Smart API client factory that routes requests appropriately
+ * 
+ * SECURITY: In browser context, always use same-origin (window.location.origin)
+ * to route requests through Next.js API routes. This avoids CORS issues and
+ * keeps the backend URL private. The Next.js server-side routes will proxy
+ * to the real backend.
  */
 function createAIRouterClient() {
+  // In browser context, always use same-origin to avoid CORS
+  // Requests go through Next.js API routes which proxy to backend
+  if (typeof window !== 'undefined') {
+    return new AIRouterClient(window.location.origin);
+  }
+
+  // Server-side: use the configured backend URL
   // Import configuration dynamically to avoid circular dependencies
   let config;
   try {

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /*
- * SPDX-License-Identifier: PolyForm-Perimeter-1.0.0
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  * SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
  */
 
