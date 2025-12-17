@@ -11,13 +11,17 @@ export default function App() {
   const [showReport, setShowReport] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
 
-  // Demo Trigger
-  const startDemo = () => {
-    setActiveProject('demo-running');
-    // Report appears after animation finishes (approx 5 steps * 1.5s = 7.5s, cutting short for UX)
-    setTimeout(() => {
-      setShowReport(true);
-    }, 7500);
+  // Project Trigger
+  const startDemo = (projectId: string = 'demo-running') => {
+    setActiveProject(projectId);
+
+    // Only simulate report appearance if it's the demo running
+    if (projectId === 'demo-running') {
+      // Report appears after animation finishes (approx 5 steps * 1.5s = 7.5s, cutting short for UX)
+      setTimeout(() => {
+        setShowReport(true);
+      }, 7500);
+    }
   };
 
   const resetDemo = () => {
@@ -30,12 +34,23 @@ export default function App() {
 
   useEffect(() => {
     if (activeProject) {
-      setShowReport(false);
-      if (activeProject !== 'demo-running') {
-        setTimeout(() => {
-          setShowReport(true);
-        }, 500);
+      // Don't auto-show report for real projects until analysis is complete
+      // (This will be handled by the AgentInterface updating the state eventually,
+      // but for now we rely on the component's internal state)
+      if (activeProject === 'demo-running') {
+        setShowReport(false);
       }
+      // For real projects, we might want to let AgentInterface control when report shows
+      // Currently AgentInterface doesn't bubble up "analysis complete" to here directly
+      // except via side effects.
+      // We will let AgentInterface handle the "Analysis Complete" message, and the
+      // user can click to view report, or we can add a callback prop later.
+      // For now, keeping existing behavior for non-demo projects might be safer
+      // to ensure UI consistency if they expect immediate feedback,
+      // but the requirement said "report page ... shows dummy data even if pdf didn't finish".
+      // So we should NOT show it immediately.
+
+      setShowReport(false);
     }
   }, [activeProject]);
 

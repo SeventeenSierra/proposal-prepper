@@ -23,7 +23,7 @@ type Message = {
 
 type AgentInterfaceProps = {
   activeProject: string | null;
-  startDemo: () => void;
+  startDemo: (projectId?: string) => void;
 };
 
 // Map analysis status to step information
@@ -132,9 +132,6 @@ const AgentInterface = ({ activeProject, startDemo }: AgentInterfaceProps) => {
     setIsAnalysisComplete(false);
     setMessages([]);
 
-    // Trigger the parent's startDemo to set activeProject
-    startDemo();
-
     try {
       // Step 1: Upload document
       setSteps(prev => prev.map((step, idx) =>
@@ -152,6 +149,10 @@ const AgentInterface = ({ activeProject, startDemo }: AgentInterfaceProps) => {
         idx === 0 ? { ...step, status: 'complete' } :
           idx === 1 ? { ...step, status: 'running' } : step
       ));
+
+      // Trigger the parent's startDemo (which activates the project view)
+      // Pass the session ID so it's not treated as a demo
+      startDemo(uploadResult.sessionId);
 
       // Step 2-5: Start analysis
       const analysisResult = await analysisService.startAnalysis({

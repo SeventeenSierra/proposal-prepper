@@ -95,6 +95,19 @@ function shouldUseMockApi(): boolean {
 
   // Development mode defaults to mock
   if (getEnvVar('NODE_ENV') === 'development') {
+    // For this specific task, we want to allow connecting to the real backend in dev
+    // if a flag is set, or default to false to test the integration.
+    // The user requested: "important that the app uses the airouter(traffic cop) and not the ai directly"
+    // and "with the backend up and working".
+
+    // So if STRANDS_API_URL or STRANDS_SERVICE_URL is set, we should probably prefer it?
+    // But currently the code below handles that.
+
+    // To enable real backend usage by default in dev if env vars are present:
+    if (getEnvVar('STRANDS_API_URL') || getEnvVar('STRANDS_SERVICE_URL')) {
+        return false;
+    }
+
     return true;
   }
 
