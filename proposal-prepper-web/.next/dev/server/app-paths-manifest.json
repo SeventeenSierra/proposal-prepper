@@ -1,3 +1,6 @@
 {
+  "/api/analysis/start/route": "app/api/analysis/start/route.js",
+  "/api/documents/upload/route": "app/api/documents/upload/route.js",
+  "/api/health/route": "app/api/health/route.js",
   "/page": "app/page.js"
 }

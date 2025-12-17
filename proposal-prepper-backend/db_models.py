@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: PolyForm-Strict-1.0.0
+# SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
+
 """
 SQLAlchemy database models for the Strands service.
 

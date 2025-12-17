@@ -1,4 +1,4 @@
--- SPDX-License-Identifier: PolyForm-Perimeter-1.0.0
+-- SPDX-License-Identifier: PolyForm-Strict-1.0.0
 -- SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 -- Seed database with document metadata from src/seed-data PDFs

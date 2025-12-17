@@ -7,6 +7,7 @@ import { uploadService } from 'proposal-prepper-services/upload-service';
 import { analysisService } from 'proposal-prepper-services/analysis-service';
 import { resultsService } from 'proposal-prepper-services/results-service';
 import { AnalysisStatus } from '@/components/analysis/types';
+import type { AnalysisResults } from '@/components/results/types';
 
 type Step = {
   id: number;
@@ -23,7 +24,9 @@ type Message = {
 
 type AgentInterfaceProps = {
   activeProject: string | null;
-  startDemo: () => void;
+  onAnalysisStart: () => void;
+  onAnalysisComplete: (results: AnalysisResults) => void;
+  onAnalysisError: (error: string) => void;
 };
 
 // Map analysis status to step information
@@ -85,7 +88,7 @@ function getStepIndexFromStatus(status: AnalysisStatus): number {
   }
 }
 
-const AgentInterface = ({ activeProject, startDemo }: AgentInterfaceProps) => {
+const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, onAnalysisError }: AgentInterfaceProps) => {
   const [activeTab, setActiveTab] = useState<'steps' | 'results'>('steps');
   const [steps, setSteps] = useState<Step[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -132,8 +135,8 @@ const AgentInterface = ({ activeProject, startDemo }: AgentInterfaceProps) => {
     setIsAnalysisComplete(false);
     setMessages([]);
 
-    // Trigger the parent's startDemo to set activeProject
-    startDemo();
+    // Notify parent that analysis is starting
+    onAnalysisStart();
 
     try {
       // Step 1: Upload document
@@ -188,7 +191,8 @@ const AgentInterface = ({ activeProject, startDemo }: AgentInterfaceProps) => {
 
           // Fetch results
           try {
-            const resultsResponse = await resultsService.getResults(session.proposalId);
+            // Use sessionId (Analysis Session ID) not proposalId
+            const resultsResponse = await resultsService.getResults(sessionId);
             if (resultsResponse.success && resultsResponse.results) {
               const results = resultsResponse.results;
               const issueCount = results.issues.length;
@@ -199,9 +203,13 @@ const AgentInterface = ({ activeProject, startDemo }: AgentInterfaceProps) => {
                 content: `Analysis complete. I found ${issueCount} compliance issue${issueCount !== 1 ? 's' : ''} (${criticalCount} critical). The proposal has a ${results.overallScore}% compliance score. You can view the full details in the report panel.`,
               }]);
               setActiveTab('results');
+
+              // Notify parent with the results
+              onAnalysisComplete(results);
             }
           } catch (err) {
             console.error('Failed to fetch results:', err);
+            onAnalysisError('Failed to fetch analysis results');
           }
         },
         onError: (sessionId, error) => {
@@ -214,6 +222,7 @@ const AgentInterface = ({ activeProject, startDemo }: AgentInterfaceProps) => {
           }));
           setUploadError(error);
           setIsUploading(false);
+          onAnalysisError(error);
         },
       });
 
@@ -228,6 +237,7 @@ const AgentInterface = ({ activeProject, startDemo }: AgentInterfaceProps) => {
         return step;
       }));
       setIsUploading(false);
+      onAnalysisError(errorMessage);
     }
   };
 

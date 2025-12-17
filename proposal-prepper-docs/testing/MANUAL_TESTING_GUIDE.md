@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+<!-- SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC -->
+
 # Manual Testing Guide: Proposal Prepper UI Workflow
 
 This guide walks you through testing the complete end-to-end workflow of the Proposal Prepper application.

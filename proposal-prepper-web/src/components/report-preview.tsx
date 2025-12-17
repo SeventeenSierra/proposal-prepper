@@ -2,13 +2,18 @@
 
 import { AlertTriangle, Calendar, CheckCircle2, Download, FileText, Maximize2 } from 'lucide-react';
 import { Badge, Button } from '@17sierra/ui';
+import type { AnalysisResults, ComplianceIssue } from '@/components/results/types';
 
 type ReportPreviewProps = {
   isVisible: boolean;
+  results?: AnalysisResults | null;
 };
 
-const ReportPreview = ({ isVisible }: ReportPreviewProps) => {
+const ReportPreview = ({ isVisible, results }: ReportPreviewProps) => {
   if (!isVisible) return null;
+
+  // Use results if available, otherwise fallback (or show nothing/loading if needed)
+  if (!results) return null;
 
   return (
     <div className="flex-1 bg-slate-50 border-l border-gray-200 h-full flex flex-col animate-in slide-in-from-right duration-500 z-10 shadow-xl max-w-[50%] min-w-[500px]">
@@ -44,7 +49,7 @@ const ReportPreview = ({ isVisible }: ReportPreviewProps) => {
                 Ref: PROP-2024-001
               </div>
               <div className="text-sm text-gray-500 flex items-center justify-end gap-1.5">
-                <Calendar size={12} /> Dec 04, 2025
+                <Calendar size={12} /> {new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}
               </div>
             </div>
           </div>
@@ -58,25 +63,40 @@ const ReportPreview = ({ isVisible }: ReportPreviewProps) => {
               </h3>
             </div>
             <p className="text-sm text-gray-600 leading-relaxed mb-6 font-serif text-justify">
-              The submitted proposal{' '}
-              <strong className="text-slate-900">"Cloud Modernization Initiative"</strong> has been
-              analyzed against the current Federal Acquisition Regulation (FAR) and Defense Federal
-              Acquisition Regulation Supplement (DFARS). The document scored a{' '}
-              <span className="bg-green-100 text-green-800 px-1 py-0.5 rounded font-bold">
-                92% compliance rating
+              The submitted proposal has been analyzed against the current Federal Acquisition Regulation (FAR)
+              and Defense Federal Acquisition Regulation Supplement (DFARS). The document scored a{' '}
+              <span className={`px-1 py-0.5 rounded font-bold ${results.overallScore >= 90 ? 'bg-green-100 text-green-800' :
+                  results.overallScore >= 70 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
+                }`}>
+                {results.overallScore}% compliance rating
               </span>
               .
             </p>
 
-            <div className="bg-green-50 border border-green-200 rounded-lg p-5 flex gap-4 items-start shadow-sm">
-              <div className="bg-green-100 p-2 rounded-full shrink-0">
-                <CheckCircle2 size={24} className="text-green-600" />
+            <div className={`border rounded-lg p-5 flex gap-4 items-start shadow-sm ${results.status === 'pass' ? 'bg-green-50 border-green-200' :
+                results.status === 'warning' ? 'bg-yellow-50 border-yellow-200' : 'bg-red-50 border-red-200'
+              }`}>
+              <div className={`p-2 rounded-full shrink-0 ${results.status === 'pass' ? 'bg-green-100' :
+                  results.status === 'warning' ? 'bg-yellow-100' : 'bg-red-100'
+                }`}>
+                {results.status === 'pass' ? (
+                  <CheckCircle2 size={24} className="text-green-600" />
+                ) : (
+                  <AlertTriangle size={24} className={results.status === 'warning' ? 'text-yellow-600' : 'text-red-600'} />
+                )}
               </div>
               <div>
-                <strong className="text-green-900 block mb-1 text-base">Status: Compliant</strong>
-                <div className="text-sm text-green-800 leading-relaxed">
-                  This proposal meets all mandatory formatting and inclusion requirements for the
-                  targeted solicitation. No critical blocking issues were found.
+                <strong className={`block mb-1 text-base ${results.status === 'pass' ? 'text-green-900' :
+                    results.status === 'warning' ? 'text-yellow-900' : 'text-red-900'
+                  }`}>
+                  Status: {results.status.toUpperCase()}
+                </strong>
+                <div className={`text-sm leading-relaxed ${results.status === 'pass' ? 'text-green-800' :
+                    results.status === 'warning' ? 'text-yellow-800' : 'text-red-800'
+                  }`}>
+                  {results.status === 'pass'
+                    ? 'This proposal meets all mandatory formatting and inclusion requirements for the targeted solicitation. No critical blocking issues were found.'
+                    : `This proposal has identified ${results.status === 'warning' ? 'warnings' : 'critical issues'} that require attention.`}
                 </div>
               </div>
             </div>
@@ -92,80 +112,50 @@ const ReportPreview = ({ isVisible }: ReportPreviewProps) => {
             </div>
 
             <div className="space-y-4">
-              {/* Item 1 */}
-              <div className="group border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition-all bg-white">
-                <div className="flex justify-between items-center mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="bg-gray-100 text-gray-600 text-[10px] font-mono px-1.5 py-0.5 rounded border border-gray-200">
-                      FAR 52.204-24
-                    </span>
-                    <span className="font-semibold text-sm text-slate-800">
-                      Telecommunications Representation
-                    </span>
-                  </div>
-                  <Badge
-                    variant="secondary"
-                    className="bg-green-100 text-green-700 border-green-200 font-bold hover:bg-green-100"
+              {results.issues.length === 0 ? (
+                <div className="text-center p-8 text-gray-500 italic">No issues found.</div>
+              ) : (
+                results.issues.map((issue) => (
+                  <div
+                    key={issue.id}
+                    className={`group border rounded-lg p-4 hover:shadow-md transition-all ${issue.severity === 'critical' ? 'border-red-200 bg-red-50/30' :
+                        issue.severity === 'warning' ? 'border-yellow-200 bg-yellow-50/30' : 'border-gray-200 bg-white hover:border-blue-300'
+                      }`}
                   >
-                    PASS
-                  </Badge>
-                </div>
-                <p className="text-xs text-gray-500 pl-1 border-l-2 border-gray-200 ml-1">
-                  Representation Regarding Certain Telecommunications and Video Surveillance
-                  Services or Equipment is present and signed by authorized representative.
-                </p>
-              </div>
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="flex items-center gap-2">
+                        {issue.regulation && (
+                          <span className="bg-gray-100 text-gray-600 text-[10px] font-mono px-1.5 py-0.5 rounded border border-gray-200">
+                            {issue.regulation}
+                          </span>
+                        )}
+                        <span className="font-semibold text-sm text-slate-800">
+                          {issue.title}
+                        </span>
+                      </div>
+                      <Badge
+                        variant="secondary"
+                        className={`font-bold ${issue.severity === 'critical' ? 'bg-red-100 text-red-700 border-red-200' :
+                            issue.severity === 'warning' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : 'bg-blue-100 text-blue-700 border-blue-200'
+                          }`}
+                      >
+                        {issue.severity.toUpperCase()}
+                      </Badge>
+                    </div>
 
-              {/* Item 2 */}
-              <div className="group border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition-all bg-white">
-                <div className="flex justify-between items-center mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="bg-gray-100 text-gray-600 text-[10px] font-mono px-1.5 py-0.5 rounded border border-gray-200">
-                      FORMAT
-                    </span>
-                    <span className="font-semibold text-sm text-slate-800">
-                      Biosketch Format (SciENcv)
-                    </span>
+                    <div className={`gap-2 items-start pl-1 border-l-2 ml-1 ${issue.severity === 'critical' ? 'border-red-300' :
+                        issue.severity === 'warning' ? 'border-yellow-300' : 'border-gray-200'
+                      }`}>
+                      <p className="text-xs text-gray-600 mb-1">{issue.description}</p>
+                      {issue.remediation && (
+                        <p className="text-xs text-slate-500 italic mt-1 bg-white/50 p-1.5 rounded">
+                          Recommendation: {issue.remediation}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <Badge
-                    variant="secondary"
-                    className="bg-green-100 text-green-700 border-green-200 font-bold hover:bg-green-100"
-                  >
-                    PASS
-                  </Badge>
-                </div>
-                <p className="text-xs text-gray-500 pl-1 border-l-2 border-gray-200 ml-1">
-                  All personnel biosketches adhere to the required SciENcv structure and page
-                  limits.
-                </p>
-              </div>
-
-              {/* Item 3 */}
-              <div className="group border border-yellow-200 rounded-lg p-4 bg-yellow-50/30 hover:shadow-md transition-all">
-                <div className="flex justify-between items-center mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="bg-yellow-100 text-yellow-800 text-[10px] font-mono px-1.5 py-0.5 rounded border border-yellow-200">
-                      REVIEW
-                    </span>
-                    <span className="font-semibold text-sm text-yellow-900">
-                      Budget Justification
-                    </span>
-                  </div>
-                  <Badge
-                    variant="secondary"
-                    className="bg-yellow-100 text-yellow-800 border-yellow-200 font-bold hover:bg-yellow-100"
-                  >
-                    WARNING
-                  </Badge>
-                </div>
-                <div className="flex gap-2 items-start pl-1 border-l-2 border-yellow-300 ml-1">
-                  <AlertTriangle size={14} className="text-yellow-600 mt-0.5" />
-                  <p className="text-xs text-yellow-800">
-                    Budget justification length is exactly at the limit (5 pages). Review for
-                    brevity recommended to avoid potential truncation checks.
-                  </p>
-                </div>
-              </div>
+                ))
+              )}
             </div>
           </div>
 

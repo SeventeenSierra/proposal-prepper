@@ -1636,6 +1636,16 @@
     background-color: var(--color-red-50);
   }
 
+  .bg-red-50\/30 {
+    background-color: #fef2f24d;
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .bg-red-50\/30 {
+      background-color: color-mix(in oklab, var(--color-red-50) 30%, transparent);
+    }
+  }
+
   .bg-red-50\/50 {
     background-color: #fef2f280;
   }
@@ -2648,12 +2658,6 @@
   }
 
   @media (hover: hover) {
-    .hover\:bg-green-100:hover {
-      background-color: var(--color-green-100);
-    }
-  }
-
-  @media (hover: hover) {
     .hover\:bg-green-700:hover {
       background-color: var(--color-green-700);
     }
@@ -2686,12 +2690,6 @@
   @media (hover: hover) {
     .hover\:bg-slate-800:hover {
       background-color: var(--color-slate-800);
-    }
-  }
-
-  @media (hover: hover) {
-    .hover\:bg-yellow-100:hover {
-      background-color: var(--color-yellow-100);
     }
   }
 

@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+<!-- SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC -->
+
 # Documentation Split Plan for af-nonopen vs develop
 
 ## Files for af-nonopen ONLY (Internal)
