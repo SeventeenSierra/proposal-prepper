@@ -55,6 +55,7 @@ export default {
         "config", // Configuration files
         "security", // Security and secrets
         "tests", // Testing
+        "governance", // Governance and policies
 
         // Data
         "seed", // Seed data and fixtures
