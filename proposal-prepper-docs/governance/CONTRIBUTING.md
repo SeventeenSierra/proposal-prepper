@@ -33,6 +33,7 @@ Every major change or work session is documented in `.agent/sessions/`. This pro
 
 We use [Conventional Commits](https://www.conventionalcommits.org/) with specific requirements for our microservice architecture.
 
+
 ### Commit Format
 
 ```
@@ -74,12 +75,19 @@ AI-Agent: <model>                   ← If assisted by AI
 
 **Feature Addition (AI-Assisted):**
 ```bash
-git commit -m "feat(strands): add NSF PAPPG Section 2.B validation
+git commit -s -m "feat(strands): add NSF PAPPG Section 2.B validation
 
 Implements Section 2.B.2(f)(i) validation for biographical sketches.
 
 Human-Involvement: reviewed
 AI-Agent: kiro"
+```
+
+**Bug Fix (Manual):**
+```bash
+git commit -s -m "fix(web): resolve proposal upload timeout
+
+Human-Involvement: full"
 ```
 
 **Bug Fix (Manual):**
