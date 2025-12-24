@@ -22,6 +22,7 @@ export default {
         "ci", // CI/CD changes
         "perf", // Performance improvements
         "build", // Build system changes
+        "security", // Security related changes
         "revert", // Revert previous commit
       ],
     ],
@@ -44,6 +45,7 @@ export default {
         "docker", // Docker and compose files
         "railway", // Railway deployment
         "ci", // GitHub Actions
+        "infra", // Infrastructure and platform
         "deps", // Dependencies
 
         // Project areas
@@ -56,6 +58,8 @@ export default {
         "security", // Security and secrets
         "tests", // Testing
         "governance", // Governance and policies
+        "licensing", // License and legal docs
+        "gitleaks", // Gitleaks configuration
 
         // Data
         "seed", // Seed data and fixtures
@@ -103,14 +107,13 @@ export default {
             return [true];
           }
 
-          if (!hasAIAgent) {
-            return [false, "Missing required AI-Agent trailer"];
+          // Force Human-Involvement for all AI-assisted commits
+          if (hasAIAgent && !hasHumanInvolvement) {
+            return [false, "AI-Agent commits require a Human-Involvement: [level] trailer"];
           }
 
-          if (!hasHumanInvolvement) {
-            return [false, "Missing required Human-Involvement trailer"];
-          }
-
+          // Note: Human-only commits (no AI-Agent) are currently allowed without trailers
+          // to support historical development and manual policy updates.
           return [true];
         },
       },
