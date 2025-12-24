@@ -3,11 +3,12 @@
 import {
   AlertCircle,
   Bot,
+  Button,
   CheckCircle2,
   FileCheck,
   Loader2,
-  Send,
   Sparkles,
+  Textarea,
   Upload,
   Zap,
 } from '@17sierra/ui';
@@ -18,7 +19,6 @@ import { uploadService } from 'proposal-prepper-services/upload-service';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnalysisStatus } from '@/components/analysis/types';
 import type { AnalysisResults } from '@/components/results/types';
-import { Button, Textarea } from '@17sierra/ui';
 
 type Step = {
   id: number;
@@ -585,7 +585,7 @@ const AgentInterface = ({
                 disabled={!inputValue || isSending || !activeProject}
                 onClick={handleSendMessage}
               >
-                {isSending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                {isSending ? <Loader2 size={16} className="animate-spin" /> : <SendIcon size={16} />}
               </Button>
             </div>
           </div>
