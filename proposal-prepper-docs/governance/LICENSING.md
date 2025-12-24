@@ -9,22 +9,19 @@ The Proposal Prepper (Contract Checker) project uses a **multi-license strategy*
 
 | Directory | License | SPDX Identifier |
 |-----------|---------|-----------------|
-| `/` (root) | [PolyForm Strict 1.0.0](./LICENSE) | `PolyForm-Strict-1.0.0` |
-| `/apps/web/` | All Rights Reserved | `UNLICENSED` |
-| `/services/strands-agent/` | All Rights Reserved | `UNLICENSED` |
-| `/services/genkit-service/` | All Rights Reserved | `UNLICENSED` |
-| `/packages/ui/` | All Rights Reserved | `UNLICENSED` |
-| `/packages/lib/` | All Rights Reserved | `UNLICENSED` |
-| `/scripts/` | PolyForm Perimeter 1.0.0 | `PolyForm-Perimeter-1.0.0` |
-| `/.agent/` | PolyForm Perimeter 1.0.0 | `PolyForm-Perimeter-1.0.0` |
-| `/.kiro/` | PolyForm Perimeter 1.0.0 | `PolyForm-Perimeter-1.0.0` |
+| `/` (root) | [PolyForm Strict 1.0.0](../../LICENSE) | `PolyForm-Strict-1.0.0` |
+| `proposal-prepper-web/` | [AGPL-3.0-or-later](../../proposal-prepper-web/LICENSE) | `AGPL-3.0-or-later` |
+| `proposal-prepper-backend/` | All Rights Reserved | `UNLICENSED` |
+| `proposal-prepper-services/` | All Rights Reserved | `UNLICENSED` |
+| `proposal-prepper-middleware/` | All Rights Reserved | `UNLICENSED` |
+| `proposal-prepper-infra/` | PolyForm Strict 1.0.0 | `PolyForm-Strict-1.0.0` |
+| `proposal-prepper-tests/` | PolyForm Strict 1.0.0 | `PolyForm-Strict-1.0.0` |
 | `/.agent/` | PolyForm Perimeter 1.0.0 | `PolyForm-Perimeter-1.0.0` |
 | `/.github/` | PolyForm Perimeter 1.0.0 | `PolyForm-Perimeter-1.0.0` |
 | `/.husky/` | PolyForm Perimeter 1.0.0 | `PolyForm-Perimeter-1.0.0` |
-| `/.storybook/` | PolyForm Perimeter 1.0.0 | `PolyForm-Perimeter-1.0.0` |
+| `/.kiro/` | PolyForm Perimeter 1.0.0 | `PolyForm-Perimeter-1.0.0` |
 | `/.vscode/` | PolyForm Perimeter 1.0.0 | `PolyForm-Perimeter-1.0.0` |
-| `/docs/*` | CC-BY-SA-4.0 | `CC-BY-SA-4.0` |
-| `/vendor/*` | Various (see directory) | Original licenses preserved |
+| `proposal-prepper-docs/*` | CC-BY-SA-4.0 | `CC-BY-SA-4.0` |
 
 ## License Details
 
@@ -41,20 +38,20 @@ The monorepo structure, build configurations, and DevSecOps automation are licen
 - Use commercially without a license
 - Redistribute or create derivative works
 
-### Microservices and Applications: All Rights Reserved
+### Microservices and Applications: Mixed Licensing
 
-The core Proposal Prepper services and applications are proprietary:
+We use a combination of open source and proprietary licenses for core components:
 
-- **Web App** (`/apps/web/`): Next.js interface for proposal validation
-- **Strands Service** (`/services/strands-agent/`): NSF PAPPG compliance validation engine
-- **Genkit Service** (`/services/genkit-service/`): AI workflow orchestration
-- **Shared Packages** (`/packages/`): UI components and utilities
+- **Web App** (`proposal-prepper-web/`): Licensed under [AGPL-3.0-or-later](../../proposal-prepper-web/LICENSE). This ensures the frontend remains open and collaborative.
+- **Backend Service** (`proposal-prepper-backend/`): **Proprietary (All Rights Reserved)**. Python/FastAPI service for Strands agents.
+- **Middleware** (`proposal-prepper-middleware/`): **Proprietary (All Rights Reserved)**. Traffic coordination service.
+- **Shared Services** (`proposal-prepper-services/`): **Proprietary (All Rights Reserved)**. Common logic and API clients.
 
 Contact licensing@seventeensierra.com for licensing inquiries.
 
 ### Tools & Utilities: PolyForm Perimeter
 
-Internal tools in `/scripts/` and `/.agent/` use [PolyForm Perimeter 1.0.0](https://polyformproject.org/licenses/perimeter/1.0.0/):
+Internal tools in `proposal-prepper-infra/scripts/` and `/.agent/` use [PolyForm Perimeter 1.0.0](https://polyformproject.org/licenses/perimeter/1.0.0/):
 - Use internally however you want
 - Do not expose to external users or offer as a service
 
@@ -108,7 +105,7 @@ SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution requirements including DCO sign-off and CLA.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution requirements and standards.
 
 ## Commercial Licensing
 
