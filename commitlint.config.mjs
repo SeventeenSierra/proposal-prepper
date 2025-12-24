@@ -78,7 +78,7 @@ export default {
     "header-max-length": [2, "always", 100],
 
     // AI agent trailer validation
-    "ai-agent-trailer": [2, "always"],
+    "ai-agent-trailer": [1, "always"],
   },
 
   // Custom parser to handle AI agent trailers
