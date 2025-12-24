@@ -32,10 +32,10 @@ We welcome contributions! As we are at capacity for organization seats, we use a
 
 1. **Fork** the repository.
 2. Create a feature branch from `develop`.
-3. Ensure all commits are **signed off** (`git commit -s`).
+3. Make changes with conventional commits.
 4. Submit a **Pull Request** to the upstream `develop` branch.
 
-See [CONTRIBUTING.md](./proposal-prepper-docs/governance/CONTRIBUTING.md) for full details on our standards, DCO, and CLA.
+See [CONTRIBUTING.md](./proposal-prepper-docs/governance/CONTRIBUTING.md) for full details on our standards and contribution process.
 
 ## 📂 Documentation
 

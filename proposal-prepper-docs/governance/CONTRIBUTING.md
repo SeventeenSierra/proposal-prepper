@@ -7,54 +7,11 @@ Thank you for your interest in contributing to the Proposal Prepper (Contract Ch
 1. Fork the repository
 2. Create a feature branch from `develop`: `git checkout -b feat/my-feature develop`
 3. Make changes with conventional commits
-4. Sign off your commits: `git commit -s`
-5. Push to your fork and create a Pull Request to the upstream `develop` branch.
+4. Push to your fork and create a Pull Request to the upstream `develop` branch.
 
-## Contributor Verification: DCO and CLA
+## Contribution Principles
 
-We use two levels of verification to protect the project and its contributors.
-
-### 1. Developer Certificate of Origin (DCO) - **Mandatory**
-
-All contributors **must** sign off their commits. This is the primary way we verify you have the right to submit the code. Corporate contributors (such as AWS) typically prefer this model.
-
-To sign off, use the `-s` flag:
-```bash
-git commit -s -m "feat: add new feature"
-```
-
-This adds `Signed-off-by: Your Name <email>` to your commit. See [DCO.md](./DCO.md) (in the same directory) or the root license docs.
-
-### 2. Contributor License Agreement (CLA)
-
-In addition to the DCO, we require a CLA for significant contributions to ensure long-term sustainability.
-
-- **Individual Contributors**: Must sign the CLA via [CLA Assistant](https://cla-assistant.io/) when submitting a PR.
-- **Federal Government Employees**: 
-    - ✅ **No CLA required** (your work is public domain under 17 U.S.C. § 105)
-    - ✅ DCO sign-off is still required
-    - ✅ Add `US-Government-Work: true` to commit messages or PR description
-- **Corporate Contributors (Large Organizations)**:
-    - ✅ **No CLA required** for organizations with strict legal policies (e.g., AWS, Amazon, Google)
-    - ✅ DCO sign-off is still required
-    - ✅ Add `Large-Org-Contribution: true` to commit messages or PR description
-    - ✅ Automatic bypass is enabled for many common corporate email domains
-
-### Commit Message Examples
-
-**Federal Contributor:**
-```bash
-git commit -s -m "feat: add compliance feature
-
-US-Government-Work: true"
-```
-
-**Corporate Contributor:**
-```bash
-git commit -s -m "feat(web): add performance optimization
-
-Large-Org-Contribution: true"
-```
+We focus on quality, security, and transparent collaboration. While we no longer require a separate CLA or mandatory DCO sign-off for most contributions, we still expect all contributors to adhere to our standards and maintain code provenance.
 
 ## AI-Human Pair Programming
 
@@ -85,7 +42,6 @@ We use [Conventional Commits](https://www.conventionalcommits.org/) with specifi
 
 Human-Involvement: <level>
 AI-Agent: <model>                   ← If assisted by AI
-Signed-off-by: <human>              ← Added via -s flag
 ```
 
 ### Types & Scopes
@@ -187,7 +143,6 @@ The CI pipeline uses **Workload Identity Federation** to authenticate with Googl
 2. **Description**: Explain what and why
 3. **Tests**: Add/update tests for changes
 4. **Docs**: Update documentation if needed
-5. **Sign-off**: Ensure all commits are signed
 
 ## Code Style
 

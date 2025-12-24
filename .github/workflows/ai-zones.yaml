@@ -38,8 +38,6 @@ jobs:
             ".ai-zones.yaml"
             "LICENSE"
             "LICENSING.md"
-            "CLA.md"
-            "DCO.md"
             "SECURITY.md"
           )
           

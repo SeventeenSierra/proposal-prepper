@@ -105,7 +105,7 @@ SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution requirements including DCO sign-off and CLA.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution requirements and standards.
 
 ## Commercial Licensing
 
