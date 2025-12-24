@@ -1,0 +1,10 @@
+{
+    "release-type": "node",
+    "separate-pull-requests": true,
+    "packages": {
+        ".": {
+            "release-type": "node",
+            "package-name": "proposal-prepper-root"
+        }
+    }
+}
