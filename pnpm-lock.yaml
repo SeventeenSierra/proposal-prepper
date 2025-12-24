@@ -6,6 +6,8 @@ settings:
 
 importers:
 
+  .: {}
+
   proposal-prepper-middleware:
     dependencies:
       cors:
