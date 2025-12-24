@@ -19,10 +19,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@v2
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+        with:
+          args: --report-format sarif --report-path gitleaks.sarif
+      
+      - name: Upload Gitleaks results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: gitleaks.sarif
 
   npm-audit:
     name: NPM Audit
@@ -56,8 +64,7 @@ jobs:
           @17sierra:registry=https://us-east1-npm.pkg.dev/dev-tools-475316/seventeensierra-npm/
           //us-east1-npm.pkg.dev/dev-tools-475316/seventeensierra-npm/:_authToken=${{ steps.auth.outputs.access_token }}
           EOF
-          rm pnpm-lock.yaml
-          pnpm install --no-frozen-lockfile
+          pnpm install --frozen-lockfile
 
       - name: Audit
         run: pnpm audit --audit-level=low

@@ -74,7 +74,7 @@ AI-Agent: <model>                   ← If assisted by AI
 
 **Feature Addition (AI-Assisted):**
 ```bash
-git commit -s -m "feat(strands): add NSF PAPPG Section 2.B validation
+git commit -m "feat(strands): add NSF PAPPG Section 2.B validation
 
 Implements Section 2.B.2(f)(i) validation for biographical sketches.
 
@@ -84,10 +84,11 @@ AI-Agent: kiro"
 
 **Bug Fix (Manual):**
 ```bash
-git commit -s -m "fix(web): resolve proposal upload timeout
+git commit -m "fix(web): resolve proposal upload timeout
 
 Human-Involvement: full"
 ```
+
 
 ## Development Workflow
 
