@@ -12,11 +12,11 @@
 'use client';
 
 import { AlertCircle, Button, CheckCircle, FileText, Upload, X } from '@17sierra/ui';
+import { aiRouterClient } from 'proposal-prepper-services/ai-router-client';
+import { MockAIRouterClient } from 'proposal-prepper-services/mock-ai-router-client';
 import type React from 'react';
 import { useCallback, useRef, useState } from 'react';
 import { apiConfig, errorConfig, uploadConfig, validationConfig } from '@/config/app';
-import { MockAIRouterClient } from 'proposal-prepper-services/mock-ai-router-client';
-import { aiRouterClient } from 'proposal-prepper-services/ai-router-client';
 import { type UploadSession, UploadStatus } from '@/types/app';
 
 /**
@@ -532,21 +532,21 @@ export function UploadManager({
         onClick={
           !isUploading
             ? (e) => {
-              // Only handle click if it's not from a button or other interactive element
-              if (e.target === e.currentTarget || (e.target as HTMLElement).tagName === 'DIV') {
-                handleClick(e);
+                // Only handle click if it's not from a button or other interactive element
+                if (e.target === e.currentTarget || (e.target as HTMLElement).tagName === 'DIV') {
+                  handleClick(e);
+                }
               }
-            }
             : undefined
         }
         onKeyDown={
           !isUploading
             ? (e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handleClick();
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleClick();
+                }
               }
-            }
             : undefined
         }
         tabIndex={!isUploading && !disabled ? 0 : -1}

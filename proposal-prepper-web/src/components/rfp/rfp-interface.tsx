@@ -6,11 +6,11 @@
 'use client';
 
 import { Bot, Button, CheckCircle, FileCheck, Sparkles, XCircle } from '@17sierra/ui';
+import { AIRouterIntegrationUtils } from 'proposal-prepper-services/ai-router-integration';
 import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { type AnalysisStep, AnalysisSteps, ChatInput } from '@/components/shared';
 import { UploadWorkflow } from '@/components/upload/upload-workflow';
-import { AIRouterIntegrationUtils } from 'proposal-prepper-services/ai-router-integration';
 import type { UploadSession } from '@/types/app';
 
 /**
@@ -368,10 +368,11 @@ export const RFPInterface: React.FC<RFPInterfaceProps> = ({
                   </div>
                   <div className="flex-1">
                     <div
-                      className={`p-4 rounded-2xl text-sm leading-relaxed ${message.type === 'assistant'
-                        ? 'bg-slate-50 border border-gray-200 rounded-tl-none text-slate-800'
-                        : 'bg-primary text-primary-foreground rounded-tr-none'
-                        }`}
+                      className={`p-4 rounded-2xl text-sm leading-relaxed ${
+                        message.type === 'assistant'
+                          ? 'bg-slate-50 border border-gray-200 rounded-tl-none text-slate-800'
+                          : 'bg-primary text-primary-foreground rounded-tr-none'
+                      }`}
                     >
                       {message.content}
                     </div>

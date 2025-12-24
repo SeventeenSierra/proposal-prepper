@@ -10,11 +10,10 @@
  * Connects to real Strands service with fallback to mock for development.
  */
 
+// Export the handler from the AI Router integration adapter
+import type { NextRequest } from 'next/server';
 import { AIRouterHandlers } from 'proposal-prepper-middleware/ai-router-adapter';
 
-// Export the handler from the AI Router integration adapter
-import { NextRequest, NextResponse } from 'next/server';
-
 export async function POST(req: NextRequest) {
-    return AIRouterHandlers.handleDocumentUpload(req as any);
+  return AIRouterHandlers.handleDocumentUpload(req as any);
 }
