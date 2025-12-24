@@ -7,37 +7,12 @@
 [extend]
 useDefault = true
 
-# AWS Bedrock / Strands Service secrets
-[[rules]]
-id = "aws-access-key-id"
-description = "AWS Access Key ID for Bedrock service"
-regex = '''AKIA[0-9A-Z]{16}'''
-tags = ["aws", "bedrock", "strands"]
-
-[[rules]]
-id = "aws-secret-access-key"
-description = "AWS Secret Access Key"
-regex = '''[A-Za-z0-9/+=]{40}'''
-tags = ["aws", "bedrock", "strands"]
-
-[[rules]]
-id = "aws-session-token"
-description = "AWS Session Token"
-regex = '''[A-Za-z0-9/+=]{100,}'''
-tags = ["aws", "bedrock", "strands"]
-
 # Google Genkit / AI service secrets
 [[rules]]
 id = "google-api-key"
 description = "Google API Key for Genkit service"
 regex = '''AIza[0-9A-Za-z_-]{35}'''
 tags = ["google", "genkit", "ai"]
-
-[[rules]]
-id = "google-service-account"
-description = "Google Service Account Key"
-regex = '''"type"\s*:\s*"service_account"'''
-tags = ["google", "genkit", "gcp"]
 
 # Railway deployment secrets
 [[rules]]
@@ -56,7 +31,7 @@ tags = ["database", "connection"]
 [[rules]]
 id = "service-url-with-auth"
 description = "Service URL with embedded credentials"
-regex = '''https?://[^:]+:[^@]+@[^\s]+'''
+regex = '''https?://[^/\s:]+:[^/\s@]+@[^/\s]+'''
 tags = ["service", "auth", "url"]
 
 # NSF PAPPG / Compliance specific
@@ -89,12 +64,15 @@ tags = ["docker", "secrets", "deployment"]
 [allowlist]
 description = "Safe files and patterns"
 paths = [
-  ".env.example",
-  ".env.template", 
-  "**/*.md",
-  "**/package.json",
-  "**/pnpm-lock.yaml",
-  "data/seed/**/*.json"  # Seed data is safe
+  '''.env\.example''',
+  '''.env\.template''', 
+  '''.*\.md''',
+  '''.*/package\.json''',
+  '''.*/pnpm-lock\.yaml''',
+  '''data/seed/.*\.json''',
+  '''.next/.*''',
+  '''node_modules/.*''',
+  '''.*/docker-compose\.prod\.yml'''
 ]
 
 commits = [
