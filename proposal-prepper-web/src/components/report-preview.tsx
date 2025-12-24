@@ -1,7 +1,15 @@
 'use client';
 
 import { Badge, Button } from '@17sierra/ui';
-import { AlertTriangle, Calendar, CheckCircle2, Download, FileText, Maximize2 } from 'lucide-react';
+import { AlertTriangle, Calendar, CheckCircle2, Download, FileText, Maximize2 } from '@17sierra/ui';
+import {
+  AlertTriangle as AlertTriangleIcon,
+  Calendar as CalendarIcon,
+  CheckCircle2 as CheckCircle2Icon,
+  Download as DownloadIcon,
+  FileText as FileTextIcon,
+  Maximize2 as Maximize2Icon
+} from 'lucide-react'; // Fallback if missing in @17sierra/ui dist
 import type { AnalysisResults } from '@/components/results/types';
 
 type ReportPreviewProps = {
@@ -72,13 +80,12 @@ const ReportPreview = ({ isVisible, results }: ReportPreviewProps) => {
               Regulation (FAR) and Defense Federal Acquisition Regulation Supplement (DFARS). The
               document scored a{' '}
               <span
-                className={`px-1 py-0.5 rounded font-bold ${
-                  results.overallScore >= 90
+                className={`px-1 py-0.5 rounded font-bold ${results.overallScore >= 90
                     ? 'bg-green-100 text-green-800'
                     : results.overallScore >= 70
                       ? 'bg-yellow-100 text-yellow-800'
                       : 'bg-red-100 text-red-800'
-                }`}
+                  }`}
               >
                 {results.overallScore}% compliance rating
               </span>
@@ -86,22 +93,20 @@ const ReportPreview = ({ isVisible, results }: ReportPreviewProps) => {
             </p>
 
             <div
-              className={`border rounded-lg p-5 flex gap-4 items-start shadow-sm ${
-                results.status === 'pass'
+              className={`border rounded-lg p-5 flex gap-4 items-start shadow-sm ${results.status === 'pass'
                   ? 'bg-green-50 border-green-200'
                   : results.status === 'warning'
                     ? 'bg-yellow-50 border-yellow-200'
                     : 'bg-red-50 border-red-200'
-              }`}
+                }`}
             >
               <div
-                className={`p-2 rounded-full shrink-0 ${
-                  results.status === 'pass'
+                className={`p-2 rounded-full shrink-0 ${results.status === 'pass'
                     ? 'bg-green-100'
                     : results.status === 'warning'
                       ? 'bg-yellow-100'
                       : 'bg-red-100'
-                }`}
+                  }`}
               >
                 {results.status === 'pass' ? (
                   <CheckCircle2 size={24} className="text-green-600" />
@@ -114,24 +119,22 @@ const ReportPreview = ({ isVisible, results }: ReportPreviewProps) => {
               </div>
               <div>
                 <strong
-                  className={`block mb-1 text-base ${
-                    results.status === 'pass'
+                  className={`block mb-1 text-base ${results.status === 'pass'
                       ? 'text-green-900'
                       : results.status === 'warning'
                         ? 'text-yellow-900'
                         : 'text-red-900'
-                  }`}
+                    }`}
                 >
                   Status: {results.status.toUpperCase()}
                 </strong>
                 <div
-                  className={`text-sm leading-relaxed ${
-                    results.status === 'pass'
+                  className={`text-sm leading-relaxed ${results.status === 'pass'
                       ? 'text-green-800'
                       : results.status === 'warning'
                         ? 'text-yellow-800'
                         : 'text-red-800'
-                  }`}
+                    }`}
                 >
                   {results.status === 'pass'
                     ? 'This proposal meets all mandatory formatting and inclusion requirements for the targeted solicitation. No critical blocking issues were found.'
@@ -157,13 +160,12 @@ const ReportPreview = ({ isVisible, results }: ReportPreviewProps) => {
                 results.issues.map((issue) => (
                   <div
                     key={issue.id}
-                    className={`group border rounded-lg p-4 hover:shadow-md transition-all ${
-                      issue.severity === 'critical'
+                    className={`group border rounded-lg p-4 hover:shadow-md transition-all ${issue.severity === 'critical'
                         ? 'border-red-200 bg-red-50/30'
                         : issue.severity === 'warning'
                           ? 'border-yellow-200 bg-yellow-50/30'
                           : 'border-gray-200 bg-white hover:border-blue-300'
-                    }`}
+                      }`}
                   >
                     <div className="flex justify-between items-center mb-2">
                       <div className="flex items-center gap-2">
@@ -176,26 +178,24 @@ const ReportPreview = ({ isVisible, results }: ReportPreviewProps) => {
                       </div>
                       <Badge
                         variant="secondary"
-                        className={`font-bold ${
-                          issue.severity === 'critical'
+                        className={`font-bold ${issue.severity === 'critical'
                             ? 'bg-red-100 text-red-700 border-red-200'
                             : issue.severity === 'warning'
                               ? 'bg-yellow-100 text-yellow-800 border-yellow-200'
                               : 'bg-blue-100 text-blue-700 border-blue-200'
-                        }`}
+                          }`}
                       >
                         {issue.severity.toUpperCase()}
                       </Badge>
                     </div>
 
                     <div
-                      className={`gap-2 items-start pl-1 border-l-2 ml-1 ${
-                        issue.severity === 'critical'
+                      className={`gap-2 items-start pl-1 border-l-2 ml-1 ${issue.severity === 'critical'
                           ? 'border-red-300'
                           : issue.severity === 'warning'
                             ? 'border-yellow-300'
                             : 'border-gray-200'
-                      }`}
+                        }`}
                     >
                       <p className="text-xs text-gray-600 mb-1">{issue.description}</p>
                       {issue.remediation && (

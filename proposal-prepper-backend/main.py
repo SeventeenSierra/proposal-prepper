@@ -106,14 +106,15 @@ async def lifespan(app: FastAPI):
             raise
         
         # Initialize database seeding
-        try:
-            from seed_manager import initialize_seeding
-            await initialize_seeding()
-            logger.info("Database seeding initialization completed")
-        except Exception as e:
-            logger.error(f"Database seeding initialization failed: {e}")
-            # Don't fail startup - seeding is not critical for service operation
-            logger.warning("Continuing without seeding initialization")
+        # Seeding disabled for clean slate as per user request
+        # try:
+        #     from seed_manager import initialize_seeding
+        #     await initialize_seeding()
+        #     logger.info("Database seeding initialization completed")
+        # except Exception as e:
+        #     logger.error(f"Database seeding initialization failed: {e}")
+        #     # Don't fail startup - seeding is not critical for service operation
+        #     logger.warning("Continuing without seeding initialization")
         
         # Initialize AWS Bedrock and PDF processing services
         try:

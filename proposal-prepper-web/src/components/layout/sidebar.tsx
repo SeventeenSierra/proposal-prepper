@@ -1,7 +1,16 @@
 'use client';
 
 import { Button } from '@17sierra/ui';
-import { ChevronRight, Clock, FileText, History, MoreHorizontal, Plus, Star } from 'lucide-react';
+import { ChevronRight, Clock, FileText, History, MoreHorizontal, Plus, Star } from '@17sierra/ui';
+import {
+  ChevronRight as ChevronRightIcon,
+  Clock as ClockIcon,
+  FileText as FileTextIcon,
+  History as HistoryIcon,
+  MoreHorizontal as MoreHorizontalIcon,
+  Plus as PlusIcon,
+  Star as StarIcon
+} from 'lucide-react'; // Fallback if missing in @17sierra/ui dist
 import { useState } from 'react';
 
 type SidebarProps = {
@@ -16,9 +25,8 @@ const Sidebar = ({ activeProject, setActiveProject, resetDemo, isOpen }: Sidebar
 
   return (
     <div
-      className={`bg-slate-50 border-gray-200 flex flex-col h-full shrink-0 transition-all duration-300 ease-in-out overflow-hidden shadow-inner ${
-        isOpen ? 'w-[280px] border-r opacity-100' : 'w-0 border-r-0 opacity-0'
-      }`}
+      className={`bg-slate-50 border-gray-200 flex flex-col h-full shrink-0 transition-all duration-300 ease-in-out overflow-hidden shadow-inner ${isOpen ? 'w-[280px] border-r opacity-100' : 'w-0 border-r-0 opacity-0'
+        }`}
     >
       <div className="w-[280px] flex flex-col h-full">
         <div className="p-4 pt-5 pb-2">
@@ -36,22 +44,20 @@ const Sidebar = ({ activeProject, setActiveProject, resetDemo, isOpen }: Sidebar
             <button
               type="button"
               onClick={() => setActiveTab('all')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                activeTab === 'all'
-                  ? 'bg-white text-slate-800 shadow-sm'
-                  : 'text-gray-500 hover:text-slate-700 hover:bg-gray-200/50'
-              }`}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold rounded-md transition-all ${activeTab === 'all'
+                ? 'bg-white text-slate-800 shadow-sm'
+                : 'text-gray-500 hover:text-slate-700 hover:bg-gray-200/50'
+                }`}
             >
               <History size={12} /> Recent
             </button>
             <button
               type="button"
               onClick={() => setActiveTab('favorites')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                activeTab === 'favorites'
-                  ? 'bg-white text-slate-800 shadow-sm'
-                  : 'text-gray-500 hover:text-slate-700 hover:bg-gray-200/50'
-              }`}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold rounded-md transition-all ${activeTab === 'favorites'
+                ? 'bg-white text-slate-800 shadow-sm'
+                : 'text-gray-500 hover:text-slate-700 hover:bg-gray-200/50'
+                }`}
             >
               <Star size={12} /> Saved
             </button>
@@ -63,56 +69,8 @@ const Sidebar = ({ activeProject, setActiveProject, resetDemo, isOpen }: Sidebar
             <Clock size={10} /> Today
           </div>
 
-          {/* biome-ignore lint/a11y/useSemanticElements: Button nesting prevents using <button> tag */}
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={() => setActiveProject('proj-1')}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                setActiveProject('proj-1');
-              }
-            }}
-            className={`w-full text-left p-3 rounded-xl border transition-all relative cursor-pointer ${
-              activeProject === 'proj-1'
-                ? 'bg-blue-50/50 border-blue-200 shadow-sm'
-                : 'bg-white border-transparent hover:border-gray-200 hover:bg-gray-50'
-            }`}
-          >
-            <div className="flex items-start gap-3">
-              <div
-                className={`p-2 rounded-md ${activeProject === 'proj-1' ? 'bg-blue-50 text-blue-600' : 'bg-gray-100 text-gray-500 hover:bg-blue-50 hover:text-blue-500'} transition-colors`}
-              >
-                <FileText size={18} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div
-                  className={`font-medium text-sm truncate ${activeProject ? 'text-blue-700' : 'text-slate-700'}`}
-                >
-                  SaaS Proposal - DOE
-                </div>
-                <div className="text-[11px] text-gray-400 mt-1 flex justify-between items-center font-medium">
-                  <span>10:23 AM</span>
-                  <span className="flex items-center gap-1 text-slate-400">
-                    92% <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block"></span>
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-2 top-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <MoreHorizontal size={14} className="text-gray-400" />
-            </Button>
-
-            {activeProject && (
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 bg-white rounded-full border border-blue-200 p-0.5 text-blue-600 shadow-sm z-10 w-5 h-5 flex items-center justify-center">
-                <ChevronRight size={12} />
-              </div>
-            )}
+          <div className="text-sm text-gray-400 italic px-2 py-4 text-center">
+            No recent checks
           </div>
         </div>
 

@@ -1,7 +1,19 @@
 'use client';
 
-import { Bell, Bot, HelpCircle, PanelLeftClose, PanelLeftOpen, Settings } from 'lucide-react';
-import { Avatar, AvatarFallback, Button } from '@/components/ui';
+import { Bot, Avatar, AvatarFallback, Button } from '@17sierra/ui';
+import {
+  Bell,
+  HelpCircle,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Settings,
+  Bell as BellIcon,
+  Bot as BotIcon,
+  HelpCircle as HelpCircleIcon,
+  PanelLeftClose as PanelLeftCloseIcon,
+  PanelLeftOpen as PanelLeftOpenIcon,
+  Settings as SettingsIcon
+} from 'lucide-react'; // Fallback if missing in @17sierra/ui dist
 
 type TopBarProps = {
   toggleSidebar: () => void;

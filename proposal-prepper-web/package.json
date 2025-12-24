@@ -18,7 +18,7 @@
     "clean": "rm -rf .next node_modules services/*/node_modules"
   },
   "dependencies": {
-    "@17sierra/ui": "^0.2.5",
+    "@17sierra/ui": "^0.2.6",
     "@hookform/resolvers": "^5.2.2",
     "@tailwindcss/postcss": "^4.1.18",
     "date-fns": "^4.1.0",

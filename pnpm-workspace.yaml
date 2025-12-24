@@ -1,12 +1,7 @@
-# SPDX-License-Identifier: PolyForm-Strict-1.0.0
-# SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
-
 packages:
-  - "packages/*"
-  - "proposal-prepper-web"
-  - "proposal-prepper-middleware"
-  - "proposal-prepper-services"
-  - "proposal-prepper-tests"
+  - packages/*
+  - proposal-prepper-web
+  - proposal-prepper-middleware
+  - proposal-prepper-services
+  - proposal-prepper-tests
 
-  # Note: strands-agent is Python-based
-  # Note: inbox/ is excluded
