@@ -1,108 +1,44 @@
 <!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
 <!-- SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC -->
 
-# Proposal Prepper Branch Structure Comparison
+# Proposal Prepper Repository Structure
 
-Generated: 2025-12-14
+This document outlines the current monorepo structure and the licensing of its components.
 
-## Branch Overview
+## Repository Layout
 
-| Branch | Purpose | License | Files |
-|--------|---------|---------|-------|
-| `af-nonopen` | Main development branch with all code | Mixed (PolyForm + AGPL) | ~400+ files |
-| `milestone/phase-1` | Phase 1 milestone with license updates | Mixed (PolyForm + AGPL) | ~400+ files |
-| `develop` | Clean AGPL-only frontend for customers | AGPL-3.0-or-later | ~200 files |
+| Directory | Purpose | Primary License |
+| :--- | :--- | :--- |
+| `proposal-prepper-web/` | Next.js Frontend UI | AGPL-3.0-or-later |
+| `proposal-prepper-middleware/` | API Traffic Coordination | Proprietary (UNLICENSED) |
+| `proposal-prepper-services/` | Shared Business Logic & Clients | Proprietary (UNLICENSED) |
+| `proposal-prepper-backend/` | Python/FastAPI AI Service | Proprietary (UNLICENSED) |
+| `proposal-prepper-infra/` | DevOps & Infrastructure | PolyForm-Strict-1.0.0 |
+| `proposal-prepper-tests/` | Integrated Verification Suite | PolyForm-Strict-1.0.0 |
+| `proposal-prepper-docs/` | Project Documentation | CC-BY-SA-4.0 |
+| `.agent/` | AI Agent Configuration | PolyForm-Perimeter-1.0.0 |
+| `.kiro/` | IDE Specifications | PolyForm-Perimeter-1.0.0 |
 
----
+## Component Hierarchy
 
-## af-nonopen & milestone/phase-1 (Complete Codebase)
+```mermaid
+graph TD
+    Web["proposal-prepper-web (AGPL)"]
+    Service["proposal-prepper-services (Proprietary)"]
+    Middleware["proposal-prepper-middleware (Proprietary)"]
+    Backend["proposal-prepper-backend (Proprietary)"]
 
-**License Strategy:** Mixed licensing for internal use
-
-```
-proposal-prepper/
-├── .agent/                      # PolyForm-Perimeter (AI agent config)
-├── .github/                     # PolyForm-Perimeter (GitHub workflows)
-├── .husky/                      # PolyForm-Perimeter (Git hooks)
-├── .kiro/                       # PolyForm-Perimeter (IDE specs)
-├── .storybook/                  # PolyForm-Perimeter (Dev tools)
-├── .vscode/                     # PolyForm-Perimeter (VS Code)
-├── containers/                  # PolyForm-Perimeter (Docker)
-├── database/                    # PolyForm-Perimeter (Database)
-├── development/                 # PolyForm-Perimeter (Dev configs)
-├── docs/
-│   ├── private/                 # All Rights Reserved
-│   ├── public/                  # CC-BY-SA-4.0 ✅
-│   └── troubleshooting/         # All Rights Reserved
-├── scripts/                     # PolyForm-Perimeter
-├── services/strands/            # PolyForm-Perimeter (Python backend)
-├── signatures/                  # All Rights Reserved
-├── src/
-│   ├── adapters/                # PolyForm-Perimeter (Backend)
-│   ├── app/api/                 # PolyForm-Perimeter (API routes)
-│   ├── app/ (pages)             # AGPL-3.0-or-later ✅
-│   ├── components/              # AGPL-3.0-or-later ✅ (41 files)
-│   ├── config/                  # AGPL-3.0-or-later ✅
-│   ├── services/                # PolyForm-Perimeter (Mocks)
-│   ├── test-utils/              # PolyForm-Perimeter (Tests)
-│   ├── types/                   # AGPL-3.0-or-later ✅
-│   └── utils/                   # AGPL-3.0-or-later ✅
-└── ...
+    Web --> Middleware
+    Middleware --> Service
+    Service --> Backend
 ```
 
----
+## Branch Strategy
 
-## develop (Clean AGPL-Only Frontend)
+The project follows a standard Git workflow:
 
-**License Strategy:** 100% AGPL-3.0-or-later for open-source distribution
+- **main**: Production-ready code.
+- **develop**: Integration branch for new features.
+- **feat/*, fix/*, refactor/**: Short-lived feature branches.
 
-```
-proposal-prepper/
-├── docs/public/                 # CC-BY-SA-4.0 ✅
-├── e2e/                         # AGPL-3.0-or-later ✅
-├── src/
-│   ├── app/                     # AGPL-3.0-or-later ✅
-│   ├── components/              # AGPL-3.0-or-later ✅ (41 files)
-│   ├── config/                  # AGPL-3.0-or-later ✅
-│   ├── seed-data/               # AGPL-3.0-or-later ✅
-│   ├── types/                   # AGPL-3.0-or-later ✅
-│   └── utils/                   # AGPL-3.0-or-later ✅
-└── ... (config files, package.json, etc)
-
-Total: ~200 files (ALL AGPL-3.0-or-later)
-```
-
----
-
-## Key Differences  
-
-### ❌ NOT in develop
-
-- `src/adapters/`, `src/app/api/`, `src/services/` - Backend
-- `services/strands/` - Python AI backend
-- `containers/`, `database/`, `scripts/` - Infrastructure
-- `.storybook/`, `src/test-utils/` - Dev tools
-- `.agent/`, `.kiro/`, `.github/`, `.husky/` - Configuration
-- `docs/private/`, `signatures/` - Private content
-
-### ✅ What Customer Gets
-
-- Complete Next.js frontend application
-- All UI components (AGPL licensed)
-- Frontend utilities and validation
-- Sample data for testing
-- Public documentation
-- API integration configuration
-
-**Customer provides:**
-- Backend API implementation
-- Database
-- Infrastructure/hosting
-
----
-
-## Workflow
-
-```
-Work on af-nonopen → Update milestone/phase-1 → Cherry-pick to develop
-```
+All development occurs within this single monorepo. Mixed licensing is managed at the file and directory level using SPDX headers.

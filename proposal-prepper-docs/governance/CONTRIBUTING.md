@@ -5,50 +5,87 @@ Thank you for your interest in contributing to the Proposal Prepper (Contract Ch
 ## Quick Start
 
 1. Fork the repository
-2. Create a feature branch from develop: `git checkout -b feat/my-feature develop`
+2. Create a feature branch from `develop`: `git checkout -b feat/my-feature develop`
 3. Make changes with conventional commits
 4. Sign off your commits: `git commit -s`
-5. Push and create a Pull Request to `develop` branch
+5. Push to your fork and create a Pull Request to the upstream `develop` branch.
 
-## Developer Certificate of Origin (DCO)
+## Contributor Verification: DCO and CLA
 
-All commits must be signed off to certify you have the right to submit the code:
+We use two levels of verification to protect the project and its contributors.
 
+### 1. Developer Certificate of Origin (DCO) - **Mandatory**
+
+All contributors **must** sign off their commits. This is the primary way we verify you have the right to submit the code. Corporate contributors (such as AWS) typically prefer this model.
+
+To sign off, use the `-s` flag:
 ```bash
 git commit -s -m "feat: add new feature"
 ```
 
-This adds `Signed-off-by: Your Name <email>` to your commit. See [DCO.md](./DCO.md) for details.
+This adds `Signed-off-by: Your Name <email>` to your commit. See [DCO.md](./DCO.md) (in the same directory) or the root license docs.
 
-## Contributor License Agreement (CLA)
+### 2. Contributor License Agreement (CLA)
 
-**First-time contributors** must sign our CLA via [CLA Assistant](https://cla-assistant.io/) when submitting a PR.
+In addition to the DCO, we require a CLA for significant contributions to ensure long-term sustainability.
 
-### Federal Government Employees
+- **Individual Contributors**: Must sign the CLA via [CLA Assistant](https://cla-assistant.io/) when submitting a PR.
+- **Federal Government Employees**: 
+    - ✅ **No CLA required** (your work is public domain under 17 U.S.C. § 105)
+    - ✅ DCO sign-off is still required
+    - ✅ Add `US-Government-Work: true` to commit messages or PR description
+- **Corporate Contributors (Large Organizations)**:
+    - ✅ **No CLA required** for organizations with strict legal policies (e.g., AWS, Amazon, Google)
+    - ✅ DCO sign-off is still required
+    - ✅ Add `Large-Org-Contribution: true` to commit messages or PR description
+    - ✅ Automatic bypass is enabled for many common corporate email domains
 
-If you're a U.S. Federal Government employee contributing within scope of employment:
+### Commit Message Examples
 
-- ✅ **No CLA required** (your work is public domain under 17 U.S.C. § 105)
-- ✅ DCO sign-off is still required
-- ✅ Add `US-Government-Work: true` to commit messages
-
+**Federal Contributor:**
 ```bash
 git commit -s -m "feat: add compliance feature
 
 US-Government-Work: true"
 ```
 
-## Commit Convention
+**Corporate Contributor:**
+```bash
+git commit -s -m "feat(web): add performance optimization
 
-We use [Conventional Commits](https://www.conventionalcommits.org/):
+Large-Org-Contribution: true"
+```
+
+## AI-Human Pair Programming
+
+This project embracing AI-human collaboration. We use agents like **Kiro**, **Antigravity**, and **Cline** to accelerate development while maintaining high standards through human oversight.
+
+### The Design-First Workflow
+
+We follow a strict **Design-First** approach. No code should be written without a clear plan:
+
+1.  **Stage 1: Design & Specification**: Create a design document (`design.md`) and a task list (`task.md`) in a new session directory: `.agent/sessions/<N>-<name>/`.
+2.  **Stage 2: Implementation**: Execute tasks in small, verifiable sections. Each section must end with a human review and a commit.
+3.  **Stage 3: Verification**: Run the full suite of checks (lint, typecheck, test, build) before finalizing a session.
+
+### Session Records
+
+Every major change or work session is documented in `.agent/sessions/`. This provides an audit trail of decisions, architectural choices, and service impacts.
+
+## Commit Standards
+
+We use [Conventional Commits](https://www.conventionalcommits.org/) with specific requirements for our microservice architecture.
+
+### Commit Format
 
 ```
 <type>(<scope>): <description>
-
+                                    ← BLANK LINE REQUIRED
 [optional body]
 
-[optional footer]
-Signed-off-by: Name <email>
+Human-Involvement: <level>
+AI-Agent: <model>                   ← If assisted by AI
+Signed-off-by: <human>              ← Added via -s flag
 ```
 
 ### Types & Scopes
@@ -58,24 +95,42 @@ Signed-off-by: Name <email>
 | `feat` | New feature |
 | `fix` | Bug fix |
 | `docs` | Documentation only |
-| `style` | Formatting, no code change |
+| `style` | Formatting, no functional change (Biome) |
 | `refactor` | Code restructuring |
-| `test` | Adding tests |
-| `chore` | Maintenance tasks |
+| `test` | Adding or updating tests |
+| `chore` | Maintenance, dependencies, etc. |
+| `ci` | CI/CD configuration changes |
 
-- **Microservice Scopes:**
-- `web` - Next.js web app
-- `strands` - Python compliance service
-- `ui`, `lib` - Shared packages
-- `compliance` - NSF PAPPG validation logic
-- `orchestration` - Federated mesh patterns
+**Microservice Scopes:**
+- **Services:** `web` (Next.js), `strands` (Python agent), `genkit` (Node.js/LLM)
+- **Packages:** `ui` (@aatb/ui), `lib` (@aatb/lib)
+- **Infrastructure:** `docker`, `railway`, `ci`, `deps`
+- **Project Areas:** `compliance`, `orchestration`, `api`, `components`, `docs`, `config`, `security`, `tests`, `seed`, `schemas`
+
+### Human Involvement Levels
+
+- `full`: Human wrote the code, AI may have assisted.
+- `reviewed`: AI wrote the code, human performed a line-by-line review.
+- `approved`: AI wrote the code, human approved based on verification without full review.
+- `automated`: Contribution was fully generated by an automated system.
 
 ### Examples
 
+**Feature Addition (AI-Assisted):**
 ```bash
-git commit -s -m "feat(strands): add NSF PAPPG Section 2.B validation"
-git commit -s -m "fix(web): handle proposal upload timeout"
-git commit -s -m "docs(compliance): update validation rules documentation"
+git commit -s -m "feat(strands): add NSF PAPPG Section 2.B validation
+
+Implements Section 2.B.2(f)(i) validation for biographical sketches.
+
+Human-Involvement: reviewed
+AI-Agent: kiro"
+```
+
+**Bug Fix (Manual):**
+```bash
+git commit -s -m "fix(web): resolve proposal upload timeout
+
+Human-Involvement: full"
 ```
 
 ## Development Workflow
@@ -141,7 +196,7 @@ The CI pipeline uses **Workload Identity Federation** to authenticate with Googl
 - All files need SPDX headers:
 
 ```typescript
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: PolyForm-Strict-1.0.0
 // SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 ```
 

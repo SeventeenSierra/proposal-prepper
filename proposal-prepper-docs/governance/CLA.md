@@ -40,7 +40,13 @@ You are not expected to provide support for Your Contributions, except to the ex
 
 ## 6. Federal Government Employees
 
-If You are a U.S. Federal Government employee contributing within the scope of your employment, Your Contributions are not subject to copyright under 17 U.S.C. § 105 and are in the public domain. **You do not need to sign this CLA.** Instead, include `US-Government-Work: true` in your commit messages and follow the [DCO](./DCO.md) process.
+If You are a U.S. Federal Government employee contributing within the scope of your employment, Your Contributions are not subject to copyright under 17 U.S.C. § 105 and are in the public domain. **You do not need to sign this CLA.** Instead, include `US-Government-Work: true` in your commit messages or PR description and follow the [DCO](./DCO.md) process.
+
+## 7. Corporate Contributors (Large Organizations)
+
+If You are contributing on behalf of an organization whose policies prohibit signing individual CLAs (e.g., AWS, Google), **You do not need to sign this CLA.** Instead:
+- Follow the [DCO](./DCO.md) sign-off process.
+- Include `Large-Org-Contribution: true` in your commit messages or PR description.
 
 ---
 

@@ -61,8 +61,6 @@ Or configure Git to always sign off:
 git config --global format.signoff true
 ```
 
-## U.S. Federal Government Employees
-
 If you are a U.S. Federal Government employee contributing within the scope of your employment, your work is in the public domain under 17 U.S.C. § 105. Add this to your commits:
 
 ```
@@ -70,4 +68,15 @@ feat: add compliance report feature
 
 US-Government-Work: true
 Signed-off-by: Jane Doe <jane.doe@gsa.gov>
+```
+
+## Corporate Contributors (Large Organizations)
+
+If your organization requires a DCO-only path and prohibits CLAs, add this to your commits:
+
+```
+feat: add performance feature
+
+Large-Org-Contribution: true
+Signed-off-by: John Smith <jsmith@amazon.com>
 ```
