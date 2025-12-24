@@ -1,12 +1,26 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.3.8/schema.json",
   "files": {
-    "includes": ["src/**/*", "*.ts", "*.tsx", "*.js", "*.jsx", "*.json"],
+    "includes": [
+      "src/**/*",
+      "*.ts",
+      "*.tsx",
+      "*.js",
+      "*.jsx",
+      "*.json"
+    ],
+    "ignore": [
+      "next-env.d.ts",
+      ".next/**/*",
+      "out/**/*"
+    ],
     "ignoreUnknown": true
   },
   "overrides": [
     {
-      "includes": ["src/app/globals.css"],
+      "includes": [
+        "src/app/globals.css"
+      ],
       "formatter": {
         "enabled": false
       }
