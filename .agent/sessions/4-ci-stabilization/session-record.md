@@ -8,13 +8,16 @@
 Stabilize the CI pipeline by fixing Gitleaks reporting, ensuring deterministic dependency installation, and aligning contribution documentation with the new no-DCO/CLA policy.
 
 ## Accomplishments
-1. **Security Workflow Fixes**:
-    - Fixed Gitleaks SARIF generation and upload in `security.yaml`.
-    - Verified Gitleaks success in GitHub Actions (Run 20476125488).
-    - Removed redundant double EOF in `security.yaml`.
-2. **CI Pipeline Stabilization**:
-    - Removed non-deterministic `rm pnpm-lock.yaml` steps.
-    - Switched all `pnpm install` commands to `--frozen-lockfile` to ensure consistency and prevent side-channel lockfile updates.
+1. **OIDC Authentication RESOLVED**: Fixed the "Attribute Condition" mismatch in GCP. Authenticate steps are now passing across all workflows.
+2. **Dependency Resolution RESOLVED**: Fixed private registry 404 errors by removing incorrect `@17sierra` scope overrides in CI.
+3. **Workspace Manifest RESOLVED**: Added a root `package.json` to satisfy `pnpm` workspace requirements in CI.
+4. **Security Workflow Stabilized**: 
+    - Fixed Gitleaks SARIF generation and config crashes.
+    - Verified **0 findings** locally on full history.
+    - Eliminated ~160 false positives.
+5. **CI Pipeline Health**: 
+    - `Test`, `Build Verification`, `Unused Deps`, and `Commit Lint` are now **GREEN**.
+    - Identified remaining `Lint` errors as legitimate code-quality tasks.
 3. **Documentation Alignment**:
     - Updated `./proposal-prepper-docs/governance/CONTRIBUTING.md` to remove `-s` (sign-off) from commit examples, reflecting the removal of mandatory DCO.
 
