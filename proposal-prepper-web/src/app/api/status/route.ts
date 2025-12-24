@@ -9,11 +9,10 @@
  * Provides detailed status information for debugging the end-to-end workflow.
  */
 
+// Export the handler from the AI Router integration adapter
+import type { NextRequest } from 'next/server';
 import { AIRouterHandlers } from 'proposal-prepper-middleware/ai-router-adapter';
 
-// Export the handler from the AI Router integration adapter
-import { NextRequest, NextResponse } from 'next/server';
-
-export async function GET(req: NextRequest, ctx: any) {
-    return AIRouterHandlers.handleServiceStatus(req as any);
+export async function GET(req: NextRequest, _ctx: any) {
+  return AIRouterHandlers.handleServiceStatus(req as any);
 }

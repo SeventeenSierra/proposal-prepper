@@ -41,11 +41,9 @@ jobs:
         run: |
           cat <<EOF > .npmrc
           registry=https://registry.npmjs.org/
-          @17sierra:registry=https://us-east1-npm.pkg.dev/dev-tools-475316/seventeensierra-npm/
           //us-east1-npm.pkg.dev/dev-tools-475316/seventeensierra-npm/:_authToken=${{ steps.auth.outputs.access_token }}
           EOF
-          rm pnpm-lock.yaml
-          pnpm install --no-frozen-lockfile
+          pnpm install --frozen-lockfile
 
       - name: Lint
         run: pnpm run lint
@@ -82,10 +80,9 @@ jobs:
         run: |
           cat <<EOF > .npmrc
           registry=https://registry.npmjs.org/
-          @17sierra:registry=https://us-east1-npm.pkg.dev/dev-tools-475316/seventeensierra-npm/
           //us-east1-npm.pkg.dev/dev-tools-475316/seventeensierra-npm/:_authToken=${{ steps.auth.outputs.access_token }}
           EOF
-          pnpm install --no-frozen-lockfile
+          pnpm install --frozen-lockfile
 
       - name: Build Packages
         run: pnpm --filter "./packages/*" run build
@@ -122,10 +119,9 @@ jobs:
         run: |
           cat <<EOF > .npmrc
           registry=https://registry.npmjs.org/
-          @17sierra:registry=https://us-east1-npm.pkg.dev/dev-tools-475316/seventeensierra-npm/
           //us-east1-npm.pkg.dev/dev-tools-475316/seventeensierra-npm/:_authToken=${{ steps.auth.outputs.access_token }}
           EOF
-          pnpm install --no-frozen-lockfile
+          pnpm install --frozen-lockfile
 
       - name: Build
         run: pnpm run build
@@ -159,10 +155,9 @@ jobs:
         run: |
           cat <<EOF > .npmrc
           registry=https://registry.npmjs.org/
-          @17sierra:registry=https://us-east1-npm.pkg.dev/dev-tools-475316/seventeensierra-npm/
           //us-east1-npm.pkg.dev/dev-tools-475316/seventeensierra-npm/:_authToken=${{ steps.auth.outputs.access_token }}
           EOF
-          pnpm install --no-frozen-lockfile
+          pnpm install --frozen-lockfile
 
       - name: Knip
         run: pnpm run unused
@@ -198,10 +193,9 @@ jobs:
         run: |
           cat <<EOF > .npmrc
           registry=https://registry.npmjs.org/
-          @17sierra:registry=https://us-east1-npm.pkg.dev/dev-tools-475316/seventeensierra-npm/
           //us-east1-npm.pkg.dev/dev-tools-475316/seventeensierra-npm/:_authToken=${{ steps.auth.outputs.access_token }}
           EOF
-          pnpm install --no-frozen-lockfile
+          pnpm install --frozen-lockfile
 
       - name: Validate Commit Messages
         if: github.event_name == 'pull_request'

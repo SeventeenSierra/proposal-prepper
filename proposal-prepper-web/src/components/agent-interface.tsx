@@ -1,13 +1,23 @@
 'use client';
 
-import { Bot, CheckCircle2, FileCheck, Loader2, Send, Sparkles, Upload, Zap, AlertCircle } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Button, Textarea } from '@/components/ui';
-import { uploadService } from 'proposal-prepper-services/upload-service';
+import {
+  AlertCircle,
+  Bot,
+  CheckCircle2,
+  FileCheck,
+  Loader2,
+  Send,
+  Sparkles,
+  Upload,
+  Zap,
+} from 'lucide-react';
 import { analysisService } from 'proposal-prepper-services/analysis-service';
 import { resultsService } from 'proposal-prepper-services/results-service';
+import { uploadService } from 'proposal-prepper-services/upload-service';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnalysisStatus } from '@/components/analysis/types';
 import type { AnalysisResults } from '@/components/results/types';
+import { Button, Textarea } from '@/components/ui';
 
 type Step = {
   id: number;
@@ -88,7 +98,12 @@ function getStepIndexFromStatus(status: AnalysisStatus): number {
   }
 }
 
-const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, onAnalysisError }: AgentInterfaceProps) => {
+const AgentInterface = ({
+  activeProject,
+  onAnalysisStart,
+  onAnalysisComplete,
+  onAnalysisError,
+}: AgentInterfaceProps) => {
   const [activeTab, setActiveTab] = useState<'steps' | 'results'>('steps');
   const [steps, setSteps] = useState<Step[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -98,7 +113,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [analysisSessionId, setAnalysisSessionId] = useState<string | null>(null);
+  const [_analysisSessionId, setAnalysisSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -131,7 +146,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
 
     setIsUploading(true);
     setUploadError(null);
-    setSteps(analysisSteps.map(step => ({ ...step, status: 'pending' })));
+    setSteps(analysisSteps.map((step) => ({ ...step, status: 'pending' })));
     setIsAnalysisComplete(false);
     setMessages([]);
 
@@ -140,9 +155,9 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
 
     try {
       // Step 1: Upload document
-      setSteps(prev => prev.map((step, idx) =>
-        idx === 0 ? { ...step, status: 'running' } : step
-      ));
+      setSteps((prev) =>
+        prev.map((step, idx) => (idx === 0 ? { ...step, status: 'running' } : step))
+      );
 
       const uploadResult = await uploadService.uploadDocument(selectedFile);
 
@@ -153,10 +168,15 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
       }
 
       // Mark upload complete, start analysis
-      setSteps(prev => prev.map((step, idx) =>
-        idx === 0 ? { ...step, status: 'complete' } :
-          idx === 1 ? { ...step, status: 'running' } : step
-      ));
+      setSteps((prev) =>
+        prev.map((step, idx) =>
+          idx === 0
+            ? { ...step, status: 'complete' }
+            : idx === 1
+              ? { ...step, status: 'running' }
+              : step
+        )
+      );
 
       console.log('Starting Analysis with Proposal ID:', uploadResult.sessionId);
 
@@ -175,21 +195,23 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
 
       // Set up event handlers for progress updates
       analysisService.setEventHandlers({
-        onProgress: (sessionId, progress, currentStep) => {
+        onProgress: (sessionId, _progress, _currentStep) => {
           // Update steps based on current step info
-          const session = analysisService.getActiveSessions().find(s => s.id === sessionId);
+          const session = analysisService.getActiveSessions().find((s) => s.id === sessionId);
           if (session) {
             const stepIndex = getStepIndexFromStatus(session.status);
-            setSteps(prev => prev.map((step, idx) => {
-              if (idx < stepIndex) return { ...step, status: 'complete' };
-              if (idx === stepIndex) return { ...step, status: 'running' };
-              return step;
-            }));
+            setSteps((prev) =>
+              prev.map((step, idx) => {
+                if (idx < stepIndex) return { ...step, status: 'complete' };
+                if (idx === stepIndex) return { ...step, status: 'running' };
+                return step;
+              })
+            );
           }
         },
-        onComplete: async (sessionId, session) => {
+        onComplete: async (sessionId, _session) => {
           // Mark all steps complete
-          setSteps(prev => prev.map(step => ({ ...step, status: 'complete' })));
+          setSteps((prev) => prev.map((step) => ({ ...step, status: 'complete' })));
           setIsAnalysisComplete(true);
           setIsUploading(false);
 
@@ -200,12 +222,14 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
             if (resultsResponse.success && resultsResponse.results) {
               const results = resultsResponse.results;
               const issueCount = results.issues.length;
-              const criticalCount = results.issues.filter(i => i.severity === 'critical').length;
+              const criticalCount = results.issues.filter((i) => i.severity === 'critical').length;
 
-              setMessages([{
-                role: 'bot',
-                content: `Analysis complete. I found ${issueCount} compliance issue${issueCount !== 1 ? 's' : ''} (${criticalCount} critical). The proposal has a ${results.overallScore}% compliance score. You can view the full details in the report panel.`,
-              }]);
+              setMessages([
+                {
+                  role: 'bot',
+                  content: `Analysis complete. I found ${issueCount} compliance issue${issueCount !== 1 ? 's' : ''} (${criticalCount} critical). The proposal has a ${results.overallScore}% compliance score. You can view the full details in the report panel.`,
+                },
+              ]);
               setActiveTab('results');
 
               // Notify parent with the results
@@ -216,14 +240,16 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
             onAnalysisError('Failed to fetch analysis results');
           }
         },
-        onError: (sessionId, error) => {
-          setSteps(prev => prev.map((step, idx) => {
-            const runningIdx = prev.findIndex(s => s.status === 'running');
-            if (idx === runningIdx || (runningIdx === -1 && idx === prev.length - 1)) {
-              return { ...step, status: 'error' };
-            }
-            return step;
-          }));
+        onError: (_sessionId, error) => {
+          setSteps((prev) =>
+            prev.map((step, idx) => {
+              const runningIdx = prev.findIndex((s) => s.status === 'running');
+              if (idx === runningIdx || (runningIdx === -1 && idx === prev.length - 1)) {
+                return { ...step, status: 'error' };
+              }
+              return step;
+            })
+          );
           setUploadError(error);
           setIsUploading(false);
           onAnalysisError(error);
@@ -232,14 +258,15 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
 
       // Start monitoring (polling for progress)
       // The analysis service handles this internally
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       setUploadError(errorMessage);
-      setSteps(prev => prev.map((step, idx) => {
-        if (step.status === 'running') return { ...step, status: 'error' };
-        return step;
-      }));
+      setSteps((prev) =>
+        prev.map((step, _idx) => {
+          if (step.status === 'running') return { ...step, status: 'error' };
+          return step;
+        })
+      );
       setIsUploading(false);
       onAnalysisError(errorMessage);
     }
@@ -259,7 +286,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
       const botMessage: Message = {
         role: 'bot',
         content:
-          "I can help you understand the compliance findings. Ask me about specific FAR/DFARS clauses, remediation steps, or how to address the identified issues.",
+          'I can help you understand the compliance findings. Ask me about specific FAR/DFARS clauses, remediation steps, or how to address the identified issues.',
       };
       setMessages((prev) => [...prev, botMessage]);
       setIsSending(false);
@@ -296,6 +323,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
       className={className}
       aria-label="Search"
     >
+      <title>Search</title>
       <circle cx="11" cy="11" r="8" />
       <path d="m21 21-4.3-4.3" />
     </svg>
@@ -327,7 +355,8 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                 AI Regulatory Assistant
               </h2>
               <p className="text-gray-500 max-w-md mx-auto mb-10 text-lg leading-relaxed">
-                Upload your proposal to analyze against FAR/DFARS requirements using our multi-agent compliance engine.
+                Upload your proposal to analyze against FAR/DFARS requirements using our multi-agent
+                compliance engine.
               </p>
 
               {/* File Upload Section */}
@@ -355,8 +384,7 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                     <p className="text-sm text-gray-500 mt-1 leading-relaxed">
                       {selectedFile
                         ? `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB`
-                        : 'Upload a PDF document for compliance analysis'
-                      }
+                        : 'Upload a PDF document for compliance analysis'}
                     </p>
                   </div>
                 </button>
@@ -397,20 +425,22 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                 <button
                   type="button"
                   onClick={() => setActiveTab('steps')}
-                  className={`pb-3 px-1 text-sm font-medium mr-6 transition-colors border-b-2 ${activeTab === 'steps'
-                    ? 'text-blue-600 border-blue-600'
-                    : 'text-gray-500 border-transparent hover:text-slate-800'
-                    }`}
+                  className={`pb-3 px-1 text-sm font-medium mr-6 transition-colors border-b-2 ${
+                    activeTab === 'steps'
+                      ? 'text-blue-600 border-blue-600'
+                      : 'text-gray-500 border-transparent hover:text-slate-800'
+                  }`}
                 >
                   Live Analysis
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveTab('results')}
-                  className={`pb-3 px-1 text-sm font-medium transition-colors border-b-2 ${activeTab === 'results'
-                    ? 'text-blue-600 border-blue-600'
-                    : 'text-gray-500 border-transparent hover:text-slate-800'
-                    }`}
+                  className={`pb-3 px-1 text-sm font-medium transition-colors border-b-2 ${
+                    activeTab === 'results'
+                      ? 'text-blue-600 border-blue-600'
+                      : 'text-gray-500 border-transparent hover:text-slate-800'
+                  }`}
                 >
                   Results & Chat
                 </button>
@@ -421,14 +451,15 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                   {steps.map((step) => (
                     <div
                       key={step.id}
-                      className={`flex gap-3 p-4 rounded-xl border transition-all ${step.status === 'running' ? 'bg-blue-50/50 border-blue-100 shadow-sm' :
-                        step.status === 'error' ? 'bg-red-50/50 border-red-100' :
-                          'bg-white border-gray-100'
-                        }`}
+                      className={`flex gap-3 p-4 rounded-xl border transition-all ${
+                        step.status === 'running'
+                          ? 'bg-blue-50/50 border-blue-100 shadow-sm'
+                          : step.status === 'error'
+                            ? 'bg-red-50/50 border-red-100'
+                            : 'bg-white border-gray-100'
+                      }`}
                     >
-                      <div className="mt-1 shrink-0">
-                        {getStepIcon(step.status)}
-                      </div>
+                      <div className="mt-1 shrink-0">{getStepIcon(step.status)}</div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           {getAgentIcon(step.agent || 'coordinator')}
@@ -437,10 +468,13 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                           </span>
                         </div>
                         <div
-                          className={`text-sm font-medium ${step.status === 'pending' ? 'text-gray-400' :
-                            step.status === 'error' ? 'text-red-600' :
-                              'text-slate-700'
-                            }`}
+                          className={`text-sm font-medium ${
+                            step.status === 'pending'
+                              ? 'text-gray-400'
+                              : step.status === 'error'
+                                ? 'text-red-600'
+                                : 'text-slate-700'
+                          }`}
                         >
                           {step.message}
                         </div>
@@ -479,14 +513,16 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                       )}
 
                       <div
-                        className={`flex-1 max-w-xl ${message.role === 'user' ? 'flex justify-end' : ''
-                          }`}
+                        className={`flex-1 max-w-xl ${
+                          message.role === 'user' ? 'flex justify-end' : ''
+                        }`}
                       >
                         <div
-                          className={`p-4 rounded-2xl text-slate-800 leading-relaxed text-sm shadow-sm ${message.role === 'bot'
-                            ? 'bg-white border border-gray-100 rounded-tl-none'
-                            : 'bg-blue-600 text-white rounded-br-none'
-                            }`}
+                          className={`p-4 rounded-2xl text-slate-800 leading-relaxed text-sm shadow-sm ${
+                            message.role === 'bot'
+                              ? 'bg-white border border-gray-100 rounded-tl-none'
+                              : 'bg-blue-600 text-white rounded-br-none'
+                          }`}
                         >
                           {message.content}
                         </div>
@@ -539,7 +575,9 @@ const AgentInterface = ({ activeProject, onAnalysisStart, onAnalysisComplete, on
                 }
               }}
               placeholder={
-                activeProject ? 'Ask follow-up questions...' : 'Upload a proposal to start analysis.'
+                activeProject
+                  ? 'Ask follow-up questions...'
+                  : 'Upload a proposal to start analysis.'
               }
               className="w-full p-4 pr-14 text-sm resize-none bg-white min-h-[56px] shadow-sm border-gray-200 focus:border-blue-400 focus:ring-blue-100 rounded-xl transition-all"
               rows={1}

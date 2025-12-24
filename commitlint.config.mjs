@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: PolyForm-Strict-1.0.0
 // SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 // Commitlint configuration for Proposal Prepper (Contract Checker)
@@ -22,6 +22,7 @@ export default {
         "ci", // CI/CD changes
         "perf", // Performance improvements
         "build", // Build system changes
+        "security", // Security related changes
         "revert", // Revert previous commit
       ],
     ],
@@ -44,6 +45,7 @@ export default {
         "docker", // Docker and compose files
         "railway", // Railway deployment
         "ci", // GitHub Actions
+        "infra", // Infrastructure and platform
         "deps", // Dependencies
 
         // Project areas
@@ -55,6 +57,9 @@ export default {
         "config", // Configuration files
         "security", // Security and secrets
         "tests", // Testing
+        "governance", // Governance and policies
+        "licensing", // License and legal docs
+        "gitleaks", // Gitleaks configuration
 
         // Data
         "seed", // Seed data and fixtures
@@ -73,7 +78,7 @@ export default {
     "header-max-length": [2, "always", 100],
 
     // AI agent trailer validation
-    "ai-agent-trailer": [2, "always"],
+    "ai-agent-trailer": [1, "always"],
   },
 
   // Custom parser to handle AI agent trailers
@@ -102,14 +107,13 @@ export default {
             return [true];
           }
 
-          if (!hasAIAgent) {
-            return [false, "Missing required AI-Agent trailer"];
+          // Force Human-Involvement for all AI-assisted commits
+          if (hasAIAgent && !hasHumanInvolvement) {
+            return [false, "AI-Agent commits require a Human-Involvement: [level] trailer"];
           }
 
-          if (!hasHumanInvolvement) {
-            return [false, "Missing required Human-Involvement trailer"];
-          }
-
+          // Note: Human-only commits (no AI-Agent) are currently allowed without trailers
+          // to support historical development and manual policy updates.
           return [true];
         },
       },

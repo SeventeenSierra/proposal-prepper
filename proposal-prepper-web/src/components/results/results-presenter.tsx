@@ -14,8 +14,8 @@ import {
   RefreshCw,
   XCircle,
 } from '@17sierra/ui';
-import { IssueList } from '@/components/issues';
 import { resultsService } from 'proposal-prepper-services/results-service';
+import { IssueList } from '@/components/issues';
 import { RegulatoryReferences } from './regulatory-references';
 import type { ResultsPresenterProps } from './types';
 import { ComplianceStatus } from './types';

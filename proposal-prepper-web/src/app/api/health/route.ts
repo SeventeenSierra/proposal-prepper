@@ -11,10 +11,10 @@ import { NextResponse } from 'next/server';
  * For full service health including Strands, use /api/status instead.
  */
 export async function GET() {
-    return NextResponse.json({
-        status: 'healthy',
-        service: 'web',
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development',
-    });
+  return NextResponse.json({
+    status: 'healthy',
+    service: 'web',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+  });
 }

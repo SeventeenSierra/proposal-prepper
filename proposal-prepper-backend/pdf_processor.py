@@ -13,7 +13,7 @@ import logging
 from typing import Dict, Any, Optional, Tuple
 from pathlib import Path
 
-import PyPDF2
+import pypdf
 import boto3
 from botocore.exceptions import ClientError
 
@@ -126,7 +126,7 @@ class PDFProcessor:
             pdf_stream = io.BytesIO(pdf_bytes)
             
             # Initialize PDF reader
-            pdf_reader = PyPDF2.PdfReader(pdf_stream)
+            pdf_reader = pypdf.PdfReader(pdf_stream)
             
             # Extract metadata
             metadata = self._extract_pdf_metadata(pdf_reader)
@@ -153,7 +153,7 @@ class PDFProcessor:
             metadata.update({
                 'page_count': page_count,
                 'text_length': len(full_text),
-                'extraction_method': 'PyPDF2',
+                'extraction_method': 'pypdf',
                 'pages_processed': page_count,
                 'extraction_successful': True
             })
@@ -169,16 +169,16 @@ class PDFProcessor:
             error_metadata = {
                 'extraction_successful': False,
                 'extraction_error': str(e),
-                'extraction_method': 'PyPDF2'
+                'extraction_method': 'pypdf'
             }
             raise Exception(f"Text extraction failed: {str(e)}")
     
-    def _extract_pdf_metadata(self, pdf_reader: PyPDF2.PdfReader) -> Dict[str, Any]:
+    def _extract_pdf_metadata(self, pdf_reader: pypdf.PdfReader) -> Dict[str, Any]:
         """
         Extract metadata from PDF document.
         
         Args:
-            pdf_reader: PyPDF2 PdfReader instance
+            pdf_reader: pypdf PdfReader instance
             
         Returns:
             Dictionary containing PDF metadata

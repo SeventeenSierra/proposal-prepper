@@ -10,8 +10,8 @@
  * for the end-to-end workflow integration.
  */
 
-import { useEffect, useRef, useState } from 'react';
 import { aiRouterClient, type WebSocketMessage } from 'proposal-prepper-services/ai-router-client';
+import { useEffect, useRef, useState } from 'react';
 import type { UploadSession } from '@/types/app';
 
 export interface RealTimeUpdateState {

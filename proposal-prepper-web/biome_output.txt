@@ -1,0 +1,423 @@
+src/app/api/analysis/[sessionId]/results/route.ts:18:56 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    17 │ export async function GET(req: NextRequest, ctx: { params: Promise<{ sessionId: string }> }) {
+  > 18 │   return AIRouterHandlers.handleAnalysisResults(req as any, ctx);
+       │                                                        ^^^
+    19 │ }
+    20 │ 
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/app/api/analysis/[sessionId]/route.ts:17:50 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    15 │ import { AIRouterHandlers } from 'proposal-prepper-middleware/ai-router-adapter';
+    16 │ 
+  > 17 │ export async function GET(req: NextRequest, ctx: any) {
+       │                                                  ^^^
+    18 │   return AIRouterHandlers.handleAnalysisStatus(req as any, ctx);
+    19 │ }
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/app/api/analysis/[sessionId]/route.ts:18:55 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    17 │ export async function GET(req: NextRequest, ctx: any) {
+  > 18 │   return AIRouterHandlers.handleAnalysisStatus(req as any, ctx);
+       │                                                       ^^^
+    19 │ }
+    20 │ 
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/app/api/analysis/start/route.ts:18:54 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    16 │ export async function POST(req: NextRequest) {
+    17 │   // Export the handler from the AI Router integration adapter
+  > 18 │   return AIRouterHandlers.handleAnalysisStart(req as any);
+       │                                                      ^^^
+    19 │ }
+    20 │ 
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/app/api/documents/upload/route.ts:18:55 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    17 │ export async function POST(req: NextRequest) {
+  > 18 │   return AIRouterHandlers.handleDocumentUpload(req as any);
+       │                                                       ^^^
+    19 │ }
+    20 │ 
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/app/api/status/route.ts:16:51 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    14 │ import { AIRouterHandlers } from 'proposal-prepper-middleware/ai-router-adapter';
+    15 │ 
+  > 16 │ export async function GET(req: NextRequest, _ctx: any) {
+       │                                                   ^^^
+    17 │   return AIRouterHandlers.handleServiceStatus(req as any);
+    18 │ }
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/app/api/status/route.ts:17:54 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    16 │ export async function GET(req: NextRequest, _ctx: any) {
+  > 17 │   return AIRouterHandlers.handleServiceStatus(req as any);
+       │                                                      ^^^
+    18 │ }
+    19 │ 
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/components/reports/report-preview.tsx:71:3 lint/correctness/noUnusedFunctionParameters ━━━━━━━━━━
+
+  ! This parameter is unused.
+  
+    69 │   onFullscreen: _onFullscreen,
+    70 │   onShare: _onShare,
+  > 71 │   className = '',
+       │   ^^^^^^^^^
+    72 │ }) => {
+    73 │   if (!isVisible) return null;
+  
+  i Unused parameters might be the result of an incomplete refactoring.
+  
+
+src/components/rfp/rfp-interface.tsx:25:34 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    23 │   onProjectStart: (projectId: string) => void;
+    24 │   /** Callback when analysis completes */
+  > 25 │   onAnalysisComplete?: (results: any) => void;
+       │                                  ^^^
+    26 │   /** Callback to start a new analysis */
+    27 │   onStartNew?: () => void;
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/components/rfp/rfp-interface.tsx:183:54 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    181 │   // Handle workflow completion (upload + analysis)
+    182 │   const handleWorkflowComplete = useCallback(
+  > 183 │     async (session: UploadSession, analysisResults?: any) => {
+        │                                                      ^^^
+    184 │       console.log('Workflow completed:', { session, analysisResults });
+    185 │ 
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/components/rfp/rfp-interface.tsx:210:31 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    208 │   // Handle workflow errors
+    209 │   const handleWorkflowError = useCallback(
+  > 210 │     (error: string, context?: any) => {
+        │                               ^^^
+    211 │       console.error('Workflow error:', error, context);
+    212 │ 
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/components/shared/types.ts:55:24 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    53 │   validationError?: string;
+    54 │   /** Callback for validation */
+  > 55 │   onValidate?: (value: any) => boolean | string;
+       │                        ^^^
+    56 │ }
+    57 │ 
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/components/shared/types.ts:129:31 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    127 │ export type KeyboardHandler = (event: React.KeyboardEvent) => void;
+    128 │ export type ChangeHandler<T = string> = (value: T) => void;
+  > 129 │ export type SubmitHandler<T = any> = (data: T) => void | Promise<void>;
+        │                               ^^^
+    130 │ 
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/components/upload/types.ts:152:29 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    150 │ export interface UploadOptions {
+    151 │   /** Custom metadata to attach */
+  > 152 │   metadata?: Record<string, any>;
+        │                             ^^^
+    153 │   /** Whether to enable chunked upload */
+    154 │   chunked?: boolean;
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/components/upload/upload-manager.tsx:220:50 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    218 │             completedAt: new Date(),
+    219 │             // Store analysis session ID if available (from Strands integration)
+  > 220 │             analysisSessionId: (response.data as any).analysisSessionId,
+        │                                                  ^^^
+    221 │           };
+    222 │ 
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/components/upload/upload-manager.tsx:229:42 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    227 │           // Provide detailed error information from API response
+    228 │           const apiError = response.error || 'Upload failed';
+  > 229 │           const errorCode = (response as any).code || 'UNKNOWN_ERROR';
+        │                                          ^^^
+    230 │           console.error('API Response Error:', { error: apiError, code: errorCode, response });
+    231 │           throw new Error(`${apiError} (Code: ${errorCode})`);
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/components/upload/upload-workflow.tsx:32:73 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    30 │ export interface UploadWorkflowProps {
+    31 │   /** Callback when the complete workflow finishes */
+  > 32 │   onWorkflowComplete?: (uploadSession: UploadSession, analysisResults?: any) => void;
+       │                                                                         ^^^
+    33 │   /** Callback for workflow errors */
+    34 │   onWorkflowError?: (error: string, context?: any) => void;
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/components/upload/upload-workflow.tsx:34:47 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    32 │   onWorkflowComplete?: (uploadSession: UploadSession, analysisResults?: any) => void;
+    33 │   /** Callback for workflow errors */
+  > 34 │   onWorkflowError?: (error: string, context?: any) => void;
+       │                                               ^^^
+    35 │   /** Whether the workflow is disabled */
+    36 │   disabled?: boolean;
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/components/upload/upload-workflow.tsx:46:12 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    44 │   progress: number;
+    45 │   currentStep: string;
+  > 46 │   results: any | null;
+       │            ^^^
+    47 │   error: string | null;
+    48 │ }
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/components/upload/upload-workflow.tsx:118:40 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    117 │         if (message.sessionId === analysisState.sessionId) {
+  > 118 │           const data = message.data as any;
+        │                                        ^^^
+    119 │           setAnalysisState((prev) => ({
+    120 │             ...prev,
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/components/upload/upload-workflow.tsx:155:45 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    154 │         if (message.sessionId === analysisState.sessionId) {
+  > 155 │           const errorData = message.data as any;
+        │                                             ^^^
+    156 │           setAnalysisState((prev) => ({
+    157 │             ...prev,
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/components/upload/upload-workflow.tsx:197:36 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    195 │           setAnalysisState((prev) => ({
+    196 │             ...prev,
+  > 197 │             status: data.status as any,
+        │                                    ^^^
+    198 │             progress: data.progress || 0,
+    199 │             currentStep: data.currentStep || 'Processing...',
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/components/upload/upload-workflow.tsx:208:31 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    206 │             setAnalysisState((prev) => ({
+    207 │               ...prev,
+  > 208 │               error: (data as any).error_message || 'Analysis failed',
+        │                               ^^^
+    209 │             }));
+    210 │           }
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/seed-data/grants.ts:381:14 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    379 │           regulation: 'N/A', // Added missing regulation
+    380 │           remediation: 'Fix this critical issue',
+  > 381 │         } as any); // Cast as any because 'category' might be missing from type
+        │              ^^^
+    382 │       }
+    383 │     } else if (complianceStatus === 'warning') {
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/seed-data/grants.ts:397:14 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    395 │           regulation: 'N/A', // Added missing regulation
+    396 │           remediation: 'Consider addressing this warning',
+  > 397 │         } as any);
+        │              ^^^
+    398 │       }
+    399 │     }
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+next-env.d.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+    1 1 │   /// <reference types="next" />
+    2 2 │   /// <reference types="next/image-types/global" />
+    3   │ - import·"./.next/types/routes.d.ts";
+      3 │ + import·'./.next/types/routes.d.ts';
+    4 4 │   
+    5 5 │   // NOTE: This file should not be edited
+  
+
+src/components/agent-interface.tsx:313:5 lint/a11y/noSvgWithoutTitle ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Alternative text title element cannot be empty
+  
+    311 │   // Helper for SearchIcon
+    312 │   const SearchIcon = ({ size, className }: { size: number; className: string }) => (
+  > 313 │     <svg
+        │     ^^^^
+  > 314 │       xmlns="http://www.w3.org/2000/svg"
+         ...
+  > 324 │       aria-label="Search"
+  > 325 │     >
+        │     ^
+    326 │       <circle cx="11" cy="11" r="8" />
+    327 │       <path d="m21 21-4.3-4.3" />
+  
+  i For accessibility purposes, SVGs should have an alternative text, provided via title element. If the svg element has role="img", you should add the aria-label or aria-labelledby attribute.
+  
+
+src/components/upload/upload-workflow.tsx:442:15 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    440 │           <div className="flex gap-2 mt-4">
+    441 │             {workflowStatus === 'completed' && (
+  > 442 │               <button
+        │               ^^^^^^^
+  > 443 │                 onClick={resetWorkflow}
+  > 444 │                 className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+  > 445 │               >
+        │               ^
+    446 │                 Analyze Another Document
+    447 │               </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src/components/upload/upload-workflow.tsx:451:15 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    450 │             {workflowStatus === 'failed' && (
+  > 451 │               <button
+        │               ^^^^^^^
+  > 452 │                 onClick={() =>
+  > 453 │                   uploadSession && startAnalysis(uploadSession.id, uploadSession.filename)
+  > 454 │                 }
+  > 455 │                 className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+  > 456 │               >
+        │               ^
+    457 │                 Retry Analysis
+    458 │               </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+Checked 78 files in 81ms. No fixes applied.
+Found 4 errors.
+Found 25 warnings.
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+  
+

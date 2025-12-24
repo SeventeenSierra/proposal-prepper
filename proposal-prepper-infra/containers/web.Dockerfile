@@ -33,5 +33,11 @@ EXPOSE 3000
 ENV NODE_ENV=development
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Ensure permissions for node user
+RUN chown -R node:node /app
+
+# Switch to non-root user
+USER node
+
 # Start development server
 CMD ["pnpm", "dev"]

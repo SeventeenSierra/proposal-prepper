@@ -33,6 +33,7 @@ Every major change or work session is documented in `.agent/sessions/`. This pro
 
 We use [Conventional Commits](https://www.conventionalcommits.org/) with specific requirements for our microservice architecture.
 
+
 ### Commit Format
 
 ```
@@ -88,6 +89,14 @@ git commit -s -m "fix(web): resolve proposal upload timeout
 
 Human-Involvement: full"
 ```
+
+**Bug Fix (Manual):**
+```bash
+git commit -m "fix(web): resolve proposal upload timeout
+
+Human-Involvement: full"
+```
+
 
 ## Development Workflow
 

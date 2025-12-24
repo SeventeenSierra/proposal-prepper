@@ -6,6 +6,15 @@
   },
   "overrides": [
     {
+      "includes": ["next-env.d.ts", ".next/**/*", "out/**/*"],
+      "linter": {
+        "enabled": false
+      },
+      "formatter": {
+        "enabled": false
+      }
+    },
+    {
       "includes": ["src/app/globals.css"],
       "formatter": {
         "enabled": false

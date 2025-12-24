@@ -17,15 +17,15 @@
 
 'use client';
 
-import { AlertCircle, CheckCircle, Clock, FileText, TrendingUp, Zap } from '@17sierra/ui';
+import { AlertCircle, CheckCircle, Clock, TrendingUp, Zap } from '@17sierra/ui';
+import type { WebSocketMessage } from 'proposal-prepper-services/ai-router-client';
+import { aiRouterClient } from 'proposal-prepper-services/ai-router-client';
 import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
+import type { UploadSession } from '@/types/app';
 import { SimulationControls } from './simulation-controls';
-import type { WebSocketMessage } from 'proposal-prepper-services/ai-router-client';
 import { UploadManager } from './upload-manager';
 import { useRealTimeUpdates } from './use-real-time-updates';
-import type { UploadSession } from '@/types/app';
-import { aiRouterClient } from 'proposal-prepper-services/ai-router-client';
 
 export interface UploadWorkflowProps {
   /** Callback when the complete workflow finishes */
@@ -170,8 +170,6 @@ export function UploadWorkflow({
     ),
   });
 
-
-
   // Poll analysis status if not using WebSocket
   useEffect(() => {
     if (
@@ -291,8 +289,6 @@ export function UploadWorkflow({
     ]
   );
 
-
-
   // Handle upload error
   const handleUploadError = useCallback(
     (error: string, session: UploadSession) => {
@@ -373,8 +369,9 @@ export function UploadWorkflow({
             {/* WebSocket Connection Status */}
             <div className="flex items-center gap-2 text-sm text-gray-500">
               <div
-                className={`w-2 h-2 rounded-full ${realTimeUpdates.connected ? 'bg-green-500' : 'bg-gray-300'
-                  }`}
+                className={`w-2 h-2 rounded-full ${
+                  realTimeUpdates.connected ? 'bg-green-500' : 'bg-gray-300'
+                }`}
               />
               {realTimeUpdates.connected ? 'Live updates' : 'Polling for updates'}
             </div>
@@ -443,6 +440,7 @@ export function UploadWorkflow({
           <div className="flex gap-2 mt-4">
             {workflowStatus === 'completed' && (
               <button
+                type="button"
                 onClick={resetWorkflow}
                 className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
               >
@@ -452,6 +450,7 @@ export function UploadWorkflow({
 
             {workflowStatus === 'failed' && (
               <button
+                type="button"
                 onClick={() =>
                   uploadSession && startAnalysis(uploadSession.id, uploadSession.filename)
                 }
@@ -474,10 +473,10 @@ export function UploadWorkflow({
                 workflowStatus,
                 uploadSession: uploadSession
                   ? {
-                    id: uploadSession.id,
-                    status: uploadSession.status,
-                    analysisSessionId: uploadSession.analysisSessionId,
-                  }
+                      id: uploadSession.id,
+                      status: uploadSession.status,
+                      analysisSessionId: uploadSession.analysisSessionId,
+                    }
                   : null,
                 analysisState,
                 realTimeUpdates: {
