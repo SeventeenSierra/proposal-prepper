@@ -249,6 +249,6 @@ export function formatFileSize(bytes: number): string {
  */
 export function generateSessionId(): string {
   const timestamp = Date.now().toString(36);
-  const randomPart = Math.random().toString(36).substr(2, 9);
+  const randomPart = self.crypto.randomUUID().substring(0, 9);
   return `upload-${timestamp}-${randomPart}`;
 }

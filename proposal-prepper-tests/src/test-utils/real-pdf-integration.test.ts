@@ -118,7 +118,7 @@ class RealPDFTestHelper {
     }
 
     // Simulate successful upload
-    const sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const sessionId = `session-${Date.now()}-${self.crypto.randomUUID().substring(0, 8)}`;
 
     return {
       success: true,

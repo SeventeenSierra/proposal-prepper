@@ -137,7 +137,7 @@ export function UploadManager({
    */
   const createUploadSession = useCallback((file: File): UploadSession => {
     return {
-      id: `upload_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+      id: `upload_${Date.now()}_${self.crypto.randomUUID().substring(0, 8)}`,
       filename: file.name,
       fileSize: file.size,
       mimeType: file.type,
@@ -532,21 +532,21 @@ export function UploadManager({
         onClick={
           !isUploading
             ? (e) => {
-                // Only handle click if it's not from a button or other interactive element
-                if (e.target === e.currentTarget || (e.target as HTMLElement).tagName === 'DIV') {
-                  handleClick(e);
-                }
+              // Only handle click if it's not from a button or other interactive element
+              if (e.target === e.currentTarget || (e.target as HTMLElement).tagName === 'DIV') {
+                handleClick(e);
               }
+            }
             : undefined
         }
         onKeyDown={
           !isUploading
             ? (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  handleClick();
-                }
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleClick();
               }
+            }
             : undefined
         }
         tabIndex={!isUploading && !disabled ? 0 : -1}

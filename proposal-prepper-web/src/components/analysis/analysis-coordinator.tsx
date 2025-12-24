@@ -69,7 +69,7 @@ export const AnalysisCoordinator: React.FC<AnalysisCoordinatorProps> = ({
    * Generate unique session ID
    */
   const generateSessionId = useCallback((): string => {
-    return `analysis_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `analysis_${Date.now()}_${self.crypto.randomUUID().substring(0, 9)}`;
   }, []);
 
   /**
@@ -256,11 +256,11 @@ export const AnalysisCoordinator: React.FC<AnalysisCoordinatorProps> = ({
           setSession((prev) =>
             prev
               ? {
-                  ...prev,
-                  status: AnalysisStatus.FAILED,
-                  errorMessage: error,
-                  currentStep: 'Analysis failed',
-                }
+                ...prev,
+                status: AnalysisStatus.FAILED,
+                errorMessage: error,
+                currentStep: 'Analysis failed',
+              }
               : null
           );
           setIsAnalyzing(false);
@@ -371,13 +371,12 @@ export const AnalysisCoordinator: React.FC<AnalysisCoordinatorProps> = ({
           <div className="flex justify-between items-center mb-2">
             <h3 className="text-lg font-medium">Analysis Status</h3>
             <span
-              className={`px-2 py-1 rounded text-sm ${
-                session.status === AnalysisStatus.COMPLETED
+              className={`px-2 py-1 rounded text-sm ${session.status === AnalysisStatus.COMPLETED
                   ? 'bg-green-100 text-green-800'
                   : session.status === AnalysisStatus.FAILED
                     ? 'bg-red-100 text-red-800'
                     : 'bg-blue-100 text-blue-800'
-              }`}
+                }`}
             >
               {session.status.toUpperCase()}
             </span>
@@ -435,13 +434,12 @@ export const AnalysisCoordinator: React.FC<AnalysisCoordinatorProps> = ({
             <div>
               <span className="font-medium">Status:</span>
               <span
-                className={`ml-2 px-2 py-1 rounded ${
-                  result.status === 'pass'
+                className={`ml-2 px-2 py-1 rounded ${result.status === 'pass'
                     ? 'bg-green-100 text-green-800'
                     : result.status === 'fail'
                       ? 'bg-red-100 text-red-800'
                       : 'bg-yellow-100 text-yellow-800'
-                }`}
+                  }`}
               >
                 {result.status.toUpperCase()}
               </span>

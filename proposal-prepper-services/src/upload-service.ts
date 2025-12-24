@@ -53,7 +53,7 @@ export class UploadService {
       sessionId && this.activeSessions.has(sessionId)
         ? { ...this.activeSessions.get(sessionId)!, status: UploadStatus.UPLOADING }
         : {
-          id: sessionId || `upload_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+          id: sessionId || `upload_${Date.now()}_${self.crypto.randomUUID().substring(0, 8)}`,
           filename: file.name,
           fileSize: file.size,
           mimeType: file.type,

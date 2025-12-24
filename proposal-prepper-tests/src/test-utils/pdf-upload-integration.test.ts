@@ -244,7 +244,7 @@ async function simulateUpload(file: File): Promise<{
 
   return {
     success: true,
-    sessionId: `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    sessionId: `session-${Date.now()}-${self.crypto.randomUUID().substring(0, 8)}`,
   };
 }
 

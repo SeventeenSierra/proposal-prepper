@@ -61,7 +61,7 @@ export class MockAIRouterClient {
     return {
       success: true,
       data: {
-        id: `upload_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+        id: `upload_${Date.now()}_${self.crypto.randomUUID().substring(0, 8)}`,
         filename: file.name,
         fileSize: file.size,
         mimeType: file.type,
@@ -79,7 +79,7 @@ export class MockAIRouterClient {
     return {
       success: true,
       data: {
-        id: `analysis_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+        id: `analysis_${Date.now()}_${self.crypto.randomUUID().substring(0, 8)}`,
         proposalId,
         status: 'analyzing',
         progress: 0,

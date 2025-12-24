@@ -11,6 +11,10 @@ on:
   schedule:
     - cron: '0 0 * * 1' # Weekly scan
 
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
   gitleaks:
     name: Gitleaks

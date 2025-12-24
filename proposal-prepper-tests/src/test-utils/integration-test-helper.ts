@@ -86,7 +86,7 @@ export class IntegrationTestHelper {
       }
 
       // Simulate successful upload
-      const sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const sessionId = `session-${Date.now()}-${self.crypto.randomUUID().substring(0, 8)}`;
       return { success: true, sessionId };
     } catch (error) {
       return { success: false, error: error instanceof Error ? error.message : 'Upload failed' };
