@@ -1,7 +1,0 @@
-[00:00:00.477] Server  LOG      ✓ Ready in 353ms
-[00:00:02.316] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:07.794] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:36.085] Server  LOG     [Adapter] Processing upload for file: bertolet_brittnil_2021_9d34d838-4fd8-4fbd-b94e-766d1dd82d23_PROPOSAL_1.pdf
-[00:00:36.086] Server  LOG     [Adapter] Using REAL AI Router service for upload
-[00:00:36.168] Server  ERROR   [Adapter] Upload error: ReferenceError: XMLHttpRequest is not defined
-[00:00:36.272] Browser ERROR   Analysis failed: Upload failed: Internal Server Error
