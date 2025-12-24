@@ -20,7 +20,7 @@ pydantic-settings==2.1.0
 httpx==0.25.2
 
 # PDF processing
-pypdf==3.17.4
+pypdf==6.4.0
 python-multipart==0.0.19
 
 # Logging and monitoring
