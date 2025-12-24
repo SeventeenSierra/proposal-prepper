@@ -178,7 +178,7 @@ class PDFProcessor:
         Extract metadata from PDF document.
         
         Args:
-            pdf_reader: PyPDF2 PdfReader instance
+            pdf_reader: pypdf PdfReader instance
             
         Returns:
             Dictionary containing PDF metadata
