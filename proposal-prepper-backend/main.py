@@ -195,9 +195,10 @@ async def process_analysis(session_id: str) -> None:
         return
     
     try:
-        logger.info(f"Starting real AI analysis for session {session_id}")
+        logger.info(f"Starting analysis process for session: {session_id}")
         
         # Phase 1: Document text extraction
+        logger.debug(f"Phase 1: Extraction for session {session_id}")
         await update_analysis_progress(
             session_id=session_id,
             status=AnalysisStatus.EXTRACTING,
@@ -811,19 +812,23 @@ async def start_analysis(
         AnalysisStartResponse with session ID and initial status
     """
     try:
+        logger.info(f"Received analysis start request for proposal {request.proposal_id}, document {request.document_id}")
+        
         # Create analysis session in database
         session_id = await create_analysis_session(request)
+        logger.info(f"Created analysis session: {session_id}")
         
         # Submit task to concurrent processor
         queued = await submit_analysis_task(session_id, request)
         
         if not queued:
+            logger.error(f"Failed to queue analysis task for session {session_id}")
             raise HTTPException(
                 status_code=503,
                 detail="Analysis queue is full, please try again later"
             )
         
-        logger.info(f"Queued analysis session {session_id} for document {request.document_id}")
+        logger.info(f"Successfully queued analysis session {session_id} for document {request.document_id}")
         
         return AnalysisStartResponse(
             success=True,

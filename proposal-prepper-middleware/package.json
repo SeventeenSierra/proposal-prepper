@@ -11,7 +11,8 @@
     "dependencies": {
         "express": "^5.2.1",
         "cors": "^2.8.5",
-        "dotenv": "^17.2.3"
+        "dotenv": "^17.2.3",
+        "proposal-prepper-services": "workspace:*"
     },
     "devDependencies": {
         "@types/express": "^5.0.6",

@@ -138,7 +138,6 @@ describe('AnalysisService', () => {
       expect(result.sessionId).toBe('analysis-456');
       expect(mockAiRouterClient.startAnalysis).toHaveBeenCalledWith(
         'proposal-123',
-        'proposal-123',
         'doc-456'
       );
     });
