@@ -11,8 +11,8 @@
  * Performance optimizations for Requirement 5.1: Load time performance
  */
 
-import { apiConfig, errorConfig } from '@/config/app';
-import { apiCache, PerformanceMonitor } from '@/utils/performance';
+import { apiConfig, errorConfig } from './config/app';
+import { apiCache, PerformanceMonitor } from './utils/performance';
 
 /**
  * API Response wrapper for consistent error handling
@@ -161,11 +161,21 @@ class HttpClient {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        const data = await response.json();
+        const rawData = await response.json();
+        console.log(`[AIRouterClient] ${options.method || 'GET'} ${endpoint} Raw:`, JSON.stringify(rawData));
+
+        // Recursive unwrapping logic for multi-layered middleware responses
+        let data = rawData;
+        while (data && typeof data === 'object' && data.success === true && 'data' in data) {
+          console.log('[AIRouterClient] Unwrapping one level...');
+          data = data.data;
+        }
+
+        console.log(`[AIRouterClient] ${options.method || 'GET'} ${endpoint} Unwrapped:`, JSON.stringify(data));
 
         // Cache successful GET responses
         if (options.method === 'GET' && cacheKey && data) {
-          apiCache.set(cacheKey, data, cacheTTL);
+          apiCache.set(cacheKey, data as any, cacheTTL);
         }
 
         // Performance monitoring
@@ -175,7 +185,7 @@ class HttpClient {
           `${requestId}-start`,
           `${requestId}-end`
         );
-        if (duration && duration > 1000) {
+        if (duration !== null && duration > 1000) {
           console.warn(`Slow API request: ${endpoint} took ${duration}ms`);
         }
 
@@ -290,7 +300,18 @@ class HttpClient {
       xhr.addEventListener('load', () => {
         try {
           if (xhr.status >= 200 && xhr.status < 300) {
-            const data = JSON.parse(xhr.responseText);
+            const rawData = JSON.parse(xhr.responseText);
+            console.log('[AIRouterClient] Upload Raw Response:', JSON.stringify(rawData));
+
+            // Recursive unwrapping logic
+            let data = rawData;
+            while (data && typeof data === 'object' && data.success === true && 'data' in data) {
+              console.log('[AIRouterClient] Unwrapping upload one level...');
+              data = data.data;
+            }
+
+            console.log('[AIRouterClient] Upload Unwrapped Data:', JSON.stringify(data));
+
             resolve({ success: true, data });
           } else {
             resolve({
@@ -767,7 +788,7 @@ function createAIRouterClient() {
   // Import configuration dynamically to avoid circular dependencies
   let config;
   try {
-    const configModule = require('@/config/api-config');
+    const configModule = require('./config/api-config');
     config = configModule.apiConfiguration;
   } catch (_error) {
     // Fallback configuration if api-config is not available

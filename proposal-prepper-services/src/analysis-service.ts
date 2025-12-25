@@ -9,8 +9,8 @@
  * Implements requirements 2.1, 2.2, 2.3, 2.4, and 2.5 for analysis functionality.
  */
 
-import { type AnalysisSession, AnalysisStatus } from '@/components/analysis/types';
-import { analysisConfig } from '@/config/app';
+import { type AnalysisSession, AnalysisStatus } from './components/analysis/types';
+import { analysisConfig } from './config/app';
 import {
   aiRouterClient,
   type AnalysisSessionResponse,
@@ -76,14 +76,16 @@ export class AnalysisService {
         };
       }
 
+      console.log(`[AnalysisService] Starting analysis for proposal: ${request.proposalId}, document: ${request.documentId}`);
+
       // Start analysis with Strands API
       const response = await aiRouterClient.startAnalysis(
         request.proposalId,
-        request.proposalId, // Using proposalId as sessionId for now
         request.documentId
       );
 
       if (response.success && response.data) {
+        console.log(`[AnalysisService] Analysis started successfully. Session ID: ${response.data.id}`);
         // Create local session from API response
         const session = this.mapApiResponseToSession(response.data);
         this.activeSessions.set(session.id, session);
@@ -94,10 +96,12 @@ export class AnalysisService {
         return { success: true, sessionId: session.id };
       } else {
         const error = response.error || 'Failed to start analysis';
+        console.error(`[AnalysisService] Failed to start analysis: ${error}`);
         return { success: false, sessionId: '', error };
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Analysis start failed';
+      console.error(`[AnalysisService] Exception in startAnalysis: ${errorMessage}`, error);
       return { success: false, sessionId: '', error: errorMessage };
     }
   }
@@ -221,22 +225,28 @@ export class AnalysisService {
 
     const poll = async () => {
       try {
+        console.log(`[AnalysisService] Polling status for session ${sessionId} (Attempt ${attempts + 1}/${maxAttempts})`);
         const session = await this.getAnalysisStatus(sessionId);
         if (!session) {
+          console.warn(`[AnalysisService] Session ${sessionId} not found during polling`);
           return; // Session not found, stop polling
         }
+
+        console.log(`[AnalysisService] Session ${sessionId} status: ${session.status}, progress: ${session.progress}%, step: ${session.currentStep}`);
 
         // Notify progress
         this.eventHandlers.onProgress?.(sessionId, session.progress, session.currentStep);
 
         // Check if analysis is complete
         if (session.status === AnalysisStatus.COMPLETED) {
+          console.log(`[AnalysisService] Analysis complete for session ${sessionId}`);
           this.eventHandlers.onComplete?.(sessionId, session);
           return;
         }
 
         // Check if analysis failed
         if (session.status === AnalysisStatus.FAILED) {
+          console.error(`[AnalysisService] Analysis failed for session ${sessionId}: ${session.errorMessage}`);
           this.eventHandlers.onError?.(sessionId, session.errorMessage || 'Analysis failed');
           return;
         }

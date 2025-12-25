@@ -9,8 +9,9 @@
  * Implements requirements 1.1, 1.2, 1.3, 1.4, and 1.5 for upload functionality.
  */
 
-import { errorConfig, uploadConfig } from '@/config/app';
-import { type UploadSession, UploadStatus } from '@/types/app';
+import crypto from 'node:crypto';
+import { errorConfig, uploadConfig } from './config/app';
+import { type UploadSession, UploadStatus } from './types/app';
 import { aiRouterClient, type UploadSessionResponse } from './ai-router-client';
 
 /**
@@ -53,7 +54,7 @@ export class UploadService {
       sessionId && this.activeSessions.has(sessionId)
         ? { ...this.activeSessions.get(sessionId)!, status: UploadStatus.UPLOADING }
         : {
-          id: sessionId || `upload_${Date.now()}_${self.crypto.randomUUID().substring(0, 8)}`,
+          id: sessionId || `upload_${Date.now()}_${crypto.randomUUID().substring(0, 8)}`,
           filename: file.name,
           fileSize: file.size,
           mimeType: file.type,
@@ -65,6 +66,7 @@ export class UploadService {
     this.activeSessions.set(session.id, session);
 
     try {
+      console.log(`[UploadService] Starting upload for file: ${file.name}, initial sessionId: ${session.id}`);
       // Upload file with progress tracking
       const response = await aiRouterClient.uploadDocument(file, (progress) => {
         const updatedSession = { ...session, progress };
@@ -74,9 +76,11 @@ export class UploadService {
 
       if (response.success && response.data) {
         // Update session with server response
+        const serverId = (response.data as any)?.id || (response.data as any)?.sessionId;
+
         const completedSession: UploadSession = {
           ...session,
-          id: response.data.id, // Use server-generated ID
+          id: serverId || session.id, // Fallback to local session ID if server didn't provide one
           status: UploadStatus.COMPLETED,
           progress: 100,
           completedAt: new Date(),

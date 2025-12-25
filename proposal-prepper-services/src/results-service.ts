@@ -14,7 +14,7 @@ import {
   ComplianceStatus,
   IssueSeverity,
   type ComplianceIssue as LocalComplianceIssue,
-} from '@/components/results/types';
+} from './components/results/types';
 import type {
   ComplianceIssue,
   ComplianceResultsResponse,
