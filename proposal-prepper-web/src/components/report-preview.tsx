@@ -3,12 +3,12 @@
 import { Badge, Button } from '@17sierra/ui';
 import {
   AlertTriangle,
-  CalendarIcon,
+  Calendar as CalendarIcon,
   CheckCircle2,
   Download,
   FileText,
   Maximize2,
-} from '@17sierra/ui';
+} from 'lucide-react';
 import type { AnalysisResults } from '@/components/results/types';
 
 type ReportPreviewProps = {

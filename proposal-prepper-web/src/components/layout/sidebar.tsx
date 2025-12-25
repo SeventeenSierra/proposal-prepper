@@ -1,16 +1,15 @@
 'use client';
 
 import { Button } from '@17sierra/ui';
-import { ChevronRight, Clock, FileText, History, MoreHorizontal, Plus, Star } from '@17sierra/ui';
 import {
-  ChevronRight as ChevronRightIcon,
-  Clock as ClockIcon,
-  FileText as FileTextIcon,
-  History as HistoryIcon,
-  MoreHorizontal as MoreHorizontalIcon,
-  Plus as PlusIcon,
-  Star as StarIcon
-} from 'lucide-react'; // Fallback if missing in @17sierra/ui dist
+  ChevronRight,
+  Clock,
+  FileText,
+  History,
+  MoreHorizontal,
+  Plus,
+  Star
+} from 'lucide-react';
 import { useState } from 'react';
 
 type SidebarProps = {

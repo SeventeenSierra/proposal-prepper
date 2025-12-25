@@ -5,7 +5,8 @@
 
 'use client';
 
-import { Button, ChevronLeft, ChevronRight, Home } from '@17sierra/ui';
+import { Button } from '@17sierra/ui';
+import { ChevronLeft, ChevronRight, Home } from 'lucide-react';
 import type React from 'react';
 import { useCallback, useMemo } from 'react';
 
@@ -154,11 +155,10 @@ export function NavigationController({
 
       return (
         <div
-          className={`flex h-8 w-8 items-center justify-center rounded-full border-2 ${
-            step.isAccessible
+          className={`flex h-8 w-8 items-center justify-center rounded-full border-2 ${step.isAccessible
               ? 'border-gray-300 bg-white text-gray-500 hover:border-gray-400'
               : 'border-gray-200 bg-gray-100 text-gray-400'
-          }`}
+            }`}
         >
           <span className="text-sm font-medium">{steps.indexOf(step) + 1}</span>
         </div>
@@ -194,25 +194,23 @@ export function NavigationController({
                   onClick={() => handleStepNavigation(step.id)}
                   onKeyDown={(e) => handleKeyNavigation(e, step.id)}
                   disabled={disabled || !step.isAccessible}
-                  className={`group flex items-center ${
-                    step.isAccessible && !disabled
+                  className={`group flex items-center ${step.isAccessible && !disabled
                       ? 'cursor-pointer hover:text-blue-600'
                       : 'cursor-not-allowed'
-                  }`}
+                    }`}
                   aria-current={step.isCurrent ? 'step' : undefined}
                 >
                   {getStepStatusIndicator(step)}
                   <div className="ml-4 min-w-0">
                     <p
-                      className={`text-sm font-medium ${
-                        step.isCurrent
+                      className={`text-sm font-medium ${step.isCurrent
                           ? 'text-blue-600'
                           : step.isCompleted
                             ? 'text-gray-900'
                             : step.isAccessible
                               ? 'text-gray-500 group-hover:text-gray-900'
                               : 'text-gray-400'
-                      }`}
+                        }`}
                     >
                       {step.label}
                     </p>

@@ -5,7 +5,7 @@
 
 'use client';
 
-import { AlertCircle, CheckCircle, FileText, XCircle } from '@17sierra/ui';
+import { AlertCircle, CheckCircle, FileText, XCircle } from 'lucide-react';
 import type { ExtendedComplianceIssue } from './types';
 import { IssueSeverity } from './types';
 
@@ -125,9 +125,8 @@ export function RegulatoryReferences({ issues, rulesChecked }: RegulatoryReferen
                 return (
                   <div
                     key={rule}
-                    className={`p-3 rounded-lg border ${
-                      hasIssues ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'
-                    }`}
+                    className={`p-3 rounded-lg border ${hasIssues ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'
+                      }`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-gray-900 truncate pr-2">
