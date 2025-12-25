@@ -58,10 +58,13 @@ export class MockAIRouterClient {
     }
 
     // Return successful upload
+    const cryptoObj = typeof window !== 'undefined' ? window.crypto : (typeof self !== 'undefined' ? self.crypto : (globalThis as any).crypto);
+    const uuid = cryptoObj?.randomUUID() || Math.random().toString(36).substring(2, 10);
+
     return {
       success: true,
       data: {
-        id: `upload_${Date.now()}_${self.crypto.randomUUID().substring(0, 8)}`,
+        id: `upload_${Date.now()}_${uuid.substring(0, 8)}`,
         filename: file.name,
         fileSize: file.size,
         mimeType: file.type,
@@ -76,10 +79,13 @@ export class MockAIRouterClient {
   async startAnalysis(proposalId: string): Promise<ApiResponse<AnalysisSessionResponse>> {
     await this.simulateDelay(500);
 
+    const cryptoObj = typeof window !== 'undefined' ? window.crypto : (typeof self !== 'undefined' ? self.crypto : (globalThis as any).crypto);
+    const uuid = cryptoObj?.randomUUID() || Math.random().toString(36).substring(2, 10);
+
     return {
       success: true,
       data: {
-        id: `analysis_${Date.now()}_${self.crypto.randomUUID().substring(0, 8)}`,
+        id: `analysis_${Date.now()}_${uuid.substring(0, 8)}`,
         proposalId,
         status: 'analyzing',
         progress: 0,
