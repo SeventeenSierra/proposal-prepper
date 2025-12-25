@@ -1,15 +1,14 @@
 'use client';
 
 import { Badge, Button } from '@17sierra/ui';
-// Removed broken icon imports from @17sierra/ui
 import {
-  AlertTriangle as AlertTriangleIcon,
-  Calendar as CalendarIcon,
-  CheckCircle2 as CheckCircle2Icon,
-  Download as DownloadIcon,
-  FileText as FileTextIcon,
-  Maximize2 as Maximize2Icon
-} from 'lucide-react'; // Fallback if missing in @17sierra/ui dist
+  AlertTriangle,
+  CalendarIcon,
+  CheckCircle2,
+  Download,
+  FileText,
+  Maximize2,
+} from '@17sierra/ui';
 import type { AnalysisResults } from '@/components/results/types';
 
 type ReportPreviewProps = {
@@ -27,15 +26,15 @@ const ReportPreview = ({ isVisible, results }: ReportPreviewProps) => {
     <div className="flex-1 bg-slate-50 border-l border-gray-200 h-full flex flex-col animate-in slide-in-from-right duration-500 z-10 shadow-xl max-w-[50%] min-w-[500px]">
       <div className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0 z-20 shadow-sm">
         <div className="flex items-center gap-2">
-          <FileTextIcon size={18} className="text-blue-600" />
+          <FileText size={18} className="text-blue-600" />
           <div className="font-semibold text-slate-800 text-sm">Compliance Report Preview</div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 hidden md:flex">
-            <Maximize2Icon size={12} /> Fullscreen
+            <Maximize2 size={12} /> Fullscreen
           </Button>
           <Button size="sm" className="h-8 text-xs gap-1.5 bg-slate-900 hover:bg-slate-800">
-            <DownloadIcon size={12} /> Download PDF
+            <Download size={12} /> Download PDF
           </Button>
         </div>
       </div>
@@ -109,9 +108,9 @@ const ReportPreview = ({ isVisible, results }: ReportPreviewProps) => {
                   }`}
               >
                 {results.status === 'pass' ? (
-                  <CheckCircle2Icon size={24} className="text-green-600" />
+                  <CheckCircle2 size={24} className="text-green-600" />
                 ) : (
-                  <AlertTriangleIcon
+                  <AlertTriangle
                     size={24}
                     className={results.status === 'warning' ? 'text-yellow-600' : 'text-red-600'}
                   />

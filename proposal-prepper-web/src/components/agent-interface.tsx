@@ -7,12 +7,13 @@ import {
   CheckCircle2,
   FileCheck,
   Loader2,
+  Send,
   Sparkles,
   Textarea,
   Upload,
   Zap,
 } from '@17sierra/ui';
-import { Send as SendIcon, Upload as UploadIcon } from 'lucide-react'; // Fallback if not in ui package
+import { Upload as UploadIcon } from 'lucide-react'; // Fallback if not in ui package
 import { analysisService } from 'proposal-prepper-services/analysis-service';
 import { resultsService } from 'proposal-prepper-services/results-service';
 import { uploadService } from 'proposal-prepper-services/upload-service';
@@ -585,7 +586,7 @@ const AgentInterface = ({
                 disabled={!inputValue || isSending || !activeProject}
                 onClick={handleSendMessage}
               >
-                {isSending ? <Loader2 size={16} className="animate-spin" /> : <SendIcon size={16} />}
+                {isSending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
               </Button>
             </div>
           </div>

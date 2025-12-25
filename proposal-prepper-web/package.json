@@ -18,8 +18,9 @@
     "clean": "rm -rf .next node_modules services/*/node_modules"
   },
   "dependencies": {
-    "@17sierra/ui": "^0.2.6",
-    "@hookform/resolvers": "^5.2.2",
+    "@17sierra/lib": "^0.2.0",
+    "@17sierra/ui": "^0.2.7",
+    "@hookform/resolvers": "^3.10.0",
     "@tailwindcss/postcss": "^4.1.18",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
