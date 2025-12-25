@@ -11,7 +11,8 @@
 
 'use client';
 
-import { AlertCircle, Button, CheckCircle, FileText, Upload, X } from '@17sierra/ui';
+import { AlertCircle, Button, Upload } from '@17sierra/ui';
+import { CheckCircle, FileText, X } from 'lucide-react';
 import { aiRouterClient } from 'proposal-prepper-services/ai-router-client';
 import { MockAIRouterClient } from 'proposal-prepper-services/mock-ai-router-client';
 import type React from 'react';

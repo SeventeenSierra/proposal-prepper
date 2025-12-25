@@ -3,20 +3,24 @@
 import {
   AlertCircle,
   Bot,
-  Button,
   CheckCircle2,
   FileCheck,
   Loader2,
   Send,
   Sparkles,
+  Zap,
+  Upload as UploadIcon,
+} from 'lucide-react';
+import {
+  Button,
   Textarea,
   Upload,
-  Zap,
 } from '@17sierra/ui';
-import { Upload as UploadIcon } from 'lucide-react'; // Fallback if not in ui package
-import { analysisService } from 'proposal-prepper-services/analysis-service';
-import { resultsService } from 'proposal-prepper-services/results-service';
-import { uploadService } from 'proposal-prepper-services/upload-service';
+import {
+  analysisService,
+  resultsService,
+  uploadService,
+} from 'proposal-prepper-services';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnalysisStatus } from '@/components/analysis/types';
 import type { AnalysisResults } from '@/components/results/types';
@@ -163,9 +167,11 @@ const AgentInterface = ({
 
       const uploadResult = await uploadService.uploadDocument(selectedFile);
 
-      console.log('Upload Result in AgentInterface:', JSON.stringify(uploadResult, null, 2));
+      console.log('[AgentInterface] Upload Result:', JSON.stringify(uploadResult));
+      console.log('[AgentInterface] Session ID from result:', uploadResult.sessionId);
 
       if (!uploadResult.success) {
+        console.error('[AgentInterface] Upload failed:', uploadResult.error);
         throw new Error(uploadResult.error || 'Upload failed');
       }
 
@@ -180,7 +186,11 @@ const AgentInterface = ({
         )
       );
 
-      console.log('Starting Analysis with Proposal ID:', uploadResult.sessionId);
+      console.log('[AgentInterface] Starting Analysis with Request Parameters:', {
+        proposalId: uploadResult.sessionId,
+        documentId: uploadResult.sessionId,
+        frameworks: ['FAR', 'DFARS'],
+      });
 
       // Step 2-5: Start analysis
       const analysisResult = await analysisService.startAnalysis({
@@ -190,6 +200,7 @@ const AgentInterface = ({
       });
 
       if (!analysisResult.success) {
+        console.error('[AgentInterface] Analysis failed to start:', analysisResult.error);
         throw new Error(analysisResult.error || 'Analysis failed to start');
       }
 
@@ -242,7 +253,8 @@ const AgentInterface = ({
             onAnalysisError('Failed to fetch analysis results');
           }
         },
-        onError: (_sessionId, error) => {
+        onError: (sessionId, error) => {
+          console.error(`[AgentInterface] Analysis error for session ${sessionId}:`, error);
           setSteps((prev) =>
             prev.map((step, idx) => {
               const runningIdx = prev.findIndex((s) => s.status === 'running');

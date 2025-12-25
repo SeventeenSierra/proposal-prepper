@@ -20,6 +20,7 @@
   "dependencies": {
     "@17sierra/lib": "^0.2.0",
     "@17sierra/ui": "^0.2.7",
+    "proposal-prepper-services": "workspace:*",
     "@hookform/resolvers": "^3.10.0",
     "@tailwindcss/postcss": "^4.1.18",
     "date-fns": "^4.1.0",

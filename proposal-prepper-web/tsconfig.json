@@ -34,6 +34,9 @@
       "@/services/*": [
         "../proposal-prepper-services/src/*"
       ],
+      "proposal-prepper-services": [
+        "../proposal-prepper-services/src/index.ts"
+      ],
       "proposal-prepper-services/*": [
         "../proposal-prepper-services/src/*"
       ],

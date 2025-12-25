@@ -17,7 +17,7 @@
 
 'use client';
 
-import { AlertCircle, CheckCircle, Clock, TrendingUp, Zap } from '@17sierra/ui';
+import { AlertCircle, CheckCircle, Clock, TrendingUp, Zap } from 'lucide-react';
 import type { WebSocketMessage } from 'proposal-prepper-services/ai-router-client';
 import { aiRouterClient } from 'proposal-prepper-services/ai-router-client';
 import type React from 'react';
@@ -369,9 +369,8 @@ export function UploadWorkflow({
             {/* WebSocket Connection Status */}
             <div className="flex items-center gap-2 text-sm text-gray-500">
               <div
-                className={`w-2 h-2 rounded-full ${
-                  realTimeUpdates.connected ? 'bg-green-500' : 'bg-gray-300'
-                }`}
+                className={`w-2 h-2 rounded-full ${realTimeUpdates.connected ? 'bg-green-500' : 'bg-gray-300'
+                  }`}
               />
               {realTimeUpdates.connected ? 'Live updates' : 'Polling for updates'}
             </div>
@@ -473,10 +472,10 @@ export function UploadWorkflow({
                 workflowStatus,
                 uploadSession: uploadSession
                   ? {
-                      id: uploadSession.id,
-                      status: uploadSession.status,
-                      analysisSessionId: uploadSession.analysisSessionId,
-                    }
+                    id: uploadSession.id,
+                    status: uploadSession.status,
+                    analysisSessionId: uploadSession.analysisSessionId,
+                  }
                   : null,
                 analysisState,
                 realTimeUpdates: {
