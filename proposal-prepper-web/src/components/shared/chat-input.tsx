@@ -152,8 +152,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
             disabled={disabled || loading}
-            className={`w-full p-3 pr-12 text-sm resize-none bg-white shadow-sm transition-all duration-200 ${multiline ? 'min-h-[50px]' : 'h-[50px]'
-              }`}
+            className={`w-full p-3 pr-12 text-sm resize-none bg-white shadow-sm transition-all duration-200 ${
+              multiline ? 'min-h-[50px]' : 'h-[50px]'
+            }`}
             rows={multiline ? rows : 1}
             style={{
               height: multiline ? `${Math.max(50, rows * 20 + 16)}px` : '50px',
@@ -163,8 +164,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           {/* Character count */}
           {showCharacterCount && maxLength && (
             <div
-              className={`absolute bottom-1 left-3 text-xs transition-colors ${isNearLimit ? 'text-orange-500' : 'text-gray-400'
-                }`}
+              className={`absolute bottom-1 left-3 text-xs transition-colors ${
+                isNearLimit ? 'text-orange-500' : 'text-gray-400'
+              }`}
             >
               {characterCount}/{maxLength}
             </div>

@@ -1,15 +1,7 @@
 'use client';
 
 import { Button } from '@17sierra/ui';
-import {
-  ChevronRight,
-  Clock,
-  FileText,
-  History,
-  MoreHorizontal,
-  Plus,
-  Star
-} from 'lucide-react';
+import { ChevronRight, Clock, FileText, History, MoreHorizontal, Plus, Star } from 'lucide-react';
 import { useState } from 'react';
 
 type SidebarProps = {
@@ -24,8 +16,9 @@ const Sidebar = ({ activeProject, setActiveProject, resetDemo, isOpen }: Sidebar
 
   return (
     <div
-      className={`bg-slate-50 border-gray-200 flex flex-col h-full shrink-0 transition-all duration-300 ease-in-out overflow-hidden shadow-inner ${isOpen ? 'w-[280px] border-r opacity-100' : 'w-0 border-r-0 opacity-0'
-        }`}
+      className={`bg-slate-50 border-gray-200 flex flex-col h-full shrink-0 transition-all duration-300 ease-in-out overflow-hidden shadow-inner ${
+        isOpen ? 'w-[280px] border-r opacity-100' : 'w-0 border-r-0 opacity-0'
+      }`}
     >
       <div className="w-[280px] flex flex-col h-full">
         <div className="p-4 pt-5 pb-2">
@@ -43,20 +36,22 @@ const Sidebar = ({ activeProject, setActiveProject, resetDemo, isOpen }: Sidebar
             <button
               type="button"
               onClick={() => setActiveTab('all')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold rounded-md transition-all ${activeTab === 'all'
-                ? 'bg-white text-slate-800 shadow-sm'
-                : 'text-gray-500 hover:text-slate-700 hover:bg-gray-200/50'
-                }`}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                activeTab === 'all'
+                  ? 'bg-white text-slate-800 shadow-sm'
+                  : 'text-gray-500 hover:text-slate-700 hover:bg-gray-200/50'
+              }`}
             >
               <History size={12} /> Recent
             </button>
             <button
               type="button"
               onClick={() => setActiveTab('favorites')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold rounded-md transition-all ${activeTab === 'favorites'
-                ? 'bg-white text-slate-800 shadow-sm'
-                : 'text-gray-500 hover:text-slate-700 hover:bg-gray-200/50'
-                }`}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                activeTab === 'favorites'
+                  ? 'bg-white text-slate-800 shadow-sm'
+                  : 'text-gray-500 hover:text-slate-700 hover:bg-gray-200/50'
+              }`}
             >
               <Star size={12} /> Saved
             </button>
@@ -68,9 +63,7 @@ const Sidebar = ({ activeProject, setActiveProject, resetDemo, isOpen }: Sidebar
             <Clock size={10} /> Today
           </div>
 
-          <div className="text-sm text-gray-400 italic px-2 py-4 text-center">
-            No recent checks
-          </div>
+          <div className="text-sm text-gray-400 italic px-2 py-4 text-center">No recent checks</div>
         </div>
 
         {/* User Profile / Config Section at bottom */}

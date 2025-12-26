@@ -2,4 +2,3 @@
 // SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 export * from 'proposal-prepper-services/components/results/types';
-

@@ -1,18 +1,18 @@
 'use client';
 
-import { Bot, Avatar, AvatarFallback, Button } from '@17sierra/ui';
+import { Avatar, AvatarFallback, Bot, Button } from '@17sierra/ui';
 import {
   Bell,
-  HelpCircle,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Settings,
   Bell as BellIcon,
   Bot as BotIcon,
+  HelpCircle,
   HelpCircle as HelpCircleIcon,
+  PanelLeftClose,
   PanelLeftClose as PanelLeftCloseIcon,
+  PanelLeftOpen,
   PanelLeftOpen as PanelLeftOpenIcon,
-  Settings as SettingsIcon
+  Settings,
+  Settings as SettingsIcon,
 } from 'lucide-react'; // Fallback if missing in @17sierra/ui dist
 
 type TopBarProps = {
@@ -47,10 +47,13 @@ const TopBar = ({ toggleSidebar, isSidebarOpen, apiMode }: TopBarProps) => {
                   Alpha
                 </span>
                 {apiMode && (
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full border uppercase font-bold tracking-wider ${apiMode === 'mock'
-                    ? 'bg-amber-100 text-amber-700 border-amber-200'
-                    : 'bg-emerald-100 text-emerald-700 border-emerald-200'
-                    }`}>
+                  <span
+                    className={`text-[10px] px-2 py-0.5 rounded-full border uppercase font-bold tracking-wider ${
+                      apiMode === 'mock'
+                        ? 'bg-amber-100 text-amber-700 border-amber-200'
+                        : 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                    }`}
+                  >
                     {apiMode === 'mock' ? 'Demo' : 'Live'}
                   </span>
                 )}

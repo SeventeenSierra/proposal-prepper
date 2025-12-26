@@ -533,21 +533,21 @@ export function UploadManager({
         onClick={
           !isUploading
             ? (e) => {
-              // Only handle click if it's not from a button or other interactive element
-              if (e.target === e.currentTarget || (e.target as HTMLElement).tagName === 'DIV') {
-                handleClick(e);
+                // Only handle click if it's not from a button or other interactive element
+                if (e.target === e.currentTarget || (e.target as HTMLElement).tagName === 'DIV') {
+                  handleClick(e);
+                }
               }
-            }
             : undefined
         }
         onKeyDown={
           !isUploading
             ? (e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handleClick();
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleClick();
+                }
               }
-            }
             : undefined
         }
         tabIndex={!isUploading && !disabled ? 0 : -1}

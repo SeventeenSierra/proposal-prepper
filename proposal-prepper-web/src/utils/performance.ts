@@ -4,4 +4,3 @@
  */
 
 export * from 'proposal-prepper-services/utils/performance';
-

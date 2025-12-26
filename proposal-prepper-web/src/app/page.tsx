@@ -1,13 +1,12 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import AgentInterface from '@/components/agent-interface';
 import Sidebar from '@/components/layout/sidebar';
 import TopBar from '@/components/layout/top-bar';
 import ReportPreview from '@/components/report-preview';
-import { apiConfig } from '@/services/config/app';
 import type { AnalysisResults } from '@/components/results/types';
-import { useEffect } from 'react';
+import { apiConfig } from '@/services/config/app';
 
 export default function App() {
   const [activeProject, setActiveProject] = useState<string | null>(null);
