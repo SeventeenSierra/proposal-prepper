@@ -1,17 +1,36 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import AgentInterface from '@/components/agent-interface';
 import Sidebar from '@/components/layout/sidebar';
 import TopBar from '@/components/layout/top-bar';
 import ReportPreview from '@/components/report-preview';
 import type { AnalysisResults } from '@/components/results/types';
+import { apiConfig } from '@/services/config/app';
 
 export default function App() {
   const [activeProject, setActiveProject] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [analysisResults, setAnalysisResults] = useState<AnalysisResults | null>(null);
+  const [apiMode, setApiMode] = useState<'real' | 'mock'>(apiConfig.useMockApis ? 'mock' : 'real');
+
+  useEffect(() => {
+    // Check localStorage on mount
+    const storedMockPref = localStorage.getItem('use-mock-api');
+    if (storedMockPref !== null) {
+      setApiMode(storedMockPref === 'true' ? 'mock' : 'real');
+    }
+
+    // Listen for storage events
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'use-mock-api') {
+        setApiMode(e.newValue === 'true' ? 'mock' : 'real');
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   // Called when analysis starts (file selected and upload begins)
   const handleAnalysisStart = useCallback(() => {
@@ -43,7 +62,11 @@ export default function App() {
 
   return (
     <div className="h-screen bg-background flex flex-col font-body text-slate-800 overflow-hidden">
-      <TopBar toggleSidebar={() => setSidebarOpen(!isSidebarOpen)} isSidebarOpen={isSidebarOpen} />
+      <TopBar
+        toggleSidebar={() => setSidebarOpen(!isSidebarOpen)}
+        isSidebarOpen={isSidebarOpen}
+        apiMode={apiMode}
+      />
 
       <div className="flex flex-1 overflow-hidden h-[calc(100vh-64px)]">
         <Sidebar
@@ -59,6 +82,7 @@ export default function App() {
             onAnalysisStart={handleAnalysisStart}
             onAnalysisComplete={handleAnalysisComplete}
             onAnalysisError={handleAnalysisError}
+            apiMode={apiMode}
           />
           <ReportPreview isVisible={showReport} results={analysisResults} />
         </main>

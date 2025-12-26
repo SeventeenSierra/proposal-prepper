@@ -3,6 +3,10 @@
  * SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
  */
 
+
+const cryptoObj = typeof window !== 'undefined' ? window.crypto : (typeof self !== 'undefined' ? self.crypto : (globalThis as any).crypto);
+
+
 import type {
   AnalysisSessionResponse,
   ApiResponse,
@@ -68,10 +72,11 @@ export class MockApiServer {
 
       // Generate mock upload session
       const uploadSession: UploadSessionResponse = {
-        id: `upload_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+        id: `upload_${Date.now()}_${cryptoObj.randomUUID().substring(0, 8)}`,
         filename: file.name,
         fileSize: file.size,
         mimeType: file.type,
+        s3Key: `uploads/mock-proposal-${Date.now()}.pdf`,
         status: 'completed',
         progress: 100,
         startedAt: new Date().toISOString(),
@@ -111,7 +116,7 @@ export class MockApiServer {
 
       // Generate mock analysis session
       const analysisSession: AnalysisSessionResponse = {
-        id: `analysis_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+        id: `analysis_${Date.now()}_${cryptoObj.randomUUID().substring(0, 8)}`,
         proposalId,
         status: 'analyzing',
         progress: 0,

@@ -11,7 +11,8 @@
 
 'use client';
 
-import { AlertCircle, Button, CheckCircle, FileText, Upload, X } from '@17sierra/ui';
+import { AlertCircle, Button, Upload } from '@17sierra/ui';
+import { CheckCircle, FileText, X } from 'lucide-react';
 import { aiRouterClient } from 'proposal-prepper-services/ai-router-client';
 import { MockAIRouterClient } from 'proposal-prepper-services/mock-ai-router-client';
 import type React from 'react';
@@ -137,7 +138,7 @@ export function UploadManager({
    */
   const createUploadSession = useCallback((file: File): UploadSession => {
     return {
-      id: `upload_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+      id: `upload_${Date.now()}_${self.crypto.randomUUID().substring(0, 8)}`,
       filename: file.name,
       fileSize: file.size,
       mimeType: file.type,

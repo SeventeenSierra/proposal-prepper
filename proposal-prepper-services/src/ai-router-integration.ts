@@ -9,7 +9,7 @@
  * and error recovery.
  */
 
-import { apiConfigManager } from '@/config/api-config';
+import { apiConfigManager } from './config/api-config';
 import { AIRouterClient, aiRouterClient } from './ai-router-client';
 
 /**

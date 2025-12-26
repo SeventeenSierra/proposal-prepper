@@ -69,7 +69,7 @@ export const AnalysisCoordinator: React.FC<AnalysisCoordinatorProps> = ({
    * Generate unique session ID
    */
   const generateSessionId = useCallback((): string => {
-    return `analysis_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `analysis_${Date.now()}_${self.crypto.randomUUID().substring(0, 8)}`;
   }, []);
 
   /**

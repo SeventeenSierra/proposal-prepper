@@ -12,6 +12,7 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "types": ["node"],
     "jsx": "react-jsx",
     "incremental": true,
     "plugins": [
@@ -23,6 +24,7 @@
     "paths": {
       "@/*": ["./src/*"],
       "@/services/*": ["../proposal-prepper-services/src/*"],
+      "proposal-prepper-services": ["../proposal-prepper-services/src/index.ts"],
       "proposal-prepper-services/*": ["../proposal-prepper-services/src/*"],
       "proposal-prepper-middleware/*": ["../proposal-prepper-middleware/src/*"]
     },

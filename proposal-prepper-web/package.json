@@ -18,8 +18,10 @@
     "clean": "rm -rf .next node_modules services/*/node_modules"
   },
   "dependencies": {
-    "@17sierra/ui": "^0.2.5",
-    "@hookform/resolvers": "^5.2.2",
+    "@17sierra/lib": "^0.2.0",
+    "@17sierra/ui": "^0.2.7",
+    "proposal-prepper-services": "workspace:*",
+    "@hookform/resolvers": "^3.10.0",
     "@tailwindcss/postcss": "^4.1.18",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
@@ -40,7 +42,7 @@
     "@commitlint/config-conventional": "^20.2.0",
     "@types/express": "^5.0.6",
     "@types/multer": "^2.0.0",
-    "@types/node": "^25.0.2",
+    "@types/node": "25.0.3",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.4.23",

@@ -5,7 +5,7 @@
 
 'use client';
 
-import { AlertCircle, ChevronDown, ChevronRight, MapPin, XCircle } from '@17sierra/ui';
+import { AlertCircle, ChevronDown, ChevronRight, MapPin, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import { generateRemediationRecommendation } from '@/components/results/remediation-utils';
 import {

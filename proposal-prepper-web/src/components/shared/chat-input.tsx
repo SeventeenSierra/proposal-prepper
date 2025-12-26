@@ -5,7 +5,8 @@
 
 'use client';
 
-import { Button, ChevronRight, Loader2, Textarea } from '@17sierra/ui';
+import { Button, Textarea } from '@17sierra/ui';
+import { ChevronRight, Loader2 } from 'lucide-react';
 import React from 'react';
 
 /**

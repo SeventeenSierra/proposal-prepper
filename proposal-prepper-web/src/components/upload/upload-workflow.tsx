@@ -17,7 +17,7 @@
 
 'use client';
 
-import { AlertCircle, CheckCircle, Clock, TrendingUp, Zap } from '@17sierra/ui';
+import { AlertCircle, CheckCircle, Clock, TrendingUp, Zap } from 'lucide-react';
 import type { WebSocketMessage } from 'proposal-prepper-services/ai-router-client';
 import { aiRouterClient } from 'proposal-prepper-services/ai-router-client';
 import type React from 'react';

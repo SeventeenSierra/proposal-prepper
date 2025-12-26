@@ -100,7 +100,7 @@ export class MockStrandsAPIEnhanced {
     }
 
     return {
-      id: `analysis-${Date.now()}`,
+      id: `analysis-${Date.now()}_${crypto.randomUUID().substring(0, 8)}`,
       proposalId,
       status: AnalysisStatus.ANALYZING,
       progress: 0,
@@ -116,7 +116,13 @@ export class MockStrandsAPIEnhanced {
     await this.simulateDelay();
 
     // Simulate progressive analysis
-    const progress = Math.min(100, Math.floor(Math.random() * 100));
+    const array = new Uint32Array(1);
+    const cryptoObj = typeof window !== 'undefined' ? window.crypto : (typeof self !== 'undefined' ? self.crypto : (globalThis as any).crypto);
+    if (cryptoObj) {
+      cryptoObj.getRandomValues(array);
+    }
+    const randomVal = cryptoObj ? array[0] / (0xffffffff + 1) : Math.random();
+    const progress = Math.min(100, Math.floor(randomVal * 100));
     const steps = [
       'Extracting text from document',
       'Analyzing compliance requirements',

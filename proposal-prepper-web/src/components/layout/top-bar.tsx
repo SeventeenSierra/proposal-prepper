@@ -1,14 +1,27 @@
 'use client';
 
-import { Bell, Bot, HelpCircle, PanelLeftClose, PanelLeftOpen, Settings } from 'lucide-react';
-import { Avatar, AvatarFallback, Button } from '@/components/ui';
+import { Avatar, AvatarFallback, Bot, Button } from '@17sierra/ui';
+import {
+  Bell,
+  Bell as BellIcon,
+  Bot as BotIcon,
+  HelpCircle,
+  HelpCircle as HelpCircleIcon,
+  PanelLeftClose,
+  PanelLeftClose as PanelLeftCloseIcon,
+  PanelLeftOpen,
+  PanelLeftOpen as PanelLeftOpenIcon,
+  Settings,
+  Settings as SettingsIcon,
+} from 'lucide-react'; // Fallback if missing in @17sierra/ui dist
 
 type TopBarProps = {
   toggleSidebar: () => void;
   isSidebarOpen: boolean;
+  apiMode?: 'real' | 'mock';
 };
 
-const TopBar = ({ toggleSidebar, isSidebarOpen }: TopBarProps) => {
+const TopBar = ({ toggleSidebar, isSidebarOpen, apiMode }: TopBarProps) => {
   return (
     <div className="bg-white border-b border-gray-200 h-16 flex items-center px-4 justify-between shadow-sm z-20 relative">
       <div className="flex items-center gap-4 text-slate-800 font-semibold text-lg">
@@ -29,9 +42,22 @@ const TopBar = ({ toggleSidebar, isSidebarOpen }: TopBarProps) => {
           <div className="leading-tight">
             <div className="flex items-center gap-2">
               ATARC Agentic AI Lab
-              <span className="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-full border border-amber-200 uppercase font-bold tracking-wider">
-                Alpha
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="bg-slate-100 text-slate-600 text-[10px] px-2 py-0.5 rounded-full border border-slate-200 uppercase font-bold tracking-wider">
+                  Alpha
+                </span>
+                {apiMode && (
+                  <span
+                    className={`text-[10px] px-2 py-0.5 rounded-full border uppercase font-bold tracking-wider ${
+                      apiMode === 'mock'
+                        ? 'bg-amber-100 text-amber-700 border-amber-200'
+                        : 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                    }`}
+                  >
+                    {apiMode === 'mock' ? 'Demo' : 'Live'}
+                  </span>
+                )}
+              </div>
             </div>
             <div className="text-[10px] text-gray-400 font-normal tracking-wide">
               PROPOSAL PREPPER WORKSPACE

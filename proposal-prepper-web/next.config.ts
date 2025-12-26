@@ -5,7 +5,12 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   output: 'standalone', // For container support
-  transpilePackages: ['@17sierra/ui', '@17sierra/lib', '@17sierra/ai-flows'],
+  transpilePackages: [
+    '@17sierra/ui',
+    '@17sierra/lib',
+    '@17sierra/ai-flows',
+    'proposal-prepper-services',
+  ],
   serverExternalPackages: ['express'],
 
   // Performance optimizations for Requirement 5.1: Load time performance

@@ -106,14 +106,15 @@ async def lifespan(app: FastAPI):
             raise
         
         # Initialize database seeding
-        try:
-            from seed_manager import initialize_seeding
-            await initialize_seeding()
-            logger.info("Database seeding initialization completed")
-        except Exception as e:
-            logger.error(f"Database seeding initialization failed: {e}")
-            # Don't fail startup - seeding is not critical for service operation
-            logger.warning("Continuing without seeding initialization")
+        # Seeding disabled for clean slate as per user request
+        # try:
+        #     from seed_manager import initialize_seeding
+        #     await initialize_seeding()
+        #     logger.info("Database seeding initialization completed")
+        # except Exception as e:
+        #     logger.error(f"Database seeding initialization failed: {e}")
+        #     # Don't fail startup - seeding is not critical for service operation
+        #     logger.warning("Continuing without seeding initialization")
         
         # Initialize AWS Bedrock and PDF processing services
         try:
@@ -194,9 +195,10 @@ async def process_analysis(session_id: str) -> None:
         return
     
     try:
-        logger.info(f"Starting real AI analysis for session {session_id}")
+        logger.info(f"Starting analysis process for session: {session_id}")
         
         # Phase 1: Document text extraction
+        logger.debug(f"Phase 1: Extraction for session {session_id}")
         await update_analysis_progress(
             session_id=session_id,
             status=AnalysisStatus.EXTRACTING,
@@ -671,7 +673,7 @@ async def upload_document(
         raise
     except Exception as e:
         logger.error(f"Upload failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Upload failed")
 
 
 
@@ -693,22 +695,25 @@ async def simulate_upload(
         import shutil
         from pathlib import Path
         
+        # Sanitize filename to prevent path injection
+        safe_filename = os.path.basename(request.filename)
+        
         # Verify seed file exists
         seed_dir = Path("/app/src/seed-data")
-        source_path = seed_dir / request.filename
+        source_path = seed_dir / safe_filename
         
         if not source_path.exists():
             # Fallback for local dev if not using container paths exactly as expected
             # Try searching in known locations
-             alt_paths = [
-                 Path("services/strands/src/seed-data") / request.filename,
-                 Path("src/seed-data") / request.filename,
-                 Path("seed_data") / request.filename
-             ]
-             for path in alt_paths:
-                 if path.exists():
-                     source_path = path
-                     break
+            alt_paths = [
+                Path("services/strands/src/seed-data") / safe_filename,
+                Path("src/seed-data") / safe_filename,
+                Path("seed_data") / safe_filename
+            ]
+            for path in alt_paths:
+                if path.exists():
+                    source_path = path
+                    break
         
         if not source_path.exists():
             raise HTTPException(status_code=404, detail=f"Seed file '{request.filename}' not found.")
@@ -716,9 +721,9 @@ async def simulate_upload(
         # Check if file already exists in metadata to avoid duplication
         # This implementation requires get_document_metadata_by_filename to be added to db_operations
         try:
-            existing_metadata = await DocumentMetadataOperations.get_document_metadata_by_filename(request.filename)
+            existing_metadata = await DocumentMetadataOperations.get_document_metadata_by_filename(safe_filename)
             if existing_metadata:
-                logger.info(f"Found existing metadata for {request.filename}, skipping upload")
+                logger.info(f"Found existing metadata for {safe_filename}, skipping upload")
                 return UploadSessionResponse(
                     id=existing_metadata["document_id"],
                     filename=existing_metadata["filename"],
@@ -766,8 +771,8 @@ async def simulate_upload(
         # Store metadata
         await DocumentMetadataOperations.store_document_metadata(
             document_id=doc_id,
-            filename=request.filename,
-            original_filename=request.filename,
+            filename=safe_filename,
+            original_filename=safe_filename,
             file_size=file_size,
             mime_type=mime_type,
             s3_key=s3_key,
@@ -776,7 +781,7 @@ async def simulate_upload(
         
         return UploadSessionResponse(
             id=doc_id,
-            filename=request.filename,
+            filename=safe_filename,
             fileSize=file_size,
             mimeType=mime_type,
             status="completed",
@@ -790,7 +795,7 @@ async def simulate_upload(
         raise
     except Exception as e:
         logger.error(f"Simulation failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Simulation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Simulation failed")
 
 
 @app.post("/api/analysis/start", response_model=AnalysisStartResponse)
@@ -807,19 +812,23 @@ async def start_analysis(
         AnalysisStartResponse with session ID and initial status
     """
     try:
+        logger.info(f"Received analysis start request for proposal {request.proposal_id}, document {request.document_id}")
+        
         # Create analysis session in database
         session_id = await create_analysis_session(request)
+        logger.info(f"Created analysis session: {session_id}")
         
         # Submit task to concurrent processor
         queued = await submit_analysis_task(session_id, request)
         
         if not queued:
+            logger.error(f"Failed to queue analysis task for session {session_id}")
             raise HTTPException(
                 status_code=503,
                 detail="Analysis queue is full, please try again later"
             )
         
-        logger.info(f"Queued analysis session {session_id} for document {request.document_id}")
+        logger.info(f"Successfully queued analysis session {session_id} for document {request.document_id}")
         
         return AnalysisStartResponse(
             success=True,
@@ -836,7 +845,7 @@ async def start_analysis(
         logger.error(f"Failed to start analysis: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to start analysis: {str(e)}"
+            detail="Failed to start analysis"
         )
 
 
@@ -883,7 +892,7 @@ async def get_analysis_status(
         logger.error(f"Failed to get analysis status: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to get analysis status: {str(e)}"
+            detail="Failed to get analysis status"
         )
 
 
@@ -942,7 +951,7 @@ async def get_analysis_results(
         logger.error(f"Failed to get analysis results: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to get analysis results: {str(e)}"
+            detail="Failed to get analysis results"
         )
 
 

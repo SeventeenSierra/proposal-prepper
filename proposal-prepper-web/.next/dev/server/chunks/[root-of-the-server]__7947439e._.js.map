@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 40, "column": 0}, "map": {"version":3,"sources":["file:///Users/afos/Downloads/CtrlCheck-af-nonopen/proposal-prepper-web/src/app/api/health/route.ts"],"sourcesContent":["/*\n * SPDX-License-Identifier: AGPL-3.0-or-later\n * SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC\n */\n\nimport { NextResponse } from 'next/server';\n\n/**\n * Simple health check endpoint for container orchestration.\n * This endpoint responds immediately without checking external services.\n * For full service health including Strands, use /api/status instead.\n */\nexport async function GET() {\n    return NextResponse.json({\n        status: 'healthy',\n        service: 'web',\n        timestamp: new Date().toISOString(),\n        environment: process.env.NODE_ENV || 'development',\n    });\n}\n"],"names":[],"mappings":"AAAA;;;CAGC;;;;AAED;;AAOO,eAAe;IAClB,OAAO,6XAAY,CAAC,IAAI,CAAC;QACrB,QAAQ;QACR,SAAS;QACT,WAAW,IAAI,OAAO,WAAW;QACjC,aAAa,mDAAwB;IACzC;AACJ"}}]
-}

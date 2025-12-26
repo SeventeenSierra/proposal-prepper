@@ -1,7 +1,14 @@
 'use client';
 
 import { Badge, Button } from '@17sierra/ui';
-import { AlertTriangle, Calendar, CheckCircle2, Download, FileText, Maximize2 } from 'lucide-react';
+import {
+  AlertTriangle,
+  Calendar as CalendarIcon,
+  CheckCircle2,
+  Download,
+  FileText,
+  Maximize2,
+} from 'lucide-react';
 import type { AnalysisResults } from '@/components/results/types';
 
 type ReportPreviewProps = {
@@ -49,7 +56,7 @@ const ReportPreview = ({ isVisible, results }: ReportPreviewProps) => {
                 Ref: PROP-2024-001
               </div>
               <div className="text-sm text-gray-500 flex items-center justify-end gap-1.5">
-                <Calendar size={12} />{' '}
+                <CalendarIcon size={12} />{' '}
                 {new Date().toLocaleDateString('en-US', {
                   month: 'short',
                   day: '2-digit',
