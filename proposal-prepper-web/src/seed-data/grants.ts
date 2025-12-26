@@ -281,7 +281,7 @@ export function seedGrantToAnalysisResult(grant: SeedGrant) {
     issues: convertedIssues,
     analysisMetadata: {
       totalPages: (seed % 20) + 10,
-      processingTime: (seed * 100) % 5000 + 2000,
+      processingTime: ((seed * 100) % 5000) + 2000,
       completedAt: new Date(),
       rulesChecked: [
         'FAR 52.204-8',
@@ -379,11 +379,10 @@ export function generateMockAnalysisResults(complianceStatus?: 'pass' | 'fail' |
           title: 'Critical Compliance Issue',
           description: 'This is a critical compliance issue for testing',
           severity: IssueSeverity.CRITICAL,
-          category: 'compliance', // Note: 'category' is extra property not in ComplianceIssue, consider removing if strict
+          regulation: 'N/A',
           location: { page: 1, section: 'Section 1' },
-          regulation: 'N/A', // Added missing regulation
           remediation: 'Fix this critical issue',
-        } as any); // Cast as any because 'category' might be missing from type
+        });
       }
     } else if (complianceStatus === 'warning') {
       // Filter out critical issues for warning status
@@ -395,11 +394,10 @@ export function generateMockAnalysisResults(complianceStatus?: 'pass' | 'fail' |
           title: 'Warning Issue',
           description: 'This is a warning issue for testing',
           severity: IssueSeverity.WARNING,
-          category: 'formatting',
+          regulation: 'N/A',
           location: { page: 1, section: 'Section 1' },
-          regulation: 'N/A', // Added missing regulation
           remediation: 'Consider addressing this warning',
-        } as any);
+        });
       }
     }
   }
