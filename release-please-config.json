@@ -5,6 +5,30 @@
         ".": {
             "release-type": "node",
             "package-name": "proposal-prepper-root"
+        },
+        "proposal-prepper-web": {
+            "release-type": "node",
+            "package-name": "@17sierra/proposal-prepper-web"
+        },
+        "proposal-prepper-backend": {
+            "release-type": "python",
+            "package-name": "proposal-prepper-backend"
+        },
+        "proposal-prepper-services": {
+            "release-type": "node",
+            "package-name": "@17sierra/proposal-prepper-services"
+        },
+        "proposal-prepper-middleware": {
+            "release-type": "node",
+            "package-name": "@17sierra/proposal-prepper-middleware"
+        },
+        "proposal-prepper-docs": {
+            "release-type": "simple",
+            "package-name": "proposal-prepper-docs"
+        },
+        "proposal-prepper-tests": {
+            "release-type": "node",
+            "package-name": "@17sierra/proposal-prepper-tests"
         }
     }
 }

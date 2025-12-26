@@ -751,7 +751,7 @@ async def simulate_upload(
         
         # S3 Upload (Simulated by putting object)
         processor = get_pdf_processor()
-        s3_key = f"uploads/{doc_id}/{request.filename}"
+        s3_key = f"uploads/{doc_id}/{safe_filename}"
         bucket = settings.s3_bucket_name
         
         if processor._s3_client:
@@ -764,7 +764,7 @@ async def simulate_upload(
                 Body=content,
                 ContentType=mime_type
             )
-            logger.info(f"Simulated upload of {request.filename} to S3: {bucket}/{s3_key}")
+            logger.info(f"Simulated upload of {safe_filename} to S3: {bucket}/{s3_key}")
         else:
             logger.warning("S3 client not available - simulation skipped S3 upload")
 
@@ -794,8 +794,8 @@ async def simulate_upload(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Simulation failed: {e}")
-        raise HTTPException(status_code=500, detail="Simulation failed")
+        logger.error(f"Simulation failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @app.post("/api/analysis/start", response_model=AnalysisStartResponse)
@@ -812,7 +812,7 @@ async def start_analysis(
         AnalysisStartResponse with session ID and initial status
     """
     try:
-        logger.info(f"Received analysis start request for proposal {request.proposal_id}, document {request.document_id}")
+        logger.info("Received analysis start request")
         
         # Create analysis session in database
         session_id = await create_analysis_session(request)
@@ -828,7 +828,7 @@ async def start_analysis(
                 detail="Analysis queue is full, please try again later"
             )
         
-        logger.info(f"Successfully queued analysis session {session_id} for document {request.document_id}")
+        logger.info(f"Successfully queued analysis session {session_id}")
         
         return AnalysisStartResponse(
             success=True,
@@ -842,7 +842,7 @@ async def start_analysis(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to start analysis: {e}")
+        logger.error(f"Failed to start analysis: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail="Failed to start analysis"
@@ -869,7 +869,7 @@ async def get_analysis_status(
         if not session_data:
             raise HTTPException(
                 status_code=404,
-                detail=f"Analysis session {session_id} not found"
+                detail="Analysis session not found"
             )
         
         logger.info(f"Retrieved status for analysis session {session_id}")
@@ -889,7 +889,7 @@ async def get_analysis_status(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to get analysis status: {e}")
+        logger.error(f"Failed to get analysis status: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail="Failed to get analysis status"
@@ -916,7 +916,7 @@ async def get_analysis_results(
         if not session_data:
             raise HTTPException(
                 status_code=404,
-                detail=f"Analysis session {session_id} not found"
+                detail="Analysis session not found"
             )
         
         # Check if analysis is completed
@@ -924,7 +924,7 @@ async def get_analysis_results(
             return AnalysisResultsResponse(
                 success=False,
                 results=None,
-                message=f"Analysis is not yet completed. Current status: {session_data['status']}"
+                message="Analysis is not yet completed"
             )
         
         # Get results from database
@@ -948,7 +948,7 @@ async def get_analysis_results(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to get analysis results: {e}")
+        logger.error(f"Failed to get analysis results: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail="Failed to get analysis results"
@@ -972,10 +972,10 @@ async def get_processing_status_endpoint() -> Dict[str, Any]:
             "timestamp": datetime.utcnow()
         }
     except Exception as e:
-        logger.error(f"Failed to get processing status: {e}")
+        logger.error(f"Failed to get processing status: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to get processing status: {str(e)}"
+            detail="Failed to get processing status"
         )
 
 
@@ -999,19 +999,19 @@ async def cancel_analysis_endpoint(
             logger.info(f"Cancelled analysis session {session_id}")
             return {
                 "success": True,
-                "message": f"Analysis session {session_id} cancelled successfully"
+                "message": "Analysis session cancelled successfully"
             }
         else:
             return {
                 "success": False,
-                "message": f"Analysis session {session_id} could not be cancelled (may not exist or already completed)"
+                "message": "Analysis session could not be cancelled"
             }
             
     except Exception as e:
-        logger.error(f"Failed to cancel analysis session {session_id}: {e}")
+        logger.error(f"Failed to cancel analysis session {session_id}: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to cancel analysis: {str(e)}"
+            detail="Failed to cancel analysis"
         )
 
 
@@ -1034,10 +1034,10 @@ async def get_seeding_status() -> Dict[str, Any]:
             "timestamp": datetime.utcnow()
         }
     except Exception as e:
-        logger.error(f"Failed to get seeding status: {e}")
+        logger.error(f"Failed to get seeding status: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to get seeding status: {str(e)}"
+            detail="Failed to get seeding status"
         )
 
 
@@ -1061,10 +1061,10 @@ async def get_seeded_documents() -> Dict[str, Any]:
             "timestamp": datetime.utcnow()
         }
     except Exception as e:
-        logger.error(f"Failed to get seeded documents: {e}")
+        logger.error(f"Failed to get seeded documents: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to get seeded documents: {str(e)}"
+            detail="Failed to get seeded documents"
         )
 
 
@@ -1080,17 +1080,17 @@ async def reseed_database() -> Dict[str, Any]:
         from seed_manager import seed_manager
         result = await seed_manager.seed_database(force_reseed=True)
         
-        logger.info(f"Database reseeding completed: {result['message']}")
+        logger.info("Database reseeding completed")
         return {
             "success": True,
             "result": result,
             "timestamp": datetime.utcnow()
         }
     except Exception as e:
-        logger.error(f"Failed to reseed database: {e}")
+        logger.error(f"Failed to reseed database: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to reseed database: {str(e)}"
+            detail="Failed to reseed database"
         )
 
 
@@ -1113,10 +1113,10 @@ async def verify_seeded_files() -> Dict[str, Any]:
             "timestamp": datetime.utcnow()
         }
     except Exception as e:
-        logger.error(f"Failed to verify seeded files: {e}")
+        logger.error(f"Failed to verify seeded files: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to verify seeded files: {str(e)}"
+            detail="Failed to verify seeded files"
         )
 
 

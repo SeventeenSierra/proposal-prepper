@@ -1,3 +1,9 @@
 {
-    ".": "1.0.0"
+    ".": "1.0.0",
+    "proposal-prepper-web": "1.0.0",
+    "proposal-prepper-backend": "1.0.0",
+    "proposal-prepper-services": "1.0.0",
+    "proposal-prepper-middleware": "1.0.0",
+    "proposal-prepper-docs": "1.0.0",
+    "proposal-prepper-tests": "1.0.0"
 }

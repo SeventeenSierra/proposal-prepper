@@ -5,6 +5,14 @@ SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 # Threshold Infrastructure Design Document
 
+### Database and Infrastructure Secrets
+
+> [!CAUTION]
+> Hardcoded passwords should NEVER be used in production. These values are placeholders for development/testing only.
+
+- Redis Password: `[REDACTED]`
+- DB Password: `[REDACTED]`
+
 ## Overview
 
 The Infrastructure component provides containerized local development infrastructure for the Proposal Prepper application, enabling developers to run the complete system locally with all necessary services. The design focuses on Docker containerization, service orchestration, and essential infrastructure services for development and testing environments.
@@ -202,7 +210,7 @@ services:
     image: redis:7-alpine
     ports:
       - "6379:6379"
-    command: redis-server --appendonly yes --requirepass redis123
+    command: redis-server --appendonly yes --requirepass [PLACEHOLDER]
     volumes:
       - redis-data:/data
     networks:
@@ -508,7 +516,7 @@ const developmentConfig: DevEnvironment = {
   redis: {
     host: 'redis',
     port: 6379,
-    password: 'redis123'
+    password: '[PLACEHOLDER]'
   },
   storage: {
     endpoint: 'minio:9000',
@@ -522,7 +530,7 @@ const developmentConfig: DevEnvironment = {
   },
   security: {
     jwtSecret: 'dev-jwt-secret-key',
-    encryptionKey: 'dev-encryption-key-32-chars-long'
+    encryptionKey: '[PLACEHOLDER]'
   },
   external: {
     aws: {
