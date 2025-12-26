@@ -16,12 +16,11 @@ import {
   Textarea,
   Upload,
 } from '@17sierra/ui';
-import {
-  analysisService,
-  resultsService,
-  uploadService,
-} from 'proposal-prepper-services';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { AnalysisService, analysisService } from '@/services/analysis-service';
+import { resultsService } from '@/services/results-service';
+import { uploadService } from '@/services/upload-service';
+import { apiConfig } from '@/services/config/app';
 import { AnalysisStatus } from '@/components/analysis/types';
 import type { AnalysisResults } from '@/components/results/types';
 
@@ -43,6 +42,7 @@ type AgentInterfaceProps = {
   onAnalysisStart: () => void;
   onAnalysisComplete: (results: AnalysisResults) => void;
   onAnalysisError: (error: string) => void;
+  apiMode?: 'real' | 'mock';
 };
 
 // Map analysis status to step information
@@ -109,6 +109,7 @@ const AgentInterface = ({
   onAnalysisStart,
   onAnalysisComplete,
   onAnalysisError,
+  apiMode,
 }: AgentInterfaceProps) => {
   const [activeTab, setActiveTab] = useState<'steps' | 'results'>('steps');
   const [steps, setSteps] = useState<Step[]>([]);
@@ -126,7 +127,6 @@ const AgentInterface = ({
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
-
   useEffect(() => {
     scrollToBottom();
   }, [scrollToBottom]);
@@ -169,6 +169,7 @@ const AgentInterface = ({
 
       console.log('[AgentInterface] Upload Result:', JSON.stringify(uploadResult));
       console.log('[AgentInterface] Session ID from result:', uploadResult.sessionId);
+      console.log('[AgentInterface] Upload success:', uploadResult.success);
 
       if (!uploadResult.success) {
         console.error('[AgentInterface] Upload failed:', uploadResult.error);
@@ -359,6 +360,17 @@ const AgentInterface = ({
   return (
     <div className="flex-1 flex flex-col h-full bg-white relative">
       <div className="flex-1 overflow-y-auto scrollbar-hide p-6">
+        {/* API Status Badge */}
+        <div className="absolute top-4 right-6 z-30">
+          <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-sm ${apiMode === 'mock'
+            ? 'bg-amber-100 text-amber-700 border-amber-200'
+            : 'bg-emerald-100 text-emerald-700 border-emerald-200'
+            }`}>
+            <span className={`w-1 h-1 rounded-full ${apiMode === 'mock' ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}></span>
+            {apiMode === 'mock' ? 'Demo' : 'Real'}
+          </div>
+        </div>
+
         <div className="max-w-3xl mx-auto w-full space-y-8">
           {!activeProject && (
             <div className="text-center py-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -389,7 +401,7 @@ const AgentInterface = ({
                   className="flex items-center gap-4 p-5 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md hover:bg-blue-50/30 transition-all group bg-white w-full"
                 >
                   <div className="p-3 bg-blue-100 text-blue-600 rounded-lg group-hover:scale-110 transition-transform">
-                    <Upload size={24} />
+                    <UploadIcon size={24} />
                   </div>
                   <div className="text-left">
                     <div className="font-semibold text-slate-800 text-base">

@@ -9,7 +9,10 @@
  * Implements requirements 1.1, 1.2, 1.3, 1.4, and 1.5 for upload functionality.
  */
 
-import crypto from 'node:crypto';
+
+const cryptoObj = typeof window !== 'undefined' ? window.crypto : (typeof self !== 'undefined' ? self.crypto : (globalThis as any).crypto);
+
+
 import { errorConfig, uploadConfig } from './config/app';
 import { type UploadSession, UploadStatus } from './types/app';
 import { aiRouterClient, type UploadSessionResponse } from './ai-router-client';
@@ -54,7 +57,7 @@ export class UploadService {
       sessionId && this.activeSessions.has(sessionId)
         ? { ...this.activeSessions.get(sessionId)!, status: UploadStatus.UPLOADING }
         : {
-          id: sessionId || `upload_${Date.now()}_${crypto.randomUUID().substring(0, 8)}`,
+          id: sessionId || `upload_${Date.now()}_${cryptoObj.randomUUID().substring(0, 8)}`,
           filename: file.name,
           fileSize: file.size,
           mimeType: file.type,
@@ -76,6 +79,7 @@ export class UploadService {
 
       if (response.success && response.data) {
         // Update session with server response
+        console.log('[UploadService] Server response data:', JSON.stringify(response.data));
         const serverId = (response.data as any)?.id || (response.data as any)?.sessionId;
 
         const completedSession: UploadSession = {

@@ -79,7 +79,7 @@ export function detectCriticalViolations(text: string): ComplianceIssue[] {
     /cybersecurity|nist\s+800-171|information\s+security|basic\s+safeguarding/i.test(text);
   if (!hasCybersecurity) {
     issues.push({
-      id: `critical_missing_cybersecurity_${Date.now()}_${self.crypto.randomUUID().substring(0, 5)}`,
+      id: `critical_missing_cybersecurity_${Date.now()}_${self.crypto.randomUUID().substring(0, 8)}`,
       severity: IssueSeverity.CRITICAL,
       title: 'Missing Cybersecurity Requirements',
       description: 'Document lacks required cybersecurity and information security measures',
@@ -94,7 +94,7 @@ export function detectCriticalViolations(text: string): ComplianceIssue[] {
     /business\s+ethics|code\s+of\s+conduct|ethics\s+training|compliance\s+program/i.test(text);
   if (!hasBusinessEthics) {
     issues.push({
-      id: `critical_missing_business_ethics_${Date.now()}_${self.crypto.randomUUID().substring(0, 5)}`,
+      id: `critical_missing_business_ethics_${Date.now()}_${self.crypto.randomUUID().substring(0, 8)}`,
       severity: IssueSeverity.CRITICAL,
       title: 'Missing Business Ethics Requirements',
       description: 'Document does not address business ethics and conduct requirements',
@@ -110,7 +110,7 @@ export function detectCriticalViolations(text: string): ComplianceIssue[] {
   );
   if (!hasAntiTrafficking) {
     issues.push({
-      id: `critical_missing_trafficking_${Date.now()}_${self.crypto.randomUUID().substring(0, 5)}`,
+      id: `critical_missing_trafficking_${Date.now()}_${self.crypto.randomUUID().substring(0, 8)}`,
       severity: IssueSeverity.CRITICAL,
       title: 'Missing Anti-Trafficking Requirements',
       description: 'Document lacks required anti-trafficking in persons compliance',
@@ -131,7 +131,7 @@ export function detectWarningIssues(text: string): ComplianceIssue[] {
   for (const pattern of WARNING_VIOLATION_PATTERNS) {
     if (pattern.pattern.test(text)) {
       issues.push({
-        id: `warning_${pattern.id}_${Date.now()}_${self.crypto.randomUUID().substring(0, 5)}`,
+        id: `warning_${pattern.id}_${Date.now()}_${self.crypto.randomUUID().substring(0, 8)}`,
         severity: pattern.severity,
         title: pattern.title,
         description: pattern.description,

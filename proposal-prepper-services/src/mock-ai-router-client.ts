@@ -59,7 +59,7 @@ export class MockAIRouterClient {
 
     // Return successful upload
     const cryptoObj = typeof window !== 'undefined' ? window.crypto : (typeof self !== 'undefined' ? self.crypto : (globalThis as any).crypto);
-    const uuid = cryptoObj?.randomUUID() || Math.random().toString(36).substring(2, 10);
+    const uuid = cryptoObj.randomUUID();
 
     return {
       success: true,
@@ -80,7 +80,7 @@ export class MockAIRouterClient {
     await this.simulateDelay(500);
 
     const cryptoObj = typeof window !== 'undefined' ? window.crypto : (typeof self !== 'undefined' ? self.crypto : (globalThis as any).crypto);
-    const uuid = cryptoObj?.randomUUID() || Math.random().toString(36).substring(2, 10);
+    const uuid = cryptoObj.randomUUID();
 
     return {
       success: true,

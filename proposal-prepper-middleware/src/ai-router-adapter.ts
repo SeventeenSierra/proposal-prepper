@@ -174,34 +174,29 @@ export class AIRouterHandlers {
               },
               { status: 201 }
             );
-          } else {
-            console.warn('Analysis start failed, returning upload result only');
-            return toNextResponse(uploadResult, 201);
           }
-        } else {
-          console.error('Upload failed:', uploadResult.error);
-          throw new Error(uploadResult.error || 'Upload failed');
+
+          console.warn('Analysis start failed, returning upload result only');
+          return toNextResponse(uploadResult, 201);
         }
-      } else {
-        console.log('Service unavailable, using mock fallback');
-        const result = await mockApiServer.handleDocumentUpload(file);
-        return toNextResponse(result, 201);
+
+        console.error('Upload failed:', uploadResult.error);
+        return toNextResponse(uploadResult);
       }
+
+      console.log('Using internal MockApiServer for upload');
+      const result = await mockApiServer.handleDocumentUpload(file);
+      return toNextResponse(result, 201);
     } catch (error) {
       console.error('Upload error:', error);
-      try {
-        const fallbackResult = await mockApiServer.handleDocumentUpload(file);
-        return toNextResponse(fallbackResult, 201);
-      } catch (fallbackError) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Upload failed and fallback unavailable',
-            code: 'UPLOAD_FAILED',
-          },
-          { status: 500 }
-        );
-      }
+      return NextResponse.json(
+        {
+          success: false,
+          error: error instanceof Error ? error.message : 'Upload failed',
+          code: 'UPLOAD_FAILED',
+        },
+        { status: 500 }
+      );
     }
   }
 
@@ -245,26 +240,21 @@ export class AIRouterHandlers {
         );
 
         return toNextResponse(result, 201);
-      } else {
-        console.log('Service unavailable, using mock fallback');
-        const result = await mockApiServer.handleAnalysisStart(proposalId);
-        return toNextResponse(result, 201);
       }
+
+      console.log('Using internal MockApiServer for analysis');
+      const result = await mockApiServer.handleAnalysisStart(proposalId);
+      return toNextResponse(result, 201);
     } catch (error) {
       console.error('Analysis start error:', error);
-      try {
-        const fallbackResult = await mockApiServer.handleAnalysisStart(proposalId);
-        return toNextResponse(fallbackResult, 201);
-      } catch (fallbackError) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Analysis start failed and fallback unavailable',
-            code: 'ANALYSIS_START_FAILED',
-          },
-          { status: 500 }
-        );
-      }
+      return NextResponse.json(
+        {
+          success: false,
+          error: error instanceof Error ? error.message : 'Analysis start failed',
+          code: 'ANALYSIS_START_FAILED',
+        },
+        { status: 500 }
+      );
     }
   }
 
