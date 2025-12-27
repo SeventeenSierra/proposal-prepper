@@ -162,7 +162,7 @@ export class AIRouterHandlers {
           );
 
           if (analysisResult.success && analysisResult.data) {
-            console.log(`Analysis started, session ID: ${analysisResult.data.id}`);
+            console.log(`Analysis started, session ID: ${analysisResult.data.id.substring(0, 12)}...`);
 
             return NextResponse.json(
               {
@@ -220,7 +220,7 @@ export class AIRouterHandlers {
     const documentId = body?.documentId || body?.document_id;
     const filename = body?.filename;
 
-    console.log(`Extracted proposalId: ${proposalId}`);
+    console.log(`Extracted proposalId: ${proposalId?.substring(0, 12)}...`);
 
     if (!proposalId) {
       return NextResponse.json(

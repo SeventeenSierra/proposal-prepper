@@ -9,11 +9,10 @@ the same structure as real AI analysis, ensuring system reliability
 when external AI services are not available.
 """
 
-import uuid
+import secrets
 import logging
 from datetime import datetime
 from typing import List, Dict, Any
-import random
 
 from models import ComplianceResults, ComplianceIssue, ComplianceSummary, RegulatoryReference
 
@@ -26,6 +25,7 @@ class FallbackAnalysisService:
     def __init__(self):
         """Initialize the fallback analysis service."""
         self.mock_issues_templates = self._initialize_mock_templates()
+        self.random_gen = secrets.SystemRandom()
     
     def _initialize_mock_templates(self) -> List[Dict[str, Any]]:
         """Initialize templates for generating realistic mock compliance issues."""
@@ -150,7 +150,7 @@ class FallbackAnalysisService:
         num_issues = min(max(2, word_count // 1000), 6)  # 2-6 issues based on size
         
         # Randomly select issues from templates
-        selected_templates = random.sample(self.mock_issues_templates, num_issues)
+        selected_templates = self.random_gen.sample(self.mock_issues_templates, num_issues)
         
         # Create compliance issues
         issues = []
@@ -220,7 +220,7 @@ class FallbackAnalysisService:
             summary=summary,
             generated_at=datetime.utcnow(),
             ai_model="mock-fallback-service",
-            processing_time=random.uniform(2.0, 8.0),  # Realistic processing time
+            processing_time=self.random_gen.uniform(2.0, 8.0),  # Realistic processing time
             metadata={
                 "analysis_type": "mock_fallback",
                 "document_filename": filename,
