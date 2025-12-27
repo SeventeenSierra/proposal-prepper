@@ -56,6 +56,10 @@ class Settings(BaseSettings):
     max_concurrent_analyses: int = Field(default=5, env="MAX_CONCURRENT_ANALYSES")
     analysis_timeout_seconds: int = Field(default=300, env="ANALYSIS_TIMEOUT_SECONDS")
     
+    # Local LLM configuration (Optional)
+    use_local_llm: bool = Field(default=False, env="USE_LOCAL_LLM")
+    local_llm_url: Optional[str] = Field(default=None, env="LOCAL_LLM_URL")
+    
     class Config:
         env_file = ".env"
         case_sensitive = False

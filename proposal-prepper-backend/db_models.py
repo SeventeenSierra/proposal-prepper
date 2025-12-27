@@ -27,6 +27,8 @@ class AnalysisStatus(str, enum.Enum):
     QUEUED = "queued"
     EXTRACTING = "extracting"
     ANALYZING = "analyzing"
+    VALIDATING = "validating"
+    GENERATING = "generating"
     COMPLETED = "completed"
     FAILED = "failed"
 

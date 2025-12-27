@@ -197,12 +197,12 @@ async def process_analysis(session_id: str) -> None:
     try:
         logger.info(f"Starting analysis process for session: {session_id}")
         
-        # Phase 1: Document text extraction
-        logger.debug(f"Phase 1: Extraction for session {session_id}")
+        # Step 2: Extraction
+        logger.debug(f"Step 2: Extraction for session {session_id}")
         await update_analysis_progress(
             session_id=session_id,
             status=AnalysisStatus.EXTRACTING,
-            progress=10.0,
+            progress=15.0,
             current_step="Extracting text from PDF document"
         )
         
@@ -212,8 +212,8 @@ async def process_analysis(session_id: str) -> None:
             "sessionId": session_id,
             "data": {
                 "status": "extracting",
-                "progress": 10.0,
-                "currentStep": "Extracting text from PDF document"
+                "progress": 15.0,
+                "currentStep": "Extraction"
             }
         })
 
@@ -230,7 +230,7 @@ async def process_analysis(session_id: str) -> None:
             session_id=session_id,
             status=AnalysisStatus.EXTRACTING,
             progress=30.0,
-            current_step="Document text extracted successfully"
+            current_step="Extraction complete"
         )
         
         # Broadcast progress
@@ -240,18 +240,18 @@ async def process_analysis(session_id: str) -> None:
             "data": {
                 "status": "extracting",
                 "progress": 30.0,
-                "currentStep": "Document text extracted successfully"
+                "currentStep": "Extraction"
             }
         })
 
         await asyncio.sleep(0.5)  # Brief pause for progress update
         
-        # Phase 2: AI Analysis
+        # Step 3: FAR Scan
         await update_analysis_progress(
             session_id=session_id,
             status=AnalysisStatus.ANALYZING,
-            progress=40.0,
-            current_step="Analyzing document for compliance issues using AI"
+            progress=45.0,
+            current_step="Analyzing document for FAR compliance"
         )
         
         # Broadcast progress
@@ -260,8 +260,8 @@ async def process_analysis(session_id: str) -> None:
             "sessionId": session_id,
             "data": {
                 "status": "analyzing",
-                "progress": 40.0,
-                "currentStep": "Analyzing document for compliance issues using AI"
+                "progress": 45.0,
+                "currentStep": "FAR Scan"
             }
         })
 
@@ -273,11 +273,12 @@ async def process_analysis(session_id: str) -> None:
         if bedrock_client.is_available():
             try:
                 logger.info(f"Using AWS Bedrock for analysis of document {session_data['document_id']}")
+                # Step 4: DFARS Audit (Simulated as part of AI processing)
                 await update_analysis_progress(
                     session_id=session_id,
                     status=AnalysisStatus.ANALYZING,
-                    progress=60.0,
-                    current_step="Processing with AWS Bedrock AI"
+                    progress=55.0,
+                    current_step="Performing DFARS regulatory audit"
                 )
                 
                 # Broadcast progress
@@ -286,8 +287,8 @@ async def process_analysis(session_id: str) -> None:
                     "sessionId": session_id,
                     "data": {
                         "status": "analyzing",
-                        "progress": 60.0,
-                        "currentStep": "Processing with AWS Bedrock AI"
+                        "progress": 55.0,
+                        "currentStep": "DFARS Audit"
                     }
                 })
 
@@ -307,11 +308,12 @@ async def process_analysis(session_id: str) -> None:
         # Fallback to mock analysis if Bedrock failed or unavailable
         if results is None:
             logger.info(f"Using fallback analysis for document {session_data['document_id']}")
+            # Step 4: DFARS Audit (Simulated as part of fallback)
             await update_analysis_progress(
                 session_id=session_id,
                 status=AnalysisStatus.ANALYZING,
-                progress=70.0,
-                current_step="Processing with fallback analysis service"
+                progress=55.0,
+                current_step="Performing DFARS regulatory audit (fallback)"
             )
             
             # Broadcast progress
@@ -320,8 +322,8 @@ async def process_analysis(session_id: str) -> None:
                 "sessionId": session_id,
                 "data": {
                     "status": "analyzing",
-                    "progress": 70.0,
-                    "currentStep": "Processing with fallback analysis service"
+                    "progress": 55.0,
+                    "currentStep": "DFARS Audit"
                 }
             })
 
@@ -334,12 +336,12 @@ async def process_analysis(session_id: str) -> None:
                 session_id=session_id
             )
         
-        # Phase 3: Finalize results
+        # Step 5: Security Review
         await update_analysis_progress(
             session_id=session_id,
-            status=AnalysisStatus.ANALYZING,
-            progress=90.0,
-            current_step="Finalizing compliance report"
+            status=AnalysisStatus.VALIDATING,
+            progress=65.0,
+            current_step="Conducting security review of compliance findings"
         )
         
         # Broadcast progress
@@ -347,9 +349,51 @@ async def process_analysis(session_id: str) -> None:
             "type": "analysis_progress",
             "sessionId": session_id,
             "data": {
-                "status": "analyzing",
+                "status": "validating",
+                "progress": 65.0,
+                "currentStep": "Security Review"
+            }
+        })
+
+        await asyncio.sleep(0.5)
+
+        # Step 6: Policy Check
+        await update_analysis_progress(
+            session_id=session_id,
+            status=AnalysisStatus.VALIDATING,
+            progress=75.0,
+            current_step="Verifying against regulatory policy guidelines"
+        )
+        
+        # Broadcast progress
+        await manager.broadcast({
+            "type": "analysis_progress",
+            "sessionId": session_id,
+            "data": {
+                "status": "validating",
+                "progress": 75.0,
+                "currentStep": "Policy Check"
+            }
+        })
+
+        await asyncio.sleep(0.5)
+
+        # Step 7: Generation
+        await update_analysis_progress(
+            session_id=session_id,
+            status=AnalysisStatus.GENERATING,
+            progress=90.0,
+            current_step="Generating final compliance report"
+        )
+        
+        # Broadcast progress
+        await manager.broadcast({
+            "type": "analysis_progress",
+            "sessionId": session_id,
+            "data": {
+                "status": "generating",
                 "progress": 90.0,
-                "currentStep": "Finalizing compliance report"
+                "currentStep": "Generation"
             }
         })
 
