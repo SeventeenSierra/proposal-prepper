@@ -104,7 +104,7 @@ services:
           - api-service
 
   postgres:
-    image: postgres:15-alpine
+    image: ankane/pgvector:v0.5.1-pg15
     ports:
       - "5432:5432"
     environment:
@@ -138,6 +138,7 @@ services:
     environment:
       - MINIO_ROOT_USER=minioadmin
       - MINIO_ROOT_PASSWORD=minioadmin
+      - MINIO_BUCKETS=documents,obi-one-far-docs,obi-one-dfars-supp,obi-one-executive-orders
       - MINIO_BROWSER_REDIRECT_URL=http://localhost:9001
     volumes:
       - minio_data:/data
@@ -154,6 +155,63 @@ services:
         aliases:
           - object-storage
           - s3-storage
+
+  opensearch:
+    image: opensearchproject/opensearch:2.11.0
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=opensearch-node
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+      - DISABLE_SECURITY_PLUGIN=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health?local=true"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      proposal-prepper-network:
+        aliases:
+          - vector-db
+          - search-service
+
+  crawler:
+    build:
+      context: ../../proposal-prepper-backend
+      dockerfile: ../proposal-prepper-infra/containers/crawler.Dockerfile
+    environment:
+      - ENVIRONMENT=development
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/proposal_prepper
+      - S3_ENDPOINT_URL=http://minio:9000
+      - S3_ACCESS_KEY=minioadmin
+      - S3_SECRET_KEY=minioadmin
+      - AWS_REGION=us-east-1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      proposal-prepper-network:
+        aliases:
+          - lambda-simulation
+          - update-service
 
   redis:
     image: redis:7-alpine
@@ -186,6 +244,9 @@ volumes:
   redis_data:
     driver: local
     name: ${COMPOSE_PROJECT_NAME:-proposal-prepper}_redis_data
+  opensearch_data:
+    driver: local
+    name: ${COMPOSE_PROJECT_NAME:-proposal-prepper}_opensearch_data
 
 networks:
   proposal-prepper-network:
