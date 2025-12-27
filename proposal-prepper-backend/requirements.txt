@@ -19,6 +19,7 @@ pydantic-settings==2.1.0
 
 # HTTP client for external API calls
 httpx==0.25.2
+opensearch-py==2.4.2
 
 # PDF processing
 pypdf==6.4.0

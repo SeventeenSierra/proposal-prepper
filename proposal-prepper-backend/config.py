@@ -53,6 +53,14 @@ class Settings(BaseSettings):
     s3_access_key: str = Field(default="minioadmin", env="S3_ACCESS_KEY")
     s3_secret_key: str = Field(default="minioadmin", env="S3_SECRET_KEY")
     s3_bucket_name: str = Field(default="documents", env="S3_BUCKET_NAME")
+    s3_far_bucket: str = Field(default="obi-one-far-docs", env="S3_FAR_BUCKET")
+    s3_dfars_bucket: str = Field(default="obi-one-dfars-supp", env="S3_DFARS_BUCKET")
+    s3_eo_bucket: str = Field(default="obi-one-executive-orders", env="S3_EO_BUCKET")
+    
+    # OpenSearch configuration
+    opensearch_url: str = Field(default="http://opensearch:9200", env="OPENSEARCH_URL")
+    opensearch_user: str = Field(default="admin", env="OPENSEARCH_USER")
+    opensearch_password: str = Field(default="admin", env="OPENSEARCH_PASSWORD")
     
     # Web service configuration
     web_service_url: str = Field(default="http://web:3000", env="WEB_SERVICE_URL")

@@ -85,8 +85,20 @@ async def initialize_service() -> bool:
         if not await wait_for_database():
             logger.error("Failed to connect to database")
             return False
+            
+        # Step 2: Initialize local infrastructure (MinIO, OpenSearch)
+        if settings.environment == "development":
+            logger.info("Initializing local infrastructure (MinIO, OpenSearch)...")
+            try:
+                from setup_local_infra import init_minio, init_opensearch
+                init_minio()
+                init_opensearch()
+                logger.info("Local infrastructure initialization completed")
+            except Exception as e:
+                logger.error(f"Local infrastructure initialization failed: {e}")
+                # Don't fail entire startup if infra init fails, but log it
         
-        # Step 2: Initialize database schema
+        # Step 3: Initialize database schema
         logger.info("Initializing database schema...")
         try:
             await init_database()
