@@ -380,10 +380,11 @@ const AgentInterface = ({
         {/* API Status Badge */}
         <div className="absolute top-4 right-6 z-30">
           <div
-            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-sm ${apiMode === 'mock'
+            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-sm ${
+              apiMode === 'mock'
                 ? 'bg-amber-100 text-amber-700 border-amber-200'
                 : 'bg-emerald-100 text-emerald-700 border-emerald-200'
-              }`}
+            }`}
           >
             <span
               className={`w-1 h-1 rounded-full ${apiMode === 'mock' ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}
@@ -472,20 +473,22 @@ const AgentInterface = ({
                 <button
                   type="button"
                   onClick={() => setActiveTab('steps')}
-                  className={`pb-3 px-1 text-sm font-medium mr-6 transition-colors border-b-2 ${activeTab === 'steps'
+                  className={`pb-3 px-1 text-sm font-medium mr-6 transition-colors border-b-2 ${
+                    activeTab === 'steps'
                       ? 'text-blue-600 border-blue-600'
                       : 'text-gray-500 border-transparent hover:text-slate-800'
-                    }`}
+                  }`}
                 >
                   Live Analysis
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveTab('results')}
-                  className={`pb-3 px-1 text-sm font-medium transition-colors border-b-2 ${activeTab === 'results'
+                  className={`pb-3 px-1 text-sm font-medium transition-colors border-b-2 ${
+                    activeTab === 'results'
                       ? 'text-blue-600 border-blue-600'
                       : 'text-gray-500 border-transparent hover:text-slate-800'
-                    }`}
+                  }`}
                 >
                   Results & Chat
                 </button>
@@ -496,12 +499,13 @@ const AgentInterface = ({
                   {steps.map((step) => (
                     <div
                       key={step.id}
-                      className={`flex gap-3 p-4 rounded-xl border transition-all ${step.status === 'running'
+                      className={`flex gap-3 p-4 rounded-xl border transition-all ${
+                        step.status === 'running'
                           ? 'bg-blue-50/50 border-blue-100 shadow-sm'
                           : step.status === 'error'
                             ? 'bg-red-50/50 border-red-100'
                             : 'bg-white border-gray-100'
-                        }`}
+                      }`}
                     >
                       <div className="mt-1 shrink-0">{getStepIcon(step.status)}</div>
                       <div className="flex-1">
@@ -512,12 +516,13 @@ const AgentInterface = ({
                           </span>
                         </div>
                         <div
-                          className={`text-sm font-medium ${step.status === 'pending'
+                          className={`text-sm font-medium ${
+                            step.status === 'pending'
                               ? 'text-gray-400'
                               : step.status === 'error'
                                 ? 'text-red-600'
                                 : 'text-slate-700'
-                            }`}
+                          }`}
                         >
                           {step.message}
                         </div>
@@ -556,14 +561,16 @@ const AgentInterface = ({
                       )}
 
                       <div
-                        className={`flex-1 max-w-xl ${message.role === 'user' ? 'flex justify-end' : ''
-                          }`}
+                        className={`flex-1 max-w-xl ${
+                          message.role === 'user' ? 'flex justify-end' : ''
+                        }`}
                       >
                         <div
-                          className={`p-4 rounded-2xl text-slate-800 leading-relaxed text-sm shadow-sm ${message.role === 'bot'
+                          className={`p-4 rounded-2xl text-slate-800 leading-relaxed text-sm shadow-sm ${
+                            message.role === 'bot'
                               ? 'bg-white border border-gray-100 rounded-tl-none'
                               : 'bg-blue-600 text-white rounded-br-none'
-                            }`}
+                          }`}
                         >
                           {message.content}
                         </div>

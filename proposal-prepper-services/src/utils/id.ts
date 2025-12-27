@@ -10,12 +10,12 @@
 export function generateUUID(): string {
     // Try native randomUUID first
     if (
-        typeof self !== 'undefined' &&
-        self.crypto &&
-        typeof self.crypto.randomUUID === 'function'
+        typeof globalThis !== 'undefined' &&
+        globalThis.crypto &&
+        typeof globalThis.crypto.randomUUID === 'function'
     ) {
         try {
-            return self.crypto.randomUUID();
+            return globalThis.crypto.randomUUID();
         } catch (e) {
             console.warn('Native randomUUID failed, using fallback', e);
         }

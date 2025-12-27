@@ -10,7 +10,6 @@ import {
 } from '@/components/analysis/types';
 import { generateUUID } from './crypto';
 
-
 /**
  * FAR/DFARS validation rule definition
  */

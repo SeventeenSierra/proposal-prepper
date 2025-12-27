@@ -6,7 +6,6 @@
 import { type ComplianceIssue, IssueSeverity } from '@/components/analysis/types';
 import { generateUUID } from './crypto';
 
-
 /**
  * Critical compliance violation patterns
  * Implements Requirement 2.3: Flag critical compliance violations
