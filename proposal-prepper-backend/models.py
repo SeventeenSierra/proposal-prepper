@@ -91,7 +91,7 @@ class AnalysisStatusResponse(BaseModel):
     """Response model for analysis status requests."""
     success: bool = Field(..., description="Whether the request was successful")
     session_id: str = Field(..., description="Session identifier")
-    status: Literal["queued", "extracting", "analyzing", "completed", "failed"] = Field(..., description="Current analysis status")
+    status: Literal["queued", "extracting", "analyzing", "validating", "generating", "completed", "failed"] = Field(..., description="Current analysis status")
     progress: float = Field(..., ge=0.0, le=100.0, description="Progress percentage (0-100)")
     current_step: str = Field(..., description="Description of current processing step")
     started_at: datetime = Field(..., description="When analysis started")
