@@ -13,7 +13,7 @@
         "unused": "pnpm -r run unused",
         "clean": "pnpm -r run clean && rm -rf node_modules"
     },
-    "packageManager": "pnpm@10.25.0",
+    "packageManager": "pnpm@10.26.2",
     "engines": {
         "node": ">=22"
     },
