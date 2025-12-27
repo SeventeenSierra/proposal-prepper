@@ -21,9 +21,25 @@ export function generateUUID(): string {
         }
     }
 
-    // Fallback implementation of UUID v4
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-        const r = (Math.random() * 16) | 0;
+    // Fallback implementation of UUID v4 using crypto.getRandomValues if available
+    const buf = new Uint8Array(16);
+    if (typeof globalThis !== 'undefined' && globalThis.crypto && globalThis.crypto.getRandomValues) {
+        globalThis.crypto.getRandomValues(buf);
+    } else {
+        // True fallback for very restricted environments
+        for (let i = 0; i < 16; i++) {
+            buf[i] = Math.floor(Math.random() * 256);
+        }
+    }
+
+    // Set version (4) and variant (10xx)
+    buf[6] = (buf[6] & 0x0f) | 0x40;
+    buf[8] = (buf[8] & 0x3f) | 0x80;
+
+    let i = 0;
+    const chars = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx';
+    return chars.replace(/[xy]/g, (c) => {
+        const r = buf[i++] % 16;
         const v = c === 'x' ? r : (r & 0x3) | 0x8;
         return v.toString(16);
     });

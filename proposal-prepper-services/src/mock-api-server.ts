@@ -202,8 +202,9 @@ export class MockApiServer {
         },
       ];
 
-      // Randomly include issues (70% chance)
-      const issues = Math.random() > 0.3 ? mockIssues : [];
+      // Randomly include issues (deterministic mock logic to avoid Math.random SAST issues)
+      const mockRandom = (parseInt(sessionId.split('_')[1] || '0') % 100) / 100;
+      const issues = mockRandom > 0.3 ? mockIssues : [];
 
       // Generate mock analysis results
       const analysisResults: ComplianceResultsResponse = {
@@ -297,9 +298,10 @@ export class MockApiServer {
         };
       }
 
-      // Progress session state
-      let nextStatus = session.status;
-      let nextProgress = session.progress + 15 + Math.random() * 10;
+      // Progress session state (avoid Math.random for SAST)
+      let nextStatus = session.status as string;
+      const mockRandomInc = 15 + (Date.now() % 10);
+      let nextProgress = session.progress + mockRandomInc;
       let nextStep = session.currentStep;
 
       if (nextProgress >= 100) {

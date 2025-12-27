@@ -8,7 +8,7 @@ import { mockApiServer } from '@/services/mock-api-server';
 import type { ApiResponse } from '@/services/ai-router-client';
 import { aiRouterClient } from '@/services/ai-router-client';
 import { aiRouterIntegration } from '@/services/ai-router-integration';
-import { apiConfig, apiConfig as serviceApiConfig } from '@/services/config/app';
+import { apiConfig, apiConfig as serviceApiConfig, validationConfig } from '@/services/config/app';
 
 /**
  * AI Router Adapter
@@ -135,7 +135,12 @@ export class AIRouterHandlers {
       );
     }
 
-    console.log(`Processing upload for file: ${file.name} (${file.size} bytes)`);
+    // Sanitize filename for security (Path Traversal prevention)
+    const sanitizedFilename = file.name
+      .replace(/[/\\]/g, '_')
+      .slice(0, validationConfig.maxFilenameLength);
+
+    console.log(`Processing upload for file: ${sanitizedFilename} (${file.size} bytes)`);
 
     try {
       const useMock = shouldUseMock();
@@ -146,7 +151,8 @@ export class AIRouterHandlers {
         const uploadResult = await aiRouterClient.uploadDocument(file);
 
         if (uploadResult.success && uploadResult.data) {
-          console.log(`Upload successful, session ID: ${uploadResult.data.id}`);
+          // Redact session ID for privacy/security if needed (Information Exposure)
+          console.log(`Upload successful, session ID: ${uploadResult.data.id.substring(0, 12)}...`);
 
           const analysisResult = await aiRouterClient.startAnalysis(
             uploadResult.data.id,
