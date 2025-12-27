@@ -65,3 +65,9 @@ __pycache__/
 
 # Local Workspace
 proposal-prepper-homelab.code-workspace
+
+# Private Sovereign OBI
+*obi*
+.kiro/specs obi/
+local_eo_crawler.py
+agent_personas.py

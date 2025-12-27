@@ -119,16 +119,23 @@ async def lifespan(app: FastAPI):
         # Initialize AWS Bedrock and PDF processing services
         try:
             from aws_bedrock import get_bedrock_client
+            from local_llm import get_local_llm_client
             from pdf_processor import get_pdf_processor
             from fallback_analysis import get_fallback_service
             
             # Initialize services
             bedrock_client = get_bedrock_client()
+            local_llm_client = get_local_llm_client()
             pdf_processor = get_pdf_processor()
             fallback_service = get_fallback_service()
             
             # Log service availability
-            if bedrock_client.is_available():
+            if settings.use_local_llm:
+                if local_llm_client.is_available():
+                    logger.info(f"Local LLM client ({settings.local_llm_model}) initialized and available at {settings.local_llm_url}")
+                else:
+                    logger.warning(f"Local LLM client ({settings.local_llm_model}) not available at {settings.local_llm_url} - using fallback")
+            elif bedrock_client.is_available():
                 logger.info("AWS Bedrock client initialized and available")
             else:
                 logger.warning("AWS Bedrock client not available - using fallback analysis")
@@ -182,6 +189,7 @@ async def process_analysis(session_id: str) -> None:
     """
     from pdf_processor import get_pdf_processor
     from aws_bedrock import get_bedrock_client
+    from local_llm import get_local_llm_client
     from fallback_analysis import get_fallback_service
     import asyncio
     import time
@@ -267,10 +275,45 @@ async def process_analysis(session_id: str) -> None:
 
         
         bedrock_client = get_bedrock_client()
+        local_llm_client = get_local_llm_client()
         results = None
         
-        # Try AWS Bedrock first
-        if bedrock_client.is_available():
+        # Try Local LLM first if configured
+        if settings.use_local_llm:
+            try:
+                logger.info(f"Using Local LLM ({settings.local_llm_model}) for analysis of document {session_data['document_id']}")
+                await update_analysis_progress(
+                    session_id=session_id,
+                    status=AnalysisStatus.ANALYZING,
+                    progress=60.0,
+                    current_step=f"Processing with Local LLM ({settings.local_llm_model})"
+                )
+                
+                # Broadcast progress
+                await manager.broadcast({
+                    "type": "analysis_progress",
+                    "sessionId": session_id,
+                    "data": {
+                        "status": "analyzing",
+                        "progress": 60.0,
+                        "currentStep": f"Processing with Local LLM ({settings.local_llm_model})"
+                    }
+                })
+
+                results = await local_llm_client.analyze_document(
+                    document_text=document_text,
+                    filename=session_data["filename"],
+                    document_id=session_data["document_id"]
+                )
+                
+                logger.info(f"Local LLM analysis completed for document {session_data['document_id']}")
+                
+            except Exception as llm_error:
+                logger.warning(f"Local LLM analysis failed for document {session_data['document_id']}: {llm_error}")
+                results = None
+        
+        # Try AWS Bedrock if Local LLM failed or not configured
+        if results is None and bedrock_client.is_available():
             try:
                 logger.info(f"Using AWS Bedrock for analysis of document {session_data['document_id']}")
                 await update_analysis_progress(
@@ -542,6 +585,22 @@ async def health_check() -> HealthCheckResponse:
             logger.warning(f"Database health check failed: {e}")
             checks["database"] = "error"
             
+        # Add Local LLM check
+        try:
+            from local_llm import get_local_llm_client
+            local_llm_client = get_local_llm_client()
+            if settings.use_local_llm:
+                if local_llm_client.is_available():
+                    checks["local_llm"] = "ok"
+                else:
+                    checks["local_llm"] = "warning"
+                    logger.warning("Local LLM not available")
+            else:
+                checks["local_llm"] = "disabled"
+        except Exception as e:
+            logger.warning(f"Local LLM health check failed: {e}")
+            checks["local_llm"] = "warning"
+
         # Add AWS services check
         try:
             from aws_bedrock import get_bedrock_client
@@ -550,7 +609,7 @@ async def health_check() -> HealthCheckResponse:
                 checks["aws_bedrock"] = "ok"
             else:
                 checks["aws_bedrock"] = "warning"
-                logger.warning("AWS Bedrock client not available - will use fallback analysis")
+                logger.warning("AWS Bedrock client not available")
         except Exception as e:
             logger.warning(f"AWS Bedrock health check failed: {e}")
             checks["aws_bedrock"] = "warning"
