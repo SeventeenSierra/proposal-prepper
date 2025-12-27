@@ -4,6 +4,8 @@
  */
 
 import type { AIRouterClient, UploadSessionResponse, AnalysisSessionResponse, ComplianceResultsResponse } from './ai-router-client';
+import { generateUUID } from './utils/id';
+
 import { aiRouterClient, type ApiResponse } from './ai-router-client';
 
 /**
@@ -58,8 +60,7 @@ export class MockAIRouterClient {
     }
 
     // Return successful upload
-    const cryptoObj = typeof window !== 'undefined' ? window.crypto : (typeof self !== 'undefined' ? self.crypto : (globalThis as any).crypto);
-    const uuid = cryptoObj.randomUUID();
+    const uuid = generateUUID();
 
     return {
       success: true,
@@ -79,8 +80,7 @@ export class MockAIRouterClient {
   async startAnalysis(proposalId: string): Promise<ApiResponse<AnalysisSessionResponse>> {
     await this.simulateDelay(500);
 
-    const cryptoObj = typeof window !== 'undefined' ? window.crypto : (typeof self !== 'undefined' ? self.crypto : (globalThis as any).crypto);
-    const uuid = cryptoObj.randomUUID();
+    const uuid = generateUUID();
 
     return {
       success: true,

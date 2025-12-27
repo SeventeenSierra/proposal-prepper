@@ -19,6 +19,8 @@ import type React from 'react';
 import { useCallback, useRef, useState } from 'react';
 import { apiConfig, errorConfig, uploadConfig, validationConfig } from '@/config/app';
 import { type UploadSession, UploadStatus } from '@/types/app';
+import { generateUUID } from '@/utils/crypto';
+
 
 /**
  * Upload Manager Props
@@ -131,6 +133,7 @@ export function UploadManager({
     }
 
     return { isValid: true };
+
   }, []);
 
   /**
@@ -138,7 +141,7 @@ export function UploadManager({
    */
   const createUploadSession = useCallback((file: File): UploadSession => {
     return {
-      id: `upload_${Date.now()}_${self.crypto.randomUUID().substring(0, 8)}`,
+      id: `upload_${Date.now()}_${generateUUID().substring(0, 8)}`,
       filename: file.name,
       fileSize: file.size,
       mimeType: file.type,
@@ -533,21 +536,21 @@ export function UploadManager({
         onClick={
           !isUploading
             ? (e) => {
-                // Only handle click if it's not from a button or other interactive element
-                if (e.target === e.currentTarget || (e.target as HTMLElement).tagName === 'DIV') {
-                  handleClick(e);
-                }
+              // Only handle click if it's not from a button or other interactive element
+              if (e.target === e.currentTarget || (e.target as HTMLElement).tagName === 'DIV') {
+                handleClick(e);
               }
+            }
             : undefined
         }
         onKeyDown={
           !isUploading
             ? (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  handleClick();
-                }
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleClick();
               }
+            }
             : undefined
         }
         tabIndex={!isUploading && !disabled ? 0 : -1}

@@ -4,7 +4,7 @@
  */
 
 
-const cryptoObj = typeof window !== 'undefined' ? window.crypto : (typeof self !== 'undefined' ? self.crypto : (globalThis as any).crypto);
+
 
 
 import type {
@@ -14,6 +14,8 @@ import type {
   ComplianceResultsResponse,
   UploadSessionResponse,
 } from './ai-router-client';
+import { generateUUID } from './utils/id';
+
 
 /**
  * Framework-Independent Mock API Server
@@ -24,8 +26,9 @@ import type {
  */
 export class MockApiServer {
   private mockDelay: number;
+  private analysisSessions = new Map<string, AnalysisSessionResponse>();
 
-  constructor(mockDelay = 1000) {
+  constructor(mockDelay = 100) { // Reduced default delay for snappier mock
     this.mockDelay = mockDelay;
   }
 
@@ -72,7 +75,7 @@ export class MockApiServer {
 
       // Generate mock upload session
       const uploadSession: UploadSessionResponse = {
-        id: `upload_${Date.now()}_${cryptoObj.randomUUID().substring(0, 8)}`,
+        id: `upload_${Date.now()}_${generateUUID().substring(0, 8)}`,
         filename: file.name,
         fileSize: file.size,
         mimeType: file.type,
@@ -115,15 +118,19 @@ export class MockApiServer {
       await this.simulateDelay(500);
 
       // Generate mock analysis session
+      const sessionId = `analysis_${Date.now()}_${generateUUID().substring(0, 8)}`;
       const analysisSession: AnalysisSessionResponse = {
-        id: `analysis_${Date.now()}_${cryptoObj.randomUUID().substring(0, 8)}`,
+        id: sessionId,
         proposalId,
-        status: 'analyzing',
+        status: 'extracting',
         progress: 0,
         startedAt: new Date().toISOString(),
-        estimatedCompletion: new Date(Date.now() + 30000).toISOString(), // 30 seconds from now
-        currentStep: 'Starting compliance analysis...',
+        estimatedCompletion: new Date(Date.now() + 10000).toISOString(),
+        currentStep: 'Extracting document structure and text...',
       };
+
+      // Store session for tracking
+      this.analysisSessions.set(sessionId, analysisSession);
 
       return {
         success: true,
@@ -279,21 +286,56 @@ export class MockApiServer {
         };
       }
 
-      await this.simulateDelay(300);
+      await this.simulateDelay(200);
 
-      const analysisSession: AnalysisSessionResponse = {
-        id: sessionId,
-        proposalId: `proposal_${sessionId}`,
-        status: 'completed',
-        progress: 100,
-        startedAt: new Date(Date.now() - 30000).toISOString(),
-        completedAt: new Date().toISOString(),
-        currentStep: 'Analysis completed',
+      const session = this.analysisSessions.get(sessionId);
+      if (!session) {
+        return {
+          success: false,
+          error: 'Analysis session not found',
+          code: 'ANALYSIS_NOT_FOUND',
+        };
+      }
+
+      // Progress session state
+      let nextStatus = session.status;
+      let nextProgress = session.progress + 15 + Math.random() * 10;
+      let nextStep = session.currentStep;
+
+      if (nextProgress >= 100) {
+        nextProgress = 100;
+        nextStatus = 'completed';
+        nextStep = 'Analysis complete';
+      } else if (nextProgress >= 85) {
+        nextStatus = 'validating';
+        nextStep = 'Synthesizing final compliance report...';
+      } else if (nextProgress >= 70) {
+        nextStatus = 'validating';
+        nextStep = 'Cross-referencing small business rules...';
+      } else if (nextProgress >= 55) {
+        nextStatus = 'analyzing';
+        nextStep = 'Performing Cybersecurity Audit (NIST)...';
+      } else if (nextProgress >= 35) {
+        nextStatus = 'analyzing';
+        nextStep = 'Auditing DFARS Supplements...';
+      } else if (nextProgress >= 15) {
+        nextStatus = 'analyzing';
+        nextStep = 'Scanning FAR Part 52 Requirements...';
+      }
+
+      const updatedSession: AnalysisSessionResponse = {
+        ...session,
+        status: nextStatus as any,
+        progress: nextProgress,
+        currentStep: nextStep,
+        ...(nextStatus === 'completed' && { completedAt: new Date().toISOString() }),
       };
+
+      this.analysisSessions.set(sessionId, updatedSession);
 
       return {
         success: true,
-        data: analysisSession,
+        data: updatedSession,
       };
     } catch (error) {
       console.error('Analysis status error:', error);

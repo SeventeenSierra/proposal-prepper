@@ -11,6 +11,7 @@ import {
   seedGrantToUploadSession,
 } from '@/seed-data';
 import type { UploadSession } from '@/types/app';
+import { generateUUID } from '@/utils/crypto';
 import { ErrorScenario } from './error-scenarios';
 
 /**
@@ -100,7 +101,7 @@ export class MockStrandsAPIEnhanced {
     }
 
     return {
-      id: `analysis-${Date.now()}_${crypto.randomUUID().substring(0, 8)}`,
+      id: `analysis-${Date.now()}_${generateUUID().substring(0, 8)}`,
       proposalId,
       status: AnalysisStatus.ANALYZING,
       progress: 0,

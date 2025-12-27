@@ -277,8 +277,8 @@ export class AnalysisService {
       }
     };
 
-    // Start polling
-    setTimeout(poll, pollInterval);
+    // Start polling immediately, then continue at intervals
+    poll();
   }
 
   /**

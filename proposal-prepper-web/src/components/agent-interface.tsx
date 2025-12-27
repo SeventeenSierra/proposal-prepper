@@ -48,56 +48,77 @@ const analysisSteps: Step[] = [
     message: 'Uploading and processing document...',
     status: 'pending',
     agent: 'coordinator',
-    details: 'Document Upload',
+    details: 'Step 1: Upload',
   },
   {
     id: 2,
     message: 'Extracting document structure and text...',
     status: 'pending',
     agent: 'rag',
-    details: 'Text Extraction',
+    details: 'Step 2: Extraction',
   },
   {
     id: 3,
-    message: 'Validating against FAR/DFARS requirements...',
+    message: 'Scanning FAR Part 52 Requirements...',
     status: 'pending',
     agent: 'compliance',
-    details: 'Compliance Analysis',
+    details: 'Step 3: FAR Scan',
   },
   {
     id: 4,
-    message: 'Checking regulatory clause compliance...',
+    message: 'Auditing DFARS Supplements...',
     status: 'pending',
     agent: 'compliance',
-    details: 'Validation Check',
+    details: 'Step 4: DFARS Audit',
   },
   {
     id: 5,
-    message: 'Synthesizing compliance report...',
+    message: 'Performing Cybersecurity Audit (NIST)...',
+    status: 'pending',
+    agent: 'compliance',
+    details: 'Step 5: Security Review',
+  },
+  {
+    id: 6,
+    message: 'Cross-referencing small business rules...',
+    status: 'pending',
+    agent: 'compliance',
+    details: 'Step 6: Policy Check',
+  },
+  {
+    id: 7,
+    message: 'Synthesizing final compliance report...',
     status: 'pending',
     agent: 'writer',
-    details: 'Report Generation',
+    details: 'Step 7: Generation',
   },
 ];
 
-// Map AnalysisStatus to step index
-function getStepIndexFromStatus(status: AnalysisStatus): number {
+// Map AnalysisStatus and currentStep to step index
+function getStepIndexFromStatus(status: AnalysisStatus, currentStep?: string): number {
+  if (status === AnalysisStatus.FAILED) return -1;
+  if (status === AnalysisStatus.COMPLETED) return 6;
+
+  // Base indices for statuses
+  let baseIndex = 0;
   switch (status) {
     case AnalysisStatus.QUEUED:
-      return 0;
+      baseIndex = 0;
+      break;
     case AnalysisStatus.EXTRACTING:
-      return 1;
+      baseIndex = 1;
+      break;
     case AnalysisStatus.ANALYZING:
-      return 2;
+      baseIndex = 2; // Default for ANALYZING
+      // Specific sub-steps based on currentStep string
+      if (currentStep?.includes('DFARS')) baseIndex = 3;
+      else if (currentStep?.includes('Cybersecurity')) baseIndex = 4;
+      break;
     case AnalysisStatus.VALIDATING:
-      return 3;
-    case AnalysisStatus.COMPLETED:
-      return 4;
-    case AnalysisStatus.FAILED:
-      return -1;
-    default:
-      return 0;
+      baseIndex = 5;
+      break;
   }
+  return baseIndex;
 }
 
 const AgentInterface = ({
@@ -205,11 +226,11 @@ const AgentInterface = ({
 
       // Set up event handlers for progress updates
       analysisService.setEventHandlers({
-        onProgress: (sessionId, _progress, _currentStep) => {
+        onProgress: (sessionId, _progress, currentStep) => {
           // Update steps based on current step info
           const session = analysisService.getActiveSessions().find((s) => s.id === sessionId);
           if (session) {
-            const stepIndex = getStepIndexFromStatus(session.status);
+            const stepIndex = getStepIndexFromStatus(session.status, currentStep);
             setSteps((prev) =>
               prev.map((step, idx) => {
                 if (idx < stepIndex) return { ...step, status: 'complete' };
@@ -359,11 +380,10 @@ const AgentInterface = ({
         {/* API Status Badge */}
         <div className="absolute top-4 right-6 z-30">
           <div
-            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-sm ${
-              apiMode === 'mock'
+            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-sm ${apiMode === 'mock'
                 ? 'bg-amber-100 text-amber-700 border-amber-200'
                 : 'bg-emerald-100 text-emerald-700 border-emerald-200'
-            }`}
+              }`}
           >
             <span
               className={`w-1 h-1 rounded-full ${apiMode === 'mock' ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}
@@ -452,22 +472,20 @@ const AgentInterface = ({
                 <button
                   type="button"
                   onClick={() => setActiveTab('steps')}
-                  className={`pb-3 px-1 text-sm font-medium mr-6 transition-colors border-b-2 ${
-                    activeTab === 'steps'
+                  className={`pb-3 px-1 text-sm font-medium mr-6 transition-colors border-b-2 ${activeTab === 'steps'
                       ? 'text-blue-600 border-blue-600'
                       : 'text-gray-500 border-transparent hover:text-slate-800'
-                  }`}
+                    }`}
                 >
                   Live Analysis
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveTab('results')}
-                  className={`pb-3 px-1 text-sm font-medium transition-colors border-b-2 ${
-                    activeTab === 'results'
+                  className={`pb-3 px-1 text-sm font-medium transition-colors border-b-2 ${activeTab === 'results'
                       ? 'text-blue-600 border-blue-600'
                       : 'text-gray-500 border-transparent hover:text-slate-800'
-                  }`}
+                    }`}
                 >
                   Results & Chat
                 </button>
@@ -478,13 +496,12 @@ const AgentInterface = ({
                   {steps.map((step) => (
                     <div
                       key={step.id}
-                      className={`flex gap-3 p-4 rounded-xl border transition-all ${
-                        step.status === 'running'
+                      className={`flex gap-3 p-4 rounded-xl border transition-all ${step.status === 'running'
                           ? 'bg-blue-50/50 border-blue-100 shadow-sm'
                           : step.status === 'error'
                             ? 'bg-red-50/50 border-red-100'
                             : 'bg-white border-gray-100'
-                      }`}
+                        }`}
                     >
                       <div className="mt-1 shrink-0">{getStepIcon(step.status)}</div>
                       <div className="flex-1">
@@ -495,13 +512,12 @@ const AgentInterface = ({
                           </span>
                         </div>
                         <div
-                          className={`text-sm font-medium ${
-                            step.status === 'pending'
+                          className={`text-sm font-medium ${step.status === 'pending'
                               ? 'text-gray-400'
                               : step.status === 'error'
                                 ? 'text-red-600'
                                 : 'text-slate-700'
-                          }`}
+                            }`}
                         >
                           {step.message}
                         </div>
@@ -540,16 +556,14 @@ const AgentInterface = ({
                       )}
 
                       <div
-                        className={`flex-1 max-w-xl ${
-                          message.role === 'user' ? 'flex justify-end' : ''
-                        }`}
+                        className={`flex-1 max-w-xl ${message.role === 'user' ? 'flex justify-end' : ''
+                          }`}
                       >
                         <div
-                          className={`p-4 rounded-2xl text-slate-800 leading-relaxed text-sm shadow-sm ${
-                            message.role === 'bot'
+                          className={`p-4 rounded-2xl text-slate-800 leading-relaxed text-sm shadow-sm ${message.role === 'bot'
                               ? 'bg-white border border-gray-100 rounded-tl-none'
                               : 'bg-blue-600 text-white rounded-br-none'
-                          }`}
+                            }`}
                         >
                           {message.content}
                         </div>

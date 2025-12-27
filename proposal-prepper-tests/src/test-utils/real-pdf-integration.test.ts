@@ -6,6 +6,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { generateUUID } from '@/utils/crypto';
 
 /**
  * Real PDF Integration Tests
@@ -118,7 +119,7 @@ class RealPDFTestHelper {
     }
 
     // Simulate successful upload
-    const sessionId = `session-${Date.now()}-${self.crypto.randomUUID().substring(0, 8)}`;
+    const sessionId = `session-${Date.now()}-${generateUUID().substring(0, 8)}`;
 
     return {
       success: true,
