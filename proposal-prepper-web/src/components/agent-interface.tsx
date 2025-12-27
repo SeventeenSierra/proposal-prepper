@@ -59,21 +59,35 @@ const analysisSteps: Step[] = [
   },
   {
     id: 3,
-    message: 'Validating against FAR/DFARS requirements...',
+    message: 'Scanning for FAR requirements...',
     status: 'pending',
     agent: 'compliance',
-    details: 'Compliance Analysis',
+    details: 'FAR Scan',
   },
   {
     id: 4,
-    message: 'Checking regulatory clause compliance...',
+    message: 'Performing DFARS regulatory audit...',
     status: 'pending',
     agent: 'compliance',
-    details: 'Validation Check',
+    details: 'DFARS Audit',
   },
   {
     id: 5,
-    message: 'Synthesizing compliance report...',
+    message: 'Conducting internal security review...',
+    status: 'pending',
+    agent: 'compliance',
+    details: 'Security Review',
+  },
+  {
+    id: 6,
+    message: 'Checking regulatory compliance policies...',
+    status: 'pending',
+    agent: 'compliance',
+    details: 'Policy Check',
+  },
+  {
+    id: 7,
+    message: 'Synthesizing final compliance report...',
     status: 'pending',
     agent: 'writer',
     details: 'Report Generation',
@@ -81,18 +95,25 @@ const analysisSteps: Step[] = [
 ];
 
 // Map AnalysisStatus to step index
-function getStepIndexFromStatus(status: AnalysisStatus): number {
+// Map AnalysisStatus and progress to step index
+function getStepIndexFromStatus(status: AnalysisStatus, progress = 0): number {
   switch (status) {
     case AnalysisStatus.QUEUED:
       return 0;
     case AnalysisStatus.EXTRACTING:
       return 1;
     case AnalysisStatus.ANALYZING:
-      return 2;
+      // Step 3 (FAR Scan) starts Around 40-45%
+      // Step 4 (DFARS Audit) starts Around 55%
+      return progress >= 55 ? 3 : 2;
     case AnalysisStatus.VALIDATING:
-      return 3;
+      // Step 5 (Security Review) starts Around 65%
+      // Step 6 (Policy Check) starts Around 75%
+      return progress >= 75 ? 5 : 4;
+    case AnalysisStatus.GENERATING:
+      return 6;
     case AnalysisStatus.COMPLETED:
-      return 4;
+      return 6; // All steps complete
     case AnalysisStatus.FAILED:
       return -1;
     default:
@@ -205,11 +226,11 @@ const AgentInterface = ({
 
       // Set up event handlers for progress updates
       analysisService.setEventHandlers({
-        onProgress: (sessionId, _progress, _currentStep) => {
+        onProgress: (sessionId, progress, _currentStep) => {
           // Update steps based on current step info
           const session = analysisService.getActiveSessions().find((s) => s.id === sessionId);
           if (session) {
-            const stepIndex = getStepIndexFromStatus(session.status);
+            const stepIndex = getStepIndexFromStatus(session.status, progress);
             setSteps((prev) =>
               prev.map((step, idx) => {
                 if (idx < stepIndex) return { ...step, status: 'complete' };
@@ -359,11 +380,10 @@ const AgentInterface = ({
         {/* API Status Badge */}
         <div className="absolute top-4 right-6 z-30">
           <div
-            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-sm ${
-              apiMode === 'mock'
-                ? 'bg-amber-100 text-amber-700 border-amber-200'
-                : 'bg-emerald-100 text-emerald-700 border-emerald-200'
-            }`}
+            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-sm ${apiMode === 'mock'
+              ? 'bg-amber-100 text-amber-700 border-amber-200'
+              : 'bg-emerald-100 text-emerald-700 border-emerald-200'
+              }`}
           >
             <span
               className={`w-1 h-1 rounded-full ${apiMode === 'mock' ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}
@@ -452,22 +472,20 @@ const AgentInterface = ({
                 <button
                   type="button"
                   onClick={() => setActiveTab('steps')}
-                  className={`pb-3 px-1 text-sm font-medium mr-6 transition-colors border-b-2 ${
-                    activeTab === 'steps'
-                      ? 'text-blue-600 border-blue-600'
-                      : 'text-gray-500 border-transparent hover:text-slate-800'
-                  }`}
+                  className={`pb-3 px-1 text-sm font-medium mr-6 transition-colors border-b-2 ${activeTab === 'steps'
+                    ? 'text-blue-600 border-blue-600'
+                    : 'text-gray-500 border-transparent hover:text-slate-800'
+                    }`}
                 >
                   Live Analysis
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveTab('results')}
-                  className={`pb-3 px-1 text-sm font-medium transition-colors border-b-2 ${
-                    activeTab === 'results'
-                      ? 'text-blue-600 border-blue-600'
-                      : 'text-gray-500 border-transparent hover:text-slate-800'
-                  }`}
+                  className={`pb-3 px-1 text-sm font-medium transition-colors border-b-2 ${activeTab === 'results'
+                    ? 'text-blue-600 border-blue-600'
+                    : 'text-gray-500 border-transparent hover:text-slate-800'
+                    }`}
                 >
                   Results & Chat
                 </button>
@@ -478,13 +496,12 @@ const AgentInterface = ({
                   {steps.map((step) => (
                     <div
                       key={step.id}
-                      className={`flex gap-3 p-4 rounded-xl border transition-all ${
-                        step.status === 'running'
-                          ? 'bg-blue-50/50 border-blue-100 shadow-sm'
-                          : step.status === 'error'
-                            ? 'bg-red-50/50 border-red-100'
-                            : 'bg-white border-gray-100'
-                      }`}
+                      className={`flex gap-3 p-4 rounded-xl border transition-all ${step.status === 'running'
+                        ? 'bg-blue-50/50 border-blue-100 shadow-sm'
+                        : step.status === 'error'
+                          ? 'bg-red-50/50 border-red-100'
+                          : 'bg-white border-gray-100'
+                        }`}
                     >
                       <div className="mt-1 shrink-0">{getStepIcon(step.status)}</div>
                       <div className="flex-1">
@@ -495,13 +512,12 @@ const AgentInterface = ({
                           </span>
                         </div>
                         <div
-                          className={`text-sm font-medium ${
-                            step.status === 'pending'
-                              ? 'text-gray-400'
-                              : step.status === 'error'
-                                ? 'text-red-600'
-                                : 'text-slate-700'
-                          }`}
+                          className={`text-sm font-medium ${step.status === 'pending'
+                            ? 'text-gray-400'
+                            : step.status === 'error'
+                              ? 'text-red-600'
+                              : 'text-slate-700'
+                            }`}
                         >
                           {step.message}
                         </div>
@@ -540,16 +556,14 @@ const AgentInterface = ({
                       )}
 
                       <div
-                        className={`flex-1 max-w-xl ${
-                          message.role === 'user' ? 'flex justify-end' : ''
-                        }`}
+                        className={`flex-1 max-w-xl ${message.role === 'user' ? 'flex justify-end' : ''
+                          }`}
                       >
                         <div
-                          className={`p-4 rounded-2xl text-slate-800 leading-relaxed text-sm shadow-sm ${
-                            message.role === 'bot'
-                              ? 'bg-white border border-gray-100 rounded-tl-none'
-                              : 'bg-blue-600 text-white rounded-br-none'
-                          }`}
+                          className={`p-4 rounded-2xl text-slate-800 leading-relaxed text-sm shadow-sm ${message.role === 'bot'
+                            ? 'bg-white border border-gray-100 rounded-tl-none'
+                            : 'bg-blue-600 text-white rounded-br-none'
+                            }`}
                         >
                           {message.content}
                         </div>
