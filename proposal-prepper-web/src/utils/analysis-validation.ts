@@ -8,6 +8,7 @@ import {
   IssueSeverity,
   type ValidationResult,
 } from '@/components/analysis/types';
+import { generateUUID } from './crypto';
 
 /**
  * FAR/DFARS validation rule definition
@@ -94,7 +95,7 @@ export function validateFARDFARS(
     // Generate compliance issue if required rule is not met
     if (rule.required && !matches) {
       issues.push({
-        id: `issue_${rule.id}_${Date.now()}_${self.crypto.randomUUID().substring(0, 8)}`,
+        id: `issue_${rule.id}_${Date.now()}_${generateUUID().substring(0, 8)}`,
         severity: IssueSeverity.CRITICAL,
         title: `Missing ${rule.name}`,
         description: rule.description,

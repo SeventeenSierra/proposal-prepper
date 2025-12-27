@@ -242,6 +242,8 @@ export function formatFileSize(bytes: number): string {
   return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
 }
 
+import { generateUUID } from './crypto';
+
 /**
  * Generates a secure session ID for upload tracking
  *
@@ -249,6 +251,6 @@ export function formatFileSize(bytes: number): string {
  */
 export function generateSessionId(): string {
   const timestamp = Date.now().toString(36);
-  const randomPart = self.crypto.randomUUID().substring(0, 8);
+  const randomPart = generateUUID().substring(0, 8);
   return `upload-${timestamp}-${randomPart}`;
 }

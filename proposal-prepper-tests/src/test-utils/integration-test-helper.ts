@@ -9,6 +9,7 @@
  * Provides utilities for testing the end-to-end flow:
  * PDF Upload → Analysis Processing → Results Display
  */
+import { generateUUID } from '@/utils/crypto';
 
 export interface IntegrationTestScenario {
   name: string;
@@ -86,7 +87,7 @@ export class IntegrationTestHelper {
       }
 
       // Simulate successful upload
-      const sessionId = `session-${Date.now()}-${self.crypto.randomUUID().substring(0, 8)}`;
+      const sessionId = `session-${Date.now()}-${generateUUID().substring(0, 8)}`;
       return { success: true, sessionId };
     } catch (error) {
       return { success: false, error: error instanceof Error ? error.message : 'Upload failed' };

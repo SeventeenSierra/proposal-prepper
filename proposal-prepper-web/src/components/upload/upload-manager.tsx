@@ -19,6 +19,7 @@ import type React from 'react';
 import { useCallback, useRef, useState } from 'react';
 import { apiConfig, errorConfig, uploadConfig, validationConfig } from '@/config/app';
 import { type UploadSession, UploadStatus } from '@/types/app';
+import { generateUUID } from '@/utils/crypto';
 
 /**
  * Upload Manager Props
@@ -138,7 +139,7 @@ export function UploadManager({
    */
   const createUploadSession = useCallback((file: File): UploadSession => {
     return {
-      id: `upload_${Date.now()}_${self.crypto.randomUUID().substring(0, 8)}`,
+      id: `upload_${Date.now()}_${generateUUID().substring(0, 8)}`,
       filename: file.name,
       fileSize: file.size,
       mimeType: file.type,

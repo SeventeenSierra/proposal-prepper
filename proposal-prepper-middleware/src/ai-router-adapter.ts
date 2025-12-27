@@ -8,6 +8,7 @@ import { mockApiServer } from '@/services/mock-api-server';
 import type { ApiResponse } from '@/services/ai-router-client';
 import { aiRouterClient } from '@/services/ai-router-client';
 import { aiRouterIntegration } from '@/services/ai-router-integration';
+import { apiConfig, apiConfig as serviceApiConfig, validationConfig } from '@/services/config/app';
 
 /**
  * AI Router Adapter
@@ -97,27 +98,22 @@ function toNextResponse<T>(apiResponse: ApiResponse<T>, successStatus = 200): Ne
 }
 
 /**
- * Check if AI Router service is available
+ * Check if we should use the mock service based on configuration
  */
-async function isServiceAvailable(): Promise<boolean> {
-  try {
-    const baseUrl = aiRouterClient.getBaseUrl();
-    // If client points to localhost:3000 (Next.js default), we are self-referencing in dev mode.
-    // In this case, we should use the internal MockApiServer instead of making HTTP calls to ourselves (which causes recursion).
-    if (baseUrl.includes('localhost:3000')) {
-      console.log('DETECTED LOCALHOST LOOP - FORCING MOCK');
-      return false;
-    }
-
-    const healthCheck = await aiRouterClient.healthCheck();
-    return (
-      healthCheck.success &&
-      (healthCheck.data?.status === 'healthy' || healthCheck.data?.status === 'degraded')
-    );
-  } catch (error) {
-    console.log('AI Router service health check failed:', error);
-    return false;
+function shouldUseMock(): boolean {
+  // Use explicit configuration
+  if (serviceApiConfig.useMockApis) {
+    return true;
   }
+
+  const baseUrl = aiRouterClient.getBaseUrl();
+  // If client points to localhost:3000 (Next.js default), we are self-referencing in dev mode.
+  // In this case, we MUST use the internal MockApiServer to avoid infinite recursion.
+  if (baseUrl.includes('localhost:3000')) {
+    return true;
+  }
+
+  return false;
 }
 
 /**
@@ -139,18 +135,24 @@ export class AIRouterHandlers {
       );
     }
 
-    console.log(`Processing upload for file: ${file.name} (${file.size} bytes)`);
+    // Sanitize filename for security (Path Traversal prevention)
+    const sanitizedFilename = file.name
+      .replace(/[/\\]/g, '_')
+      .slice(0, validationConfig.maxFilenameLength);
+
+    console.log(`Processing upload for file: ${sanitizedFilename} (${file.size} bytes)`);
 
     try {
-      const available = await isServiceAvailable();
+      const useMock = shouldUseMock();
 
-      if (available) {
+      if (!useMock) {
         console.log('Using real AI Router service for upload and analysis');
 
         const uploadResult = await aiRouterClient.uploadDocument(file);
 
         if (uploadResult.success && uploadResult.data) {
-          console.log(`Upload successful, session ID: ${uploadResult.data.id}`);
+          // Redact session ID for privacy/security if needed (Information Exposure)
+          console.log(`Upload successful, session ID: ${uploadResult.data.id.substring(0, 12)}...`);
 
           const analysisResult = await aiRouterClient.startAnalysis(
             uploadResult.data.id,
@@ -160,7 +162,7 @@ export class AIRouterHandlers {
           );
 
           if (analysisResult.success && analysisResult.data) {
-            console.log(`Analysis started, session ID: ${analysisResult.data.id}`);
+            console.log(`Analysis started, session ID: ${analysisResult.data.id.substring(0, 12)}...`);
 
             return NextResponse.json(
               {
@@ -218,7 +220,7 @@ export class AIRouterHandlers {
     const documentId = body?.documentId || body?.document_id;
     const filename = body?.filename;
 
-    console.log(`Extracted proposalId: ${proposalId}`);
+    console.log(`Extracted proposalId: ${proposalId?.substring(0, 12)}...`);
 
     if (!proposalId) {
       return NextResponse.json(
@@ -228,9 +230,9 @@ export class AIRouterHandlers {
     }
 
     try {
-      const available = await isServiceAvailable();
+      const useMock = shouldUseMock();
 
-      if (available) {
+      if (!useMock) {
         console.log('Using real AI Router service for analysis');
 
         const result = await aiRouterClient.startAnalysis(
@@ -275,9 +277,9 @@ export class AIRouterHandlers {
     }
 
     try {
-      const available = await isServiceAvailable();
+      const useMock = shouldUseMock();
 
-      if (available) {
+      if (!useMock) {
         const result = await aiRouterClient.getResults(sessionId);
         return toNextResponse(result);
       } else {
@@ -319,9 +321,9 @@ export class AIRouterHandlers {
     }
 
     try {
-      const available = await isServiceAvailable();
+      const useMock = shouldUseMock();
 
-      if (available) {
+      if (!useMock) {
         const result = await aiRouterClient.getAnalysisStatus(sessionId);
         return toNextResponse(result);
       } else {
@@ -387,10 +389,10 @@ export class AIRouterHandlers {
   static async handleHealthCheck(_request: NextRequest): Promise<NextResponse> {
     try {
       const webHealth = await mockApiServer.handleHealthCheck();
-      const available = await isServiceAvailable();
+      const useMock = shouldUseMock();
 
       let serviceHealth = null;
-      if (available) {
+      if (!useMock) {
         const healthCheck = await aiRouterClient.healthCheck();
         serviceHealth = healthCheck.data;
       }
@@ -399,8 +401,8 @@ export class AIRouterHandlers {
         success: true,
         data: {
           web_service: webHealth.data,
-          ai_router_service: serviceHealth || { status: 'unavailable' },
-          integration_status: available ? 'connected' : 'fallback_mode',
+          ai_router_service: serviceHealth || { status: 'mock_mode' },
+          integration_status: useMock ? 'mock_mode' : 'connected',
           timestamp: new Date().toISOString(),
         },
       });

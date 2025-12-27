@@ -8,6 +8,7 @@
 import { type AnalysisRequest, analysisService } from 'proposal-prepper-services/analysis-service';
 import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
+import { generateUUID } from '@/utils/crypto';
 import {
   type AnalysisResult,
   type AnalysisSession,
@@ -69,7 +70,7 @@ export const AnalysisCoordinator: React.FC<AnalysisCoordinatorProps> = ({
    * Generate unique session ID
    */
   const generateSessionId = useCallback((): string => {
-    return `analysis_${Date.now()}_${self.crypto.randomUUID().substring(0, 8)}`;
+    return `analysis_${Date.now()}_${generateUUID().substring(0, 8)}`;
   }, []);
 
   /**

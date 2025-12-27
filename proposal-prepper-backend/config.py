@@ -31,6 +31,11 @@ class Settings(BaseSettings):
     aws_secret_access_key: Optional[str] = Field(default=None, env="AWS_SECRET_ACCESS_KEY")
     bedrock_model_id: str = Field(default="anthropic.claude-3-sonnet-20240229-v1:0", env="BEDROCK_MODEL_ID")
     
+    # Local LLM configuration
+    use_local_llm: bool = Field(default=False, env="USE_LOCAL_LLM")
+    local_llm_url: str = Field(default="http://localhost:11434", env="LOCAL_LLM_URL") # Ollama default
+    local_llm_model: str = Field(default="llama3.1", env="LOCAL_LLM_MODEL")
+    
     # Database configuration
     database_url: str = Field(
         default="postgresql://postgres:password@postgres:5432/proposal_prepper",

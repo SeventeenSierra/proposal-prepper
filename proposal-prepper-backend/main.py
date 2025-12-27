@@ -119,16 +119,23 @@ async def lifespan(app: FastAPI):
         # Initialize AWS Bedrock and PDF processing services
         try:
             from aws_bedrock import get_bedrock_client
+            from local_llm import get_local_llm_client
             from pdf_processor import get_pdf_processor
             from fallback_analysis import get_fallback_service
             
             # Initialize services
             bedrock_client = get_bedrock_client()
+            local_llm_client = get_local_llm_client()
             pdf_processor = get_pdf_processor()
             fallback_service = get_fallback_service()
             
             # Log service availability
-            if bedrock_client.is_available():
+            if settings.use_local_llm:
+                if local_llm_client.is_available():
+                    logger.info(f"Local LLM client ({settings.local_llm_model}) initialized and available at {settings.local_llm_url}")
+                else:
+                    logger.warning(f"Local LLM client ({settings.local_llm_model}) not available at {settings.local_llm_url} - using fallback")
+            elif bedrock_client.is_available():
                 logger.info("AWS Bedrock client initialized and available")
             else:
                 logger.warning("AWS Bedrock client not available - using fallback analysis")
@@ -182,6 +189,7 @@ async def process_analysis(session_id: str) -> None:
     """
     from pdf_processor import get_pdf_processor
     from aws_bedrock import get_bedrock_client
+    from local_llm import get_local_llm_client
     from fallback_analysis import get_fallback_service
     import asyncio
     import time
@@ -195,7 +203,7 @@ async def process_analysis(session_id: str) -> None:
         return
     
     try:
-        logger.info(f"Starting analysis process for session: {session_id}")
+        logger.info(f"Starting analysis process for session: {session_id[:12]}...")
         
         # Phase 1: Document text extraction
         logger.debug(f"Phase 1: Extraction for session {session_id}")
@@ -223,7 +231,7 @@ async def process_analysis(session_id: str) -> None:
             s3_key=session_data["s3_key"]
         )
         
-        logger.info(f"Extracted {len(document_text)} characters from document {session_data['document_id']}")
+        logger.info(f"Extracted {len(document_text)} characters from document {session_data['document_id'][:12]}...")
         
         # Update progress
         await update_analysis_progress(
@@ -267,12 +275,47 @@ async def process_analysis(session_id: str) -> None:
 
         
         bedrock_client = get_bedrock_client()
+        local_llm_client = get_local_llm_client()
         results = None
         
-        # Try AWS Bedrock first
-        if bedrock_client.is_available():
+        # Try Local LLM first if configured
+        if settings.use_local_llm:
             try:
-                logger.info(f"Using AWS Bedrock for analysis of document {session_data['document_id']}")
+                logger.info(f"Using Local LLM ({settings.local_llm_model}) for analysis of document {session_data['document_id'][:12]}...")
+                await update_analysis_progress(
+                    session_id=session_id,
+                    status=AnalysisStatus.ANALYZING,
+                    progress=60.0,
+                    current_step=f"Processing with Local LLM ({settings.local_llm_model})"
+                )
+                
+                # Broadcast progress
+                await manager.broadcast({
+                    "type": "analysis_progress",
+                    "sessionId": session_id,
+                    "data": {
+                        "status": "analyzing",
+                        "progress": 60.0,
+                        "currentStep": f"Processing with Local LLM ({settings.local_llm_model})"
+                    }
+                })
+
+                results = await local_llm_client.analyze_document(
+                    document_text=document_text,
+                    filename=session_data["filename"],
+                    document_id=session_data["document_id"]
+                )
+                
+                logger.info(f"Local LLM analysis completed for document {session_data['document_id']}")
+                
+            except Exception as llm_error:
+                logger.warning(f"Local LLM analysis failed for document {session_data['document_id']}: {llm_error}")
+                results = None
+        
+        # Try AWS Bedrock if Local LLM failed or not configured
+        if results is None and bedrock_client.is_available():
+            try:
+                logger.info(f"Using AWS Bedrock for analysis of document {session_data['document_id'][:12]}...")
                 await update_analysis_progress(
                     session_id=session_id,
                     status=AnalysisStatus.ANALYZING,
@@ -306,7 +349,7 @@ async def process_analysis(session_id: str) -> None:
         
         # Fallback to mock analysis if Bedrock failed or unavailable
         if results is None:
-            logger.info(f"Using fallback analysis for document {session_data['document_id']}")
+            logger.info(f"Using fallback analysis for document {session_data['document_id'][:12]}...")
             await update_analysis_progress(
                 session_id=session_id,
                 status=AnalysisStatus.ANALYZING,
@@ -390,7 +433,7 @@ async def process_analysis(session_id: str) -> None:
         })
 
         
-        logger.info(f"Completed analysis for session {session_id} in {processing_time:.2f} seconds")
+        logger.info(f"Completed analysis for session {session_id[:12]}... in {processing_time:.2f} seconds")
         
     except Exception as e:
         logger.error(f"Analysis failed for session {session_id}: {e}", exc_info=True)
@@ -542,6 +585,22 @@ async def health_check() -> HealthCheckResponse:
             logger.warning(f"Database health check failed: {e}")
             checks["database"] = "error"
             
+        # Add Local LLM check
+        try:
+            from local_llm import get_local_llm_client
+            local_llm_client = get_local_llm_client()
+            if settings.use_local_llm:
+                if local_llm_client.is_available():
+                    checks["local_llm"] = "ok"
+                else:
+                    checks["local_llm"] = "warning"
+                    logger.warning("Local LLM not available")
+            else:
+                checks["local_llm"] = "disabled"
+        except Exception as e:
+            logger.warning(f"Local LLM health check failed: {e}")
+            checks["local_llm"] = "warning"
+
         # Add AWS services check
         try:
             from aws_bedrock import get_bedrock_client
@@ -550,7 +609,7 @@ async def health_check() -> HealthCheckResponse:
                 checks["aws_bedrock"] = "ok"
             else:
                 checks["aws_bedrock"] = "warning"
-                logger.warning("AWS Bedrock client not available - will use fallback analysis")
+                logger.warning("AWS Bedrock client not available")
         except Exception as e:
             logger.warning(f"AWS Bedrock health check failed: {e}")
             checks["aws_bedrock"] = "warning"
@@ -629,9 +688,12 @@ async def upload_document(
         content = await file.read()
         file_size = len(content)
         
+        # Sanitize filename to prevent path injection
+        safe_filename = os.path.basename(file.filename)
+        
         # S3 Upload
         processor = get_pdf_processor()
-        s3_key = f"uploads/{doc_id}/{file.filename}"
+        s3_key = f"uploads/{doc_id}/{safe_filename}"
         bucket = settings.s3_bucket_name
         
         if processor._s3_client:
@@ -641,7 +703,7 @@ async def upload_document(
                 Body=content,
                 ContentType="application/pdf"
             )
-            logger.info(f"Uploaded file {file.filename} to S3: {bucket}/{s3_key}")
+            logger.info(f"Uploaded file {safe_filename} to S3: {bucket}/{s3_key}")
         else:
             logger.warning("S3 client not available - upload skipped in development fallback")
             # In real app, this should probably fail or use local storage
@@ -649,8 +711,8 @@ async def upload_document(
         # Store metadata
         await DocumentMetadataOperations.store_document_metadata(
             document_id=doc_id,
-            filename=file.filename,
-            original_filename=file.filename,
+            filename=safe_filename,
+            original_filename=safe_filename,
             file_size=file_size,
             mime_type=file.content_type,
             s3_key=s3_key,
@@ -659,7 +721,7 @@ async def upload_document(
         
         return UploadSessionResponse(
             id=doc_id,
-            filename=file.filename,
+            filename=safe_filename,
             fileSize=file_size,
             mimeType=file.content_type,
             status="completed",
@@ -816,7 +878,7 @@ async def start_analysis(
         
         # Create analysis session in database
         session_id = await create_analysis_session(request)
-        logger.info(f"Created analysis session: {session_id}")
+        logger.info(f"Created analysis session: {session_id[:12]}...")
         
         # Submit task to concurrent processor
         queued = await submit_analysis_task(session_id, request)

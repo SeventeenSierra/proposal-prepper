@@ -4,6 +4,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import { generateUUID } from '@/utils/crypto';
 import PDFUploadDemo from './pdf-upload-demo';
 
 /**
@@ -244,7 +245,7 @@ async function simulateUpload(file: File): Promise<{
 
   return {
     success: true,
-    sessionId: `session-${Date.now()}-${self.crypto.randomUUID().substring(0, 8)}`,
+    sessionId: `session-${Date.now()}-${generateUUID().substring(0, 8)}`,
   };
 }
 

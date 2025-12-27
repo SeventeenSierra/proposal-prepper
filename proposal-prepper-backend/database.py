@@ -113,10 +113,24 @@ async def init_database():
         
         # Import models to ensure they're registered with Base
         from db_models import AnalysisSessionDB, ComplianceResultsDB, ComplianceIssueDB
+        try:
+            from obi_models import KnowledgeSource, KnowledgeChunk, EOCrawlStatus
+            logger.info("Sovereign OBI models loaded")
+        except ImportError:
+            logger.info("Initializing without Sovereign OBI models (Local-only)")
         
         # Create engines if not already created
         if async_engine is None or sync_engine is None:
             create_database_engines()
+            
+        # Ensure pgvector extension exists (requires superuser or specific permissions)
+        try:
+            with sync_engine.connect() as conn:
+                conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+                conn.commit()
+                logger.info("Verified pgvector extension")
+        except Exception as e:
+            logger.warning(f"Could not ensure pgvector extension (might already exist or lack permissions): {e}")
         
         # Create all tables using sync engine
         logger.info("Creating database tables...")

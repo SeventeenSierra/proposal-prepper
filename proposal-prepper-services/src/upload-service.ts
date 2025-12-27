@@ -10,12 +10,14 @@
  */
 
 
-const cryptoObj = typeof window !== 'undefined' ? window.crypto : (typeof self !== 'undefined' ? self.crypto : (globalThis as any).crypto);
+
 
 
 import { errorConfig, uploadConfig } from './config/app';
 import { type UploadSession, UploadStatus } from './types/app';
 import { aiRouterClient, type UploadSessionResponse } from './ai-router-client';
+import { generateUUID } from './utils/id';
+
 
 /**
  * Upload service events
@@ -57,7 +59,7 @@ export class UploadService {
       sessionId && this.activeSessions.has(sessionId)
         ? { ...this.activeSessions.get(sessionId)!, status: UploadStatus.UPLOADING }
         : {
-          id: sessionId || `upload_${Date.now()}_${cryptoObj.randomUUID().substring(0, 8)}`,
+          id: sessionId || `upload_${Date.now()}_${generateUUID().substring(0, 8)}`,
           filename: file.name,
           fileSize: file.size,
           mimeType: file.type,

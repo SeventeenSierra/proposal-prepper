@@ -19,8 +19,8 @@ export const uploadConfig = {
   acceptedTypes: ['application/pdf'] as const,
   /** Maximum file size in bytes (100MB) */
   maxFileSize: 100 * 1024 * 1024,
-  /** Minimum file size in bytes (0 for initial testing) */
-  minFileSize: 0,
+  /** Minimum file size in bytes (1KB) */
+  minFileSize: 1024,
   /** Upload chunk size for progress tracking */
   chunkSize: 1024 * 1024, // 1MB chunks
   /** Maximum concurrent uploads */

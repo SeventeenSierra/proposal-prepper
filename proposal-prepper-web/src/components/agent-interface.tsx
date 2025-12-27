@@ -48,56 +48,77 @@ const analysisSteps: Step[] = [
     message: 'Uploading and processing document...',
     status: 'pending',
     agent: 'coordinator',
-    details: 'Document Upload',
+    details: 'Step 1: Upload',
   },
   {
     id: 2,
     message: 'Extracting document structure and text...',
     status: 'pending',
     agent: 'rag',
-    details: 'Text Extraction',
+    details: 'Step 2: Extraction',
   },
   {
     id: 3,
-    message: 'Validating against FAR/DFARS requirements...',
+    message: 'Scanning FAR Part 52 Requirements...',
     status: 'pending',
     agent: 'compliance',
-    details: 'Compliance Analysis',
+    details: 'Step 3: FAR Scan',
   },
   {
     id: 4,
-    message: 'Checking regulatory clause compliance...',
+    message: 'Auditing DFARS Supplements...',
     status: 'pending',
     agent: 'compliance',
-    details: 'Validation Check',
+    details: 'Step 4: DFARS Audit',
   },
   {
     id: 5,
-    message: 'Synthesizing compliance report...',
+    message: 'Performing Cybersecurity Audit (NIST)...',
+    status: 'pending',
+    agent: 'compliance',
+    details: 'Step 5: Security Review',
+  },
+  {
+    id: 6,
+    message: 'Cross-referencing small business rules...',
+    status: 'pending',
+    agent: 'compliance',
+    details: 'Step 6: Policy Check',
+  },
+  {
+    id: 7,
+    message: 'Synthesizing final compliance report...',
     status: 'pending',
     agent: 'writer',
-    details: 'Report Generation',
+    details: 'Step 7: Generation',
   },
 ];
 
-// Map AnalysisStatus to step index
-function getStepIndexFromStatus(status: AnalysisStatus): number {
+// Map AnalysisStatus and currentStep to step index
+function getStepIndexFromStatus(status: AnalysisStatus, currentStep?: string): number {
+  if (status === AnalysisStatus.FAILED) return -1;
+  if (status === AnalysisStatus.COMPLETED) return 6;
+
+  // Base indices for statuses
+  let baseIndex = 0;
   switch (status) {
     case AnalysisStatus.QUEUED:
-      return 0;
+      baseIndex = 0;
+      break;
     case AnalysisStatus.EXTRACTING:
-      return 1;
+      baseIndex = 1;
+      break;
     case AnalysisStatus.ANALYZING:
-      return 2;
+      baseIndex = 2; // Default for ANALYZING
+      // Specific sub-steps based on currentStep string
+      if (currentStep?.includes('DFARS')) baseIndex = 3;
+      else if (currentStep?.includes('Cybersecurity')) baseIndex = 4;
+      break;
     case AnalysisStatus.VALIDATING:
-      return 3;
-    case AnalysisStatus.COMPLETED:
-      return 4;
-    case AnalysisStatus.FAILED:
-      return -1;
-    default:
-      return 0;
+      baseIndex = 5;
+      break;
   }
+  return baseIndex;
 }
 
 const AgentInterface = ({
@@ -205,11 +226,11 @@ const AgentInterface = ({
 
       // Set up event handlers for progress updates
       analysisService.setEventHandlers({
-        onProgress: (sessionId, _progress, _currentStep) => {
+        onProgress: (sessionId, _progress, currentStep) => {
           // Update steps based on current step info
           const session = analysisService.getActiveSessions().find((s) => s.id === sessionId);
           if (session) {
-            const stepIndex = getStepIndexFromStatus(session.status);
+            const stepIndex = getStepIndexFromStatus(session.status, currentStep);
             setSteps((prev) =>
               prev.map((step, idx) => {
                 if (idx < stepIndex) return { ...step, status: 'complete' };
