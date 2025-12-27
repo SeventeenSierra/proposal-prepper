@@ -39,7 +39,7 @@ services:
       - ../../proposal-prepper-tests:/app/proposal-prepper-tests
       - ../../proposal-prepper-services:/app/proposal-prepper-services
       - ../../proposal-prepper-middleware:/app/proposal-prepper-middleware
-    command: npm run dev
+    command: pnpm dev
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
       interval: 30s

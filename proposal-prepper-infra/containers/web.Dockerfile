@@ -2,13 +2,13 @@
 # SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 # Development Dockerfile for Next.js web application
-FROM node:20-alpine
+FROM node:22-alpine
 
 # Set working directory
 WORKDIR /app
 
 # Install curl for health checks and pnpm
-RUN apk add --no-cache curl && npm install -g pnpm@10.24.0
+RUN apk add --no-cache curl && npm install -g pnpm@10.26.2
 
 # Copy package files
 COPY pnpm-lock.yaml pnpm-workspace.yaml ./
