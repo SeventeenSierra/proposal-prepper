@@ -10,22 +10,14 @@ import type { ApiResponse } from '@/services/ai-router-client';
 /**
  * Express.js API Adapter
  *
+ * @WARNING This adapter is designed for MOCK and TESTING usage ONLY.
+ * It strictly uses the internal MockApiServer and does NOT connect to
+ * the real AI Router service. For production middleware, use the
+ * AIRouterHandlers from 'proposal-prepper-middleware/ai-router-adapter'.
+ *
  * Adapter layer for using the framework-independent mock API server
  * with Express.js. Demonstrates how the same business logic can be
  * used across different frameworks.
- *
- * Usage:
- * ```typescript
- * import express from 'express';
- * import { ExpressApiHandlers } from './adapters/express-adapter';
- *
- * const app = express();
- * app.use(express.json());
- *
- * app.post('/api/documents/upload', ExpressApiHandlers.handleDocumentUpload);
- * app.post('/api/analysis/start', ExpressApiHandlers.handleAnalysisStart);
- * // ... other routes
- * ```
  */
 
 /**

@@ -8,6 +8,10 @@
 /**
  * Standalone Mock API Server
  *
+ * @WARNING This server is designed for MOCK and TESTING usage ONLY.
+ * It strictly uses the internal MockApiServer and does NOT connect to
+ * the real AI Router service.
+ *
  * Framework-independent server that can run without Next.js or any
  * specific framework. Uses Node.js built-in HTTP server with the
  * same business logic as the framework adapters.

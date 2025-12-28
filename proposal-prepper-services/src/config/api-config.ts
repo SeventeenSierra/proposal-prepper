@@ -93,10 +93,10 @@ function shouldUseMockApi(): boolean {
     return getBooleanEnvVar(ENV_VARS.USE_MOCK_API);
   }
 
-  // Development mode defaults to mock
-  if (getEnvVar('NODE_ENV') === 'development') {
-    return true;
-  }
+  // Development mode - no longer defaults to mock to favor local provider
+  // if (getEnvVar('NODE_ENV') === 'development') {
+  //   return true;
+  // }
 
   // Browser-based detection for client-side
   if (typeof window !== 'undefined') {

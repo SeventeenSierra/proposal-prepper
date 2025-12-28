@@ -15,7 +15,8 @@ from unittest.mock import Mock, patch, AsyncMock
 
 from aws_bedrock import BedrockClient, get_bedrock_client
 from pdf_processor import PDFProcessor, get_pdf_processor
-from fallback_analysis import FallbackAnalysisService, get_fallback_service
+from local_provider import LocalAnalysisProvider
+from analysis_provider import AnalysisRouter, ProviderType
 from models import ComplianceResults
 
 
@@ -55,13 +56,13 @@ class TestAWSBedrockIntegration:
         assert "Bedrock client not initialized" in str(exc_info.value)
     
     @pytest.mark.asyncio
-    async def test_fallback_analysis_service(self):
-        """Test fallback analysis service generates valid results."""
-        service = get_fallback_service()
+    async def test_local_analysis_provider(self):
+        """Test local analysis provider generates valid results."""
+        provider = LocalAnalysisProvider()
         
         sample_text = "This is a sample proposal document for testing compliance analysis. It contains technical specifications and cost information."
         
-        results = await service.generate_mock_analysis(
+        results = await provider.analyze_document(
             document_text=sample_text,
             filename="test_proposal.pdf",
             document_id="test_doc_123",
@@ -73,10 +74,10 @@ class TestAWSBedrockIntegration:
         assert results.session_id == "test_session_456"
         assert results.document_id == "test_doc_123"
         assert results.status in ["pass", "fail", "warning"]
-        assert results.ai_model == "mock-fallback-service"
+        assert results.ai_model == "local-simulated-provider"
         assert len(results.issues) >= 0
         assert results.summary.total_issues == len(results.issues)
-        assert results.metadata["mock_analysis"] is True
+        assert results.metadata["local_mode"] is True
 
 
 class TestPDFProcessor:
@@ -152,11 +153,11 @@ class TestIntegrationWorkflow:
         with patch.object(pdf_processor, 'extract_text_from_s3', new_callable=AsyncMock) as mock_extract:
             mock_extract.return_value = (sample_text, sample_metadata)
             
-            # Get fallback service
-            fallback_service = get_fallback_service()
+            # Get local provider
+            provider = LocalAnalysisProvider()
             
             # Run analysis
-            results = await fallback_service.generate_mock_analysis(
+            results = await provider.analyze_document(
                 document_text=sample_text,
                 filename="test_proposal.pdf",
                 document_id="test_doc_123",
@@ -168,7 +169,7 @@ class TestIntegrationWorkflow:
             assert results.session_id == "test_session_456"
             assert results.document_id == "test_doc_123"
             assert results.processing_time > 0
-            assert results.metadata["mock_analysis"] is True
+            assert results.metadata["local_mode"] is True
             
             # Verify issues structure
             for issue in results.issues:

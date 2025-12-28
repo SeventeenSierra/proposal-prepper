@@ -11,42 +11,44 @@
 /// <reference types="@testing-library/jest-dom" />
 /// <reference types="vitest/globals" />
 
-import '@testing-library/jest-dom';
-import type { TestingLibraryMatchers } from '@testing-library/jest-dom/matchers';
+import "@testing-library/jest-dom";
+import type { TestingLibraryMatchers } from "@testing-library/jest-dom/matchers";
 
 // Extend Vitest's Assertion interface
-declare module 'vitest' {
-  interface Assertion<T = any> extends TestingLibraryMatchers<T, void> {}
-  interface AsymmetricMatchersContaining extends TestingLibraryMatchers<any, void> {}
+declare module "vitest" {
+	interface Assertion<T = any> extends TestingLibraryMatchers<T, void> {}
+	interface AsymmetricMatchersContaining
+		extends TestingLibraryMatchers<any, void> {}
 }
 
 // Global namespace extensions for broader compatibility
 declare global {
-  namespace Vi {
-    interface JestAssertion<T = any> extends TestingLibraryMatchers<T, void> {}
-  }
+	namespace Vi {
+		interface JestAssertion<T = any> extends TestingLibraryMatchers<T, void> {}
+	}
 
-  namespace jest {
-    interface Matchers<R> extends TestingLibraryMatchers<typeof expect.stringContaining, R> {}
-  }
+	namespace jest {
+		interface Matchers<R>
+			extends TestingLibraryMatchers<typeof expect.stringContaining, R> {}
+	}
 
-  // Direct expect interface extension as fallback
-  type Expect = <T = any>(
-    actual: T
-  ) => TestingLibraryMatchers<T, void> & import('vitest').Assertion<T>;
+	// Direct expect interface extension as fallback
+	type Expect = <T = any>(
+		actual: T,
+	) => TestingLibraryMatchers<T, void> & import("vitest").Assertion<T>;
 }
 
 // Module augmentation for @testing-library/jest-dom
-declare module '@testing-library/jest-dom' {
-  interface TestingLibraryMatchers<R = void, _T = {}> {
-    toBeInTheDocument(): R;
-    toHaveValue(value?: string | string[] | number): R;
-    toBeDisabled(): R;
-    toBeEnabled(): R;
-    toHaveClass(...classNames: string[]): R;
-    toHaveAttribute(attr: string, value?: string): R;
-    toBeVisible(): R;
-    toBeChecked(): R;
-    toHaveTextContent(text: string | RegExp): R;
-  }
+declare module "@testing-library/jest-dom" {
+	interface TestingLibraryMatchers<R = void, _T = {}> {
+		toBeInTheDocument(): R;
+		toHaveValue(value?: string | string[] | number): R;
+		toBeDisabled(): R;
+		toBeEnabled(): R;
+		toHaveClass(...classNames: string[]): R;
+		toHaveAttribute(attr: string, value?: string): R;
+		toBeVisible(): R;
+		toBeChecked(): R;
+		toHaveTextContent(text: string | RegExp): R;
+	}
 }

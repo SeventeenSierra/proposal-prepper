@@ -364,9 +364,16 @@ class WebSocketClient {
   private listeners: Map<string, Set<(message: WebSocketMessage) => void>> = new Map();
 
   constructor(baseUrl: string) {
+    if (!apiConfig || !apiConfig.websocket) {
+      console.error('[AIRouterClient] apiConfig.websocket is undefined!', {
+        apiConfig: !!apiConfig,
+        hasWebsocket: !!(apiConfig && apiConfig.websocket),
+        keys: apiConfig ? Object.keys(apiConfig) : [],
+      });
+    }
     this.url = `${baseUrl.replace('http', 'ws')}/ws`;
-    this.maxReconnectAttempts = apiConfig.websocket.maxReconnectAttempts;
-    this.reconnectInterval = apiConfig.websocket.reconnectInterval;
+    this.maxReconnectAttempts = apiConfig?.websocket?.maxReconnectAttempts || 10;
+    this.reconnectInterval = apiConfig?.websocket?.reconnectInterval || 5000;
   }
 
   /**

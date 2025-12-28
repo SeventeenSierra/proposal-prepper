@@ -22,12 +22,12 @@
  * All property tests should run a minimum of 100 iterations.
  */
 export const PBT_CONFIG = {
-  /** Minimum number of iterations for property tests */
-  numRuns: 100,
-  /** Seed for reproducible test runs (optional) */
-  seed: undefined,
-  /** Maximum shrinking iterations */
-  maxSkipsPerRun: 100,
+	/** Minimum number of iterations for property tests */
+	numRuns: 100,
+	/** Seed for reproducible test runs (optional) */
+	seed: undefined,
+	/** Maximum shrinking iterations */
+	maxSkipsPerRun: 100,
 } as const;
 
 /**
@@ -40,17 +40,17 @@ export const PBT_CONFIG = {
  * @param property The property function to test
  */
 export function propertyTest(name: string, _property: () => void): void {
-  // This will be implemented once fast-check is available
-  // Example usage:
-  // propertyTest(
-  //   "Feature: proposal-prepper, Property 1: PDF Upload Acceptance",
-  //   () => fc.assert(fc.property(fc.string(), (input) => {
-  //     // Property test implementation
-  //   }), PBT_CONFIG)
-  // );
+	// This will be implemented once fast-check is available
+	// Example usage:
+	// propertyTest(
+	//   "Feature: proposal-prepper, Property 1: PDF Upload Acceptance",
+	//   () => fc.assert(fc.property(fc.string(), (input) => {
+	//     // Property test implementation
+	//   }), PBT_CONFIG)
+	// );
 
-  // Placeholder implementation
-  console.warn(`Property test "${name}" requires fast-check to be installed`);
+	// Placeholder implementation
+	console.warn(`Property test "${name}" requires fast-check to be installed`);
 }
 
 /**
@@ -60,38 +60,38 @@ export function propertyTest(name: string, _property: () => void): void {
  * These will be implemented once fast-check is available.
  */
 export const generators = {
-  // File-related generators
-  filename: () => {
-    // fc.string({ minLength: 1, maxLength: 255 }).filter(s => !s.includes('/'))
-    throw new Error('fast-check not available');
-  },
+	// File-related generators
+	filename: () => {
+		// fc.string({ minLength: 1, maxLength: 255 }).filter(s => !s.includes('/'))
+		throw new Error("fast-check not available");
+	},
 
-  fileSize: () => {
-    // fc.integer({ min: 1, max: 100 * 1024 * 1024 }) // 1 byte to 100MB
-    throw new Error('fast-check not available');
-  },
+	fileSize: () => {
+		// fc.integer({ min: 1, max: 100 * 1024 * 1024 }) // 1 byte to 100MB
+		throw new Error("fast-check not available");
+	},
 
-  mimeType: () => {
-    // fc.constantFrom('application/pdf', 'text/plain', 'application/json')
-    throw new Error('fast-check not available');
-  },
+	mimeType: () => {
+		// fc.constantFrom('application/pdf', 'text/plain', 'application/json')
+		throw new Error("fast-check not available");
+	},
 
-  // Session-related generators
-  sessionId: () => {
-    // fc.uuid()
-    throw new Error('fast-check not available');
-  },
+	// Session-related generators
+	sessionId: () => {
+		// fc.uuid()
+		throw new Error("fast-check not available");
+	},
 
-  progress: () => {
-    // fc.integer({ min: 0, max: 100 })
-    throw new Error('fast-check not available');
-  },
+	progress: () => {
+		// fc.integer({ min: 0, max: 100 })
+		throw new Error("fast-check not available");
+	},
 
-  // Date generators
-  timestamp: () => {
-    // fc.date()
-    throw new Error('fast-check not available');
-  },
+	// Date generators
+	timestamp: () => {
+		// fc.date()
+		throw new Error("fast-check not available");
+	},
 } as const;
 
 /**
@@ -101,18 +101,18 @@ export const generators = {
  * expected by the application components.
  */
 export const builders = {
-  uploadSession: () => {
-    // Will be implemented with fast-check generators
-    throw new Error('fast-check not available');
-  },
+	uploadSession: () => {
+		// Will be implemented with fast-check generators
+		throw new Error("fast-check not available");
+	},
 
-  analysisSession: () => {
-    // Will be implemented with fast-check generators
-    throw new Error('fast-check not available');
-  },
+	analysisSession: () => {
+		// Will be implemented with fast-check generators
+		throw new Error("fast-check not available");
+	},
 
-  uiState: () => {
-    // Will be implemented with fast-check generators
-    throw new Error('fast-check not available');
-  },
+	uiState: () => {
+		// Will be implemented with fast-check generators
+		throw new Error("fast-check not available");
+	},
 } as const;
