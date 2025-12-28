@@ -18,12 +18,13 @@ from botocore.exceptions import ClientError, NoCredentialsError, BotoCoreError
 
 from config import get_settings
 from models import ComplianceResults, ComplianceIssue, ComplianceSummary, RegulatoryReference
+from analysis_provider import AnalysisProvider, AnalysisRouter, ProviderType
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
 
-class BedrockClient:
+class BedrockClient(AnalysisProvider):
     """AWS Bedrock client for AI-powered compliance analysis."""
     
     def __init__(self):
@@ -69,6 +70,10 @@ class BedrockClient:
         except Exception as e:
             logger.warning(f"Bedrock availability check failed: {e}")
             return False
+
+    def get_name(self) -> str:
+        """Get the human-readable name of the provider."""
+        return "AWS Bedrock"
     
     async def analyze_document(
         self,
@@ -293,3 +298,7 @@ def get_bedrock_client() -> BedrockClient:
     if _bedrock_client is None:
         _bedrock_client = BedrockClient()
     return _bedrock_client
+
+
+# Register the provider
+AnalysisRouter.register_provider(ProviderType.AWS, BedrockClient)
