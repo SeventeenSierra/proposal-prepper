@@ -7,6 +7,7 @@ import TopBar from '@/components/layout/top-bar';
 import ReportPreview from '@/components/report-preview';
 import type { AnalysisResults } from '@/components/results/types';
 import { apiConfig } from '@/services/config/app';
+import { AIRouterIntegrationUtils } from 'proposal-prepper-services';
 
 export default function App() {
   const [activeProject, setActiveProject] = useState<string | null>(null);
@@ -16,6 +17,9 @@ export default function App() {
   const [apiMode, setApiMode] = useState<'real' | 'mock'>(apiConfig.useMockApis ? 'mock' : 'real');
 
   useEffect(() => {
+    // Initialize health monitoring
+    AIRouterIntegrationUtils.initialize();
+
     // Check localStorage on mount
     const storedMockPref = localStorage.getItem('use-mock-api');
     if (storedMockPref !== null) {
@@ -29,7 +33,10 @@ export default function App() {
       }
     };
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      AIRouterIntegrationUtils.cleanup();
+    };
   }, []);
 
   // Called when analysis starts (file selected and upload begins)

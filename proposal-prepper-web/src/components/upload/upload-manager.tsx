@@ -14,7 +14,6 @@
 import { AlertCircle, Button, Upload } from '@17sierra/ui';
 import { CheckCircle, FileText, X } from 'lucide-react';
 import { aiRouterClient } from 'proposal-prepper-services/ai-router-client';
-import { MockAIRouterClient } from 'proposal-prepper-services/mock-ai-router-client';
 import type React from 'react';
 import { useCallback, useRef, useState } from 'react';
 import { apiConfig, errorConfig, uploadConfig, validationConfig } from '@/config/app';
@@ -160,56 +159,12 @@ export function UploadManager({
       setCurrentUpload(updatedSession);
 
       try {
-        // biome-ignore lint/suspicious/noImplicitAnyLet: Complex type inference
-        let response;
-
-        try {
-          // Try real API first
-          console.log('Attempting upload to real API...');
-          // Use the unified AI Router client
-          response = await aiRouterClient.uploadDocument(file, (progress: number) => {
-            const progressSession = { ...updatedSession, progress };
-            setCurrentUpload(progressSession);
-            onUploadProgress?.(progress, progressSession);
-          });
-          console.log('Real API upload successful');
-        } catch (realApiError) {
-          console.log('Real API failed, attempting mock fallback:', realApiError);
-
-          // Provide detailed error context
-          const apiErrorMessage =
-            realApiError instanceof Error ? realApiError.message : 'Unknown API error';
-          console.log(`API Error Details: ${apiErrorMessage}`);
-
-          if (apiConfig.useMockApis) {
-            // Use the mock client directly for testing UI flows
-            console.log('Using mock client for upload');
-            const mockClient = new MockAIRouterClient();
-            response = await mockClient.uploadDocument(file, (progress: number) => {
-              const progressSession = { ...updatedSession, progress };
-              setCurrentUpload(progressSession);
-              onUploadProgress?.(progress, progressSession);
-            });
-            console.log('Mock client upload successful');
-          } else if (
-            apiErrorMessage.includes('fetch') ||
-            apiErrorMessage.includes('network') ||
-            apiErrorMessage.includes('ECONNREFUSED')
-          ) {
-            console.log('Network connectivity issue detected, using mock client');
-            // Fallback to mock client for network issues if not explicitly using mock
-            const mockClient = new MockAIRouterClient();
-            response = await mockClient.uploadDocument(file, (progress: number) => {
-              const progressSession = { ...updatedSession, progress };
-              setCurrentUpload(progressSession);
-              onUploadProgress?.(progress, progressSession);
-            });
-            console.log('Mock client upload successful due to network error');
-          } else {
-            // Re-throw if not a network issue and not explicitly using mock
-            throw realApiError;
-          }
-        }
+        // Use the unified AI Router client
+        const response = await aiRouterClient.uploadDocument(file, (progress: number) => {
+          const progressSession = { ...updatedSession, progress };
+          setCurrentUpload(progressSession);
+          onUploadProgress?.(progress, progressSession);
+        });
 
         if (response.success && response.data) {
           const completedSession: UploadSession = {
@@ -225,13 +180,12 @@ export function UploadManager({
           setCurrentUpload(completedSession);
           onUploadProgress?.(100, completedSession);
           return completedSession;
-        } else {
-          // Provide detailed error information from API response
-          const apiError = response.error || 'Upload failed';
-          const errorCode = (response as any).code || 'UNKNOWN_ERROR';
-          console.error('API Response Error:', { error: apiError, code: errorCode, response });
-          throw new Error(`${apiError} (Code: ${errorCode})`);
         }
+
+        // Provide detailed error information from API response
+        const apiError = response.error || 'Upload failed';
+        const errorCode = (response as any).code || 'UNKNOWN_ERROR';
+        throw new Error(`${apiError} (Code: ${errorCode})`);
       } catch (error) {
         console.error('Upload error caught:', error);
 
@@ -252,7 +206,7 @@ export function UploadManager({
             originalMessage.includes('ERR_CONNECTION_REFUSED')
           ) {
             errorMessage = 'Server unavailable';
-            errorDetails = 'Upload server is not responding. Using mock mode for testing.';
+            errorDetails = 'Upload server is not responding.';
           } else if (originalMessage.includes('timeout')) {
             errorMessage = 'Upload timeout';
             errorDetails =
@@ -268,10 +222,8 @@ export function UploadManager({
             errorDetails = originalMessage;
           } else if (originalMessage.includes('CORS')) {
             errorMessage = 'Cross-origin request blocked';
-            errorDetails =
-              'Browser security settings are blocking the upload. This is normal in development.';
+            errorDetails = 'Browser security settings are blocking the upload.';
           } else {
-            // Use original message but make it more user-friendly
             errorMessage = originalMessage.includes('Upload')
               ? originalMessage
               : `Upload error: ${originalMessage}`;
@@ -279,20 +231,13 @@ export function UploadManager({
           }
         }
 
-        // Combine message and details
         const fullErrorMessage = errorDetails ? `${errorMessage}. ${errorDetails}` : errorMessage;
-
         const failedSession: UploadSession = {
           ...updatedSession,
           status: UploadStatus.FAILED,
           errorMessage: fullErrorMessage,
         };
         setCurrentUpload(failedSession);
-
-        // Log for debugging
-        console.error('Final error message:', fullErrorMessage);
-        console.error('File details:', { name: file.name, size: file.size, type: file.type });
-
         throw new Error(fullErrorMessage);
       }
     },
