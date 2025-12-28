@@ -42,3 +42,9 @@ python-jose[cryptography]==3.4.0
 
 # Async utilities
 asyncio-mqtt==0.16.1
+
+# AI Intelligence (Air Spec)
+litellm==1.15.0
+langgraph==0.0.15
+psutil==5.9.6
+langchain-openai==0.0.5

@@ -10,6 +10,7 @@
         "lint": "pnpm -r run lint",
         "test": "pnpm -r run test",
         "typecheck": "pnpm -r run typecheck",
+        "format": "pnpm -r run format",
         "unused": "pnpm -r run unused",
         "clean": "pnpm -r run clean && rm -rf node_modules"
     },

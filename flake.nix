@@ -28,6 +28,23 @@
             python313Packages.pip
             python313Packages.uvicorn
             python313Packages.fastapi
+            python313Packages.boto3
+            python313Packages.botocore
+            python313Packages.pydantic
+            python313Packages.pydantic-settings
+            python313Packages.structlog
+            python313Packages.python-dotenv
+            python313Packages.python-multipart
+            python313Packages.psutil
+            python313Packages.httpx
+            python313Packages.pypdf
+            python313Packages.sqlalchemy
+            python313Packages.redis
+            python313Packages.asyncpg
+            python313Packages.psycopg2
+            python313Packages.opensearch-py
+            python313Packages.python-json-logger
+            python313Packages.python-jose
 
             # Container runtime options
             docker
@@ -58,6 +75,13 @@
             echo "🚀 Proposal Prepper Dev Environment"
             echo "Node: $(node --version)"
             echo "pnpm: $(pnpm --version)"
+            
+            # Setup Python Virtual Environment for missing nixpkgs
+            if [ ! -d ".venv" ]; then
+              python3 -m venv .venv
+            fi
+            source .venv/bin/activate
+            pip install --quiet litellm langgraph langchain-openai
             
             # Mimic IDX web preview command
             alias web='pnpm run dev -- --port ''${PORT:-3000} --hostname 0.0.0.0'

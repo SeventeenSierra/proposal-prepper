@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     port: int = Field(default=8080, env="PORT")
     log_level: str = Field(default="INFO", env="LOG_LEVEL")
     log_to_file: bool = Field(default=False, env="LOG_TO_FILE")
+    analysis_provider: str = Field(default="local", env="ANALYSIS_PROVIDER")
+    analysis_mode: str = Field(default="local", env="ANALYSIS_MODE")
+    air_spec_mode: bool = Field(default=True, env="AIR_SPEC_MODE")
+    environment_provider: str = Field(default="local", env="ENVIRONMENT_PROVIDER")
     
     # AWS configuration
     aws_region: str = Field(default="us-east-1", env="AWS_REGION")
@@ -69,9 +73,15 @@ class Settings(BaseSettings):
     max_concurrent_analyses: int = Field(default=5, env="MAX_CONCURRENT_ANALYSES")
     analysis_timeout_seconds: int = Field(default=300, env="ANALYSIS_TIMEOUT_SECONDS")
     
-    # Local LLM configuration (Optional)
-    use_local_llm: bool = Field(default=False, env="USE_LOCAL_LLM")
-    local_llm_url: Optional[str] = Field(default=None, env="LOCAL_LLM_URL")
+    # Local LLM configuration (Air Spec)
+    use_local_llm: bool = Field(default=True, env="USE_LOCAL_LLM")
+    local_llm_url: str = Field(default="http://localhost:11434", env="LOCAL_LLM_URL")
+    local_llm_model: str = Field(default="llama3.2", env="LOCAL_LLM_MODEL")
+    use_simulated_data: bool = Field(default=True, env="USE_SIMULATED_DATA")
+    
+    # Thermal Throttling (Air Spec)
+    cpu_usage_threshold: float = Field(default=80.0, env="CPU_USAGE_THRESHOLD")
+    batch_cool_down_seconds: float = Field(default=1.0, env="BATCH_COOL_DOWN_SECONDS")
     
     class Config:
         env_file = ".env"
