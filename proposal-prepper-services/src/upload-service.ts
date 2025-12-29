@@ -52,6 +52,7 @@ export class UploadService {
    */
   async uploadDocument(
     file: File,
+    onProgress?: (progress: number) => void,
     sessionId?: string
   ): Promise<{ success: boolean; sessionId: string; error?: string }> {
     // Create or update session
@@ -77,6 +78,7 @@ export class UploadService {
         const updatedSession = { ...session, progress };
         this.activeSessions.set(session.id, updatedSession);
         this.eventHandlers.onProgress?.(session.id, progress);
+        if (onProgress) onProgress(progress);
       });
 
       if (response.success && response.data) {

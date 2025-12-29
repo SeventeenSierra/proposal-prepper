@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: PolyForm-Perimeter-1.0.0
+# SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
+
+name: Pre-commit
+
+on:
+  push:
+    branches: [main, develop, 'feature/**', 'feat/**', 'release/**', 'hotfix/**']
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  pre-commit:
+    name: Pre-commit Hooks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - uses: pre-commit/action@v3.0.1

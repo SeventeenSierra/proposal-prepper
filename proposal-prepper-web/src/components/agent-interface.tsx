@@ -33,9 +33,9 @@ import {
 } from '@17sierra/ui';
 import { uploadService } from '@/services/upload-service';
 import { analysisService, AnalysisStatus } from '@/services/analysis-service';
-import { resultsService } from '@/services/results-service';
+import { resultsService, type AnalysisResults } from '@/services/results-service';
 import { generateUUID } from '@/utils/crypto';
-import type { ComplianceResults } from '@/services/ai-router-client';
+import { type ConnectionMode } from '@/services/config/app';
 
 interface Message {
   role: 'user' | 'bot';
@@ -52,8 +52,10 @@ interface Step {
 
 interface AgentInterfaceProps {
   onAnalysisStart: (sessionId: string) => void;
-  onAnalysisComplete: (results: ComplianceResults) => void;
+  onAnalysisComplete: (results: AnalysisResults) => void;
   onAnalysisError: (error: string) => void;
+  activeProject?: string | null;
+  connectionMode?: ConnectionMode;
 }
 
 const analysisSteps: Step[] = [
@@ -137,7 +139,7 @@ function getStepIndexFromStatus(status: AnalysisStatus, progress = 0, currentSte
   }
 }
 
-export const AgentInterface: React.FC<AgentInterfaceProps> = ({
+const AgentInterface: React.FC<AgentInterfaceProps> = ({
   onAnalysisStart,
   onAnalysisComplete,
   onAnalysisError,
@@ -221,7 +223,7 @@ export const AgentInterface: React.FC<AgentInterfaceProps> = ({
       const analysisResult = await analysisService.startAnalysis({
         proposalId,
         file: selectedFile,
-        onProgress: (progress) => {
+        onProgress: (progress: number) => {
           setUploadProgress(progress);
         },
       });
@@ -236,7 +238,7 @@ export const AgentInterface: React.FC<AgentInterfaceProps> = ({
 
       // Set up event handlers for progress updates
       analysisService.setEventHandlers({
-        onProgress: (sId, progress, currentStep) => {
+        onProgress: (sId: string, progress: number, currentStep: string) => {
           if (sId !== sessionId) return;
 
           const session = analysisService.getActiveSessions().find((s) => s.id === sId);
@@ -251,7 +253,7 @@ export const AgentInterface: React.FC<AgentInterfaceProps> = ({
             );
           }
         },
-        onComplete: async (sId, _session) => {
+        onComplete: async (sId: string, _session: any) => {
           if (sId !== sessionId) return;
 
           setSteps((prev) => prev.map((step) => ({ ...step, status: 'complete' })));
@@ -280,7 +282,7 @@ export const AgentInterface: React.FC<AgentInterfaceProps> = ({
             onAnalysisError('Failed to fetch final report data');
           }
         },
-        onError: (sId, error) => {
+        onError: (sId: string, error: string) => {
           if (sId !== sessionId) return;
 
           setSteps((prev) =>
@@ -361,8 +363,8 @@ export const AgentInterface: React.FC<AgentInterfaceProps> = ({
                 >
                   <div
                     className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm shadow-sm ${m.role === 'user'
-                        ? 'bg-primary text-primary-foreground rounded-tr-none'
-                        : 'bg-muted text-foreground rounded-tl-none border'
+                      ? 'bg-primary text-primary-foreground rounded-tr-none'
+                      : 'bg-muted text-foreground rounded-tl-none border'
                       }`}
                   >
                     {m.content}
@@ -380,10 +382,10 @@ export const AgentInterface: React.FC<AgentInterfaceProps> = ({
               <div
                 key={step.id}
                 className={`flex items-start space-x-3 p-3 rounded-xl border transition-all ${step.status === 'running'
-                    ? 'bg-primary/5 border-primary/20 shadow-sm'
-                    : step.status === 'complete'
-                      ? 'bg-green-50/30 border-green-100 dark:bg-green-900/10'
-                      : 'bg-muted/30 border-transparent opacity-60'
+                  ? 'bg-primary/5 border-primary/20 shadow-sm'
+                  : step.status === 'complete'
+                    ? 'bg-green-50/30 border-green-100 dark:bg-green-900/10'
+                    : 'bg-muted/30 border-transparent opacity-60'
                   }`}
               >
                 <div className="mt-1">{getStepIcon(step.status)}</div>
@@ -490,3 +492,5 @@ export const AgentInterface: React.FC<AgentInterfaceProps> = ({
     </Card>
   );
 };
+
+export default AgentInterface;

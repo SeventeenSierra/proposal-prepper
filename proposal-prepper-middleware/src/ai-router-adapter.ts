@@ -32,40 +32,96 @@ export class AiRouterAdapter {
   }
 
   /**
-   * Handle an analysis request
+   * Document upload handler
    */
-  async handleAnalysis(req: NextRequest): Promise<NextResponse> {
+  async handleDocumentUpload(req: NextRequest): Promise<NextResponse> {
     try {
-      const useMock = !isMockAllowed();
+      const useMock = isMockAllowed();
+      const formData = await req.formData();
+      const file = formData.get('file') as File;
+
+      if (!file) {
+        return NextResponse.json({ success: false, error: 'No file provided' }, { status: 400 });
+      }
+
+      if (useMock) {
+        console.log('[AiRouterAdapter] Proxying upload to Mock API Server');
+        const result = await mockApiServer.handleDocumentUpload(file);
+        return NextResponse.json({ success: true, data: result.data }, { status: 201 });
+      }
+
+      console.log('[AiRouterAdapter] Proxying upload to Real AI Router');
+      const result = await aiRouterClient.uploadDocument(file);
+      return NextResponse.json(result, { status: result.success ? 201 : 400 });
+    } catch (error) {
+      console.error('[AiRouterAdapter] Upload handler error:', error);
+      return NextResponse.json({ success: false, error: 'Upload failed' }, { status: 500 });
+    }
+  }
+
+  /**
+   * Handle an analysis start request
+   */
+  async handleAnalysisStart(req: NextRequest): Promise<NextResponse> {
+    try {
+      const useMock = isMockAllowed();
       const body = await req.json();
 
       if (useMock) {
-        console.log('[AiRouterAdapter] Proxying analysis request to Mock API Server');
-        const result = await mockApiServer.handleAnalysisStart(body);
+        console.log('[AiRouterAdapter] Proxying analysis start to Mock API Server');
+        const result = await mockApiServer.handleAnalysisStart(body.proposalId || body.proposal_id);
         return NextResponse.json(result, { status: result.success ? 200 : 400 });
       }
 
-      console.log('[AiRouterAdapter] Proxying analysis request to Real AI Router');
-      const result = await aiRouterClient.startAnalysis(body);
+      console.log('[AiRouterAdapter] Proxying analysis start to Real AI Router');
+      const result = await aiRouterClient.startAnalysis(
+        body.proposalId || body.proposal_id,
+        body.documentId || body.document_id,
+        body.filename,
+        body.s3Key || body.s3_key,
+        body.provider
+      );
       return NextResponse.json(result, { status: result.success ? 200 : 400 });
     } catch (error) {
-      console.error('[AiRouterAdapter] Analysis handler error:', error);
+      console.error('[AiRouterAdapter] Analysis start handler error:', error);
       return NextResponse.json(
-        { success: false, error: 'Internal server error during analysis orchestration' },
+        { success: false, error: 'Analysis start failed' },
         { status: 500 }
       );
     }
   }
 
   /**
-   * Handle result fetching
+   * Handle analysis status request
    */
-  async handleResults(sessionId: string): Promise<NextResponse> {
+  async handleAnalysisStatus(req: NextRequest, { params }: { params: { sessionId: string } | Promise<{ sessionId: string }> }): Promise<NextResponse> {
     try {
-      const useMock = !isMockAllowed();
+      const { sessionId } = await params;
+      const useMock = isMockAllowed();
 
       if (useMock) {
-        const result = await mockApiServer.getResults(sessionId);
+        const result = await mockApiServer.handleAnalysisStatus(sessionId);
+        return NextResponse.json(result, { status: result.success ? 200 : 404 });
+      }
+
+      const result = await aiRouterClient.getAnalysisStatus(sessionId);
+      return NextResponse.json(result, { status: result.success ? 200 : 404 });
+    } catch (error) {
+      console.error('[AiRouterAdapter] Status handler error:', error);
+      return NextResponse.json({ success: false, error: 'Status retrieval failed' }, { status: 500 });
+    }
+  }
+
+  /**
+   * Handle result fetching
+   */
+  async handleAnalysisResults(req: NextRequest, { params }: { params: { sessionId: string } | Promise<{ sessionId: string }> }): Promise<NextResponse> {
+    try {
+      const { sessionId } = await params;
+      const useMock = isMockAllowed();
+
+      if (useMock) {
+        const result = await mockApiServer.handleAnalysisResults(sessionId);
         return NextResponse.json(result, { status: result.success ? 200 : 404 });
       }
 
@@ -74,10 +130,17 @@ export class AiRouterAdapter {
     } catch (error) {
       console.error('[AiRouterAdapter] Results handler error:', error);
       return NextResponse.json(
-        { success: false, error: 'Internal server error while fetching results' },
+        { success: false, error: 'Results retrieval failed' },
         { status: 500 }
       );
     }
+  }
+
+  /**
+   * Handle service status check
+   */
+  async handleServiceStatus(_req?: NextRequest): Promise<NextResponse> {
+    return this.handleHealthCheck();
   }
 
   /**
@@ -86,7 +149,7 @@ export class AiRouterAdapter {
   async handleHealthCheck(): Promise<NextResponse> {
     try {
       const mockAllowed = isMockAllowed();
-      const webHealth = await aiRouterIntegration.checkConnectivity();
+      const webHealth = await aiRouterIntegration.checkServiceHealth();
 
       let serviceHealth = null;
       let available = false;
@@ -104,7 +167,7 @@ export class AiRouterAdapter {
       return NextResponse.json({
         success: true,
         data: {
-          web_service: webHealth.data,
+          web_service: webHealth,
           ai_router_service: serviceHealth || { status: mockAllowed ? 'mock_mode' : 'unavailable' },
           integration_status: available ? 'connected' : (mockAllowed ? 'fallback_mode' : 'unavailable'),
           timestamp: new Date().toISOString(),
@@ -128,8 +191,13 @@ export class AiRouterAdapter {
  * Check if mock API is allowed for the current request
  */
 function isMockAllowed(): boolean {
-  const config = apiConfigManager.getConfiguration();
-  return config.useMock;
+  try {
+    const config = apiConfigManager.getConfiguration();
+    return config.useMock;
+  } catch (e) {
+    return true; // Fallback to mock if config fails
+  }
 }
 
 export const aiRouterAdapter = AiRouterAdapter.getInstance();
+export const AIRouterHandlers = aiRouterAdapter;

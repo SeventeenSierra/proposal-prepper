@@ -70,6 +70,8 @@ export interface ComplianceResultsResponse {
   generatedAt: string;
 }
 
+export type ComplianceResults = ComplianceResultsResponse;
+
 /**
  * Individual compliance issue
  */

@@ -9,6 +9,7 @@
  * Implements requirements 2.1, 2.2, 2.3, 2.4, and 2.5 for analysis functionality.
  */
 
+export { AnalysisStatus, type AnalysisResult } from './components/analysis/types';
 import { type AnalysisSession, AnalysisStatus } from './components/analysis/types';
 import { analysisConfig } from './config/app';
 import {
@@ -16,6 +17,7 @@ import {
   type AnalysisSessionResponse,
 } from './ai-router-client';
 import { AIRouterIntegrationUtils, aiRouterIntegration } from './ai-router-integration';
+import { uploadService } from './upload-service';
 
 /**
  * Analysis service events
@@ -31,7 +33,9 @@ export interface AnalysisServiceEvents {
  */
 export interface AnalysisRequest {
   proposalId: string;
-  documentId: string;
+  documentId?: string;
+  file?: File;
+  onProgress?: (progress: number) => void;
   frameworks?: ('FAR' | 'DFARS')[];
   provider?: string;
   options?: {
@@ -67,6 +71,20 @@ export class AnalysisService {
     request: AnalysisRequest
   ): Promise<{ success: boolean; sessionId: string; error?: string }> {
     try {
+      // Handle file upload if provided
+      let documentId = request.documentId;
+      if (request.file) {
+        const uploadResult = await uploadService.uploadDocument(request.file, request.onProgress);
+        if (!uploadResult.success || !uploadResult.sessionId) {
+          return { success: false, sessionId: '', error: uploadResult.error || 'Upload failed' };
+        }
+        documentId = uploadResult.sessionId;
+      }
+
+      if (!documentId) {
+        return { success: false, sessionId: '', error: 'Document ID or file is required' };
+      }
+
       // Check if service is ready before attempting analysis
       const serviceReady = await AIRouterIntegrationUtils.ensureServiceReady();
       if (!serviceReady.ready) {
@@ -77,13 +95,13 @@ export class AnalysisService {
         };
       }
 
-      console.log(`[AnalysisService] Starting analysis for proposal: ${request.proposalId}, document: ${request.documentId}`);
+      console.log(`[AnalysisService] Starting analysis for proposal: ${request.proposalId}, document: ${documentId}`);
 
       // Start analysis with Analysis Engine API
       const response = await aiRouterClient.startAnalysis(
         request.proposalId,
-        request.documentId,
-        undefined, // filename
+        documentId,
+        request.file?.name,
         undefined, // s3Key
         request.provider
       );
