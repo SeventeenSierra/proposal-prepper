@@ -5,6 +5,7 @@ import random
 from datetime import datetime
 from typing import Dict, Any, Optional, List
 from models import ComplianceResults, ComplianceIssue, ComplianceSummary, RegulatoryReference
+from parser_utils import parse_llm_json, map_issue_data
 from analysis_provider import AnalysisProvider, AnalysisRouter, ProviderType
 from logging_config import get_logger
 from config import get_settings
@@ -260,13 +261,8 @@ JSON Format:
             )
             content = response.choices[0].message.content
             
-            # Handle markdown wrappers if present
-            if "```json" in content:
-                content = content.split("```json")[1].split("```")[0].strip()
-            elif "{" in content:
-                content = content[content.find("{"):content.rfind("}")+1]
-                
-            return json.loads(content)
+            data = parse_llm_json(content)
+            return data
         except Exception as e:
             logger.error(f"Agent {agent_type} failed: {e}")
             return {"issues": []}
@@ -277,14 +273,7 @@ JSON Format:
         from datetime import datetime
         
         try:
-            # Handle potential markdown wrappers
-            json_str = content
-            if "```json" in content:
-                json_str = content.split("```json")[1].split("```")[0].strip()
-            elif "{" in content:
-                json_str = content[content.find("{"):content.rfind("}")+1]
-                
-            data = json.loads(json_str)
+            data = parse_llm_json(content)
             
             issues = []
             critical_count = 0
@@ -292,28 +281,13 @@ JSON Format:
             info_count = 0
             
             for i, issue_data in enumerate(data.get("issues", [])):
-                reg_data = issue_data.get("regulation", {})
-                regulation = RegulatoryReference(
-                    regulation=reg_data.get("regulation", "N/A"),
-                    section=reg_data.get("section", "N/A"),
-                    title=reg_data.get("title", "N/A"),
-                    url=reg_data.get("url")
-                )
+                issue = map_issue_data(issue_data, document_id, i, prefix="local_")
+                issues.append(issue)
                 
-                severity = issue_data.get("severity", "info").lower()
+                severity = issue.severity.lower()
                 if severity == "critical": critical_count += 1
                 elif severity == "warning": warning_count += 1
                 else: info_count += 1
-                
-                issues.append(ComplianceIssue(
-                    id=f"local_{document_id}_{i}",
-                    severity=severity,
-                    title=issue_data.get("title", "Issue"),
-                    description=issue_data.get("description", ""),
-                    regulation=regulation,
-                    confidence=issue_data.get("confidence", 0.5),
-                    remediation=issue_data.get("remediation")
-                ))
             
             summary = ComplianceSummary(
                 total_issues=len(issues),

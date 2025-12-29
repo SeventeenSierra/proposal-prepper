@@ -162,10 +162,11 @@ class PDFProcessor:
             
             for page_num, page in enumerate(pdf_reader.pages):
                 try:
+                    # Add page marker for context/structure regardless of text content
+                    extracted_text.append(f"\n--- Page {page_num + 1} ---\n")
+                    
                     page_text = page.extract_text()
-                    if page_text.strip():  # Only add non-empty pages
-                        # Add page marker for location tracking
-                        extracted_text.append(f"\n--- Page {page_num + 1} ---\n")
+                    if page_text and page_text.strip():
                         extracted_text.append(page_text)
                         
                 except Exception as e:
@@ -174,17 +175,17 @@ class PDFProcessor:
             
             full_text = "".join(extracted_text)
             
+            # Clean and normalize the text
+            cleaned_text = self._clean_extracted_text(full_text)
+            
             # Update metadata with extraction results
             metadata.update({
                 'page_count': page_count,
-                'text_length': len(full_text),
+                'text_length': len(cleaned_text),
                 'extraction_method': 'pypdf',
                 'pages_processed': page_count,
                 'extraction_successful': True
             })
-            
-            # Clean and normalize the text
-            cleaned_text = self._clean_extracted_text(full_text)
             
             return cleaned_text, metadata
             

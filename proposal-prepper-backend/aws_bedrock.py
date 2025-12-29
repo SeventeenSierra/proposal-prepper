@@ -18,6 +18,7 @@ from botocore.exceptions import ClientError, NoCredentialsError, BotoCoreError
 
 from config import get_settings
 from models import ComplianceResults, ComplianceIssue, ComplianceSummary, RegulatoryReference
+from parser_utils import parse_llm_json, map_issue_data
 from analysis_provider import AnalysisProvider, AnalysisRouter, ProviderType
 
 logger = logging.getLogger(__name__)
@@ -225,35 +226,12 @@ Focus on actionable, specific compliance issues with clear regulatory references
             Parsed ComplianceResults object
         """
         try:
-            # Extract JSON from the response (handle potential markdown formatting)
-            json_start = ai_response.find('{')
-            json_end = ai_response.rfind('}') + 1
-            
-            if json_start == -1 or json_end == 0:
-                raise ValueError("No JSON found in AI response")
-            
-            json_text = ai_response[json_start:json_end]
-            parsed_data = json.loads(json_text)
+            parsed_data = parse_llm_json(ai_response)
             
             # Convert to our data models
             issues = []
-            for issue_data in parsed_data.get('issues', []):
-                regulation = RegulatoryReference(
-                    regulation=issue_data['regulation']['regulation'],
-                    section=issue_data['regulation']['section'],
-                    title=issue_data['regulation']['title'],
-                    url=issue_data['regulation'].get('url')
-                )
-                
-                issue = ComplianceIssue(
-                    id=f"{document_id}_{len(issues)}",
-                    severity=issue_data['severity'],
-                    title=issue_data['title'],
-                    description=issue_data['description'],
-                    regulation=regulation,
-                    confidence=issue_data['confidence'],
-                    remediation=issue_data.get('remediation')
-                )
+            for i, issue_data in enumerate(parsed_data.get('issues', [])):
+                issue = map_issue_data(issue_data, document_id, i)
                 issues.append(issue)
             
             # Create summary

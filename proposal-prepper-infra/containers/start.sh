@@ -27,6 +27,7 @@ CONTAINER_RUNTIME=""
 COMPOSE_CMD=""
 MOCK_MODE=false
 CONNECTION_MODE="mock"
+SKIP_WEB=false
 
 # Function to print colored output
 print_status() {
@@ -58,6 +59,7 @@ OPTIONS:
                             DEMO: demo-manual, demo-simulated
                             ROUTER: router-local, router-cloud-genkit, router-cloud-strands, router-cloud-autogen
                             (Default: demo-manual)
+    -nw, --no-web           Skip the Web UI service (useful when running 'pnpm dev' locally)
     -h, --help              Show this help message
 
 EXAMPLES:
@@ -104,6 +106,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -c|--clean)
             CLEAN=true
+            shift
+            ;;
+        -nw|--no-web)
+            SKIP_WEB=true
             shift
             ;;
         -m|--mock)
@@ -243,7 +249,11 @@ case "$CONNECTION_MODE" in
         export CONNECTION_MODE="analysis-router"
         export ACTIVE_PROVIDER="local-llama"
         export USE_MOCK=false
-        UP_COMMAND="up"
+        if [[ "$SKIP_WEB" == true ]]; then
+            UP_COMMAND="up analysis-engine postgres redis minio opensearch"
+        else
+            UP_COMMAND="up"
+        fi
         ;;
     router-cloud-genkit | router-cloud-strands | router-cloud-autogen)
         print_error "Cloud Router modes ($CONNECTION_MODE) are currently disabled for safety to prevent accidental costs."

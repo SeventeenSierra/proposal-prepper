@@ -217,6 +217,45 @@ async def process_analysis(session_id: str) -> None:
     try:
         logger.info(f"Starting analysis process for session: {session_id[:12]}...")
         
+        # Step 1: Ingestion & Validation
+        logger.debug(f"Step 1: Ingestion & Validation for session {session_id}")
+        await update_analysis_progress(
+            session_id=session_id,
+            status=AnalysisStatus.QUEUED,
+            progress=5.0,
+            current_step="Validating document ingestion and storage reachability"
+        )
+        
+        # Broadcast Step 1 Progress
+        await manager.broadcast({
+            "type": "analysis_progress",
+            "sessionId": session_id,
+            "data": {
+                "status": "validating",
+                "progress": 5.0,
+                "currentStep": "Ingestion & Validation"
+            }
+        })
+        
+        # Verify metadata exists
+        metadata_record = await DocumentMetadataOperations.get_document_metadata(session_data["document_id"])
+        if not metadata_record:
+            raise ValueError(f"Document metadata record missing for {session_data['document_id']}")
+            
+        # Verify S3 reachability
+        pdf_processor = get_pdf_processor()
+        if not pdf_processor.check_file_exists_in_s3(session_data["s3_key"]):
+            raise ValueError(f"Document file missing in storage: {session_data['s3_key']}")
+            
+        logger.info(f"Step 1 Successful: Document {session_data['document_id']} validated and reachable.")
+        
+        await update_analysis_progress(
+            session_id=session_id,
+            status=AnalysisStatus.EXTRACTING,
+            progress=10.0,
+            current_step="Validation successful, starting extraction"
+        )
+
         # Step 2: Extraction
         logger.debug(f"Step 2: Extraction for session {session_id}")
         await update_analysis_progress(

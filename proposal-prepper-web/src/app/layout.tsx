@@ -29,7 +29,7 @@ export default function RootLayout({
         {/* DNS prefetch for API endpoints */}
         <link rel="dns-prefetch" href="//localhost:8080" />
       </head>
-      <body className="font-body antialiased">
+      <body className="font-body antialiased" suppressHydrationWarning>
         {children}
         <Toaster />
       </body>

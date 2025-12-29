@@ -58,8 +58,11 @@ const TopBar = ({
   const [showTier1Selector, setShowTier1Selector] = useState(false);
   const [showTier2Selector, setShowTier2Selector] = useState(false);
   const [showSettingsPane, setShowSettingsPane] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [infraLoading, setInfraLoading] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     return aiRouterIntegration.subscribeToStatus((newStatus) => {
       setStatus(newStatus);
     });
@@ -209,11 +212,30 @@ const TopBar = ({
                         ].map((m) => (
                           <button
                             key={m.id}
-                            onClick={() => {
-                              setConnectionMode(m.id as ConnectionMode);
-                              aiRouterIntegration.setMode(m.id as ConnectionMode);
-                              if (m.id === 'mock') aiRouterIntegration.setProvider('manual');
-                              else aiRouterIntegration.setProvider('local-llama');
+                            onClick={async () => {
+                              const newMode = m.id as ConnectionMode;
+                              setConnectionMode(newMode);
+                              aiRouterIntegration.setMode(newMode);
+
+                              setInfraLoading(true);
+                              if (newMode === 'mock') {
+                                aiRouterIntegration.setProvider('manual');
+                                // Trigger container shutdown bridge
+                                try {
+                                  await fetch('/api/infra/stop', { method: 'POST' });
+                                } catch (e) {
+                                  console.error('Failed to trigger infra stop:', e);
+                                }
+                              } else {
+                                aiRouterIntegration.setProvider('local-llama');
+                                // Trigger container startup bridge
+                                try {
+                                  await fetch('/api/infra/start', { method: 'POST' });
+                                } catch (e) {
+                                  console.error('Failed to trigger infra start:', e);
+                                }
+                              }
+                              setInfraLoading(false);
                               setShowTier1Selector(false);
                             }}
                             className={`w-full text-left px-3 py-2 text-[10px] hover:bg-gray-50 uppercase font-bold tracking-wider ${connectionMode === m.id ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-600'}`}
@@ -226,55 +248,36 @@ const TopBar = ({
                   </div>
                 </div>
 
-                {/* Tier 2: Workflow/Context */}
-                <div className="space-y-1.5">
-                  <label className="text-[9px] font-bold text-slate-500 uppercase tracking-tight">
-                    Tier 2: {connectionMode === 'mock' ? 'Workflow' : 'Context'}
-                  </label>
-                  <div className="relative">
-                    <button
-                      onClick={() => {
-                        setShowTier2Selector(!showTier2Selector);
-                        setShowTier1Selector(false);
-                      }}
-                      className="w-full text-[11px] px-3 py-2 rounded-md border border-gray-200 bg-white text-slate-600 flex items-center justify-between hover:bg-gray-50 transition-colors cursor-pointer shadow-sm"
-                    >
-                      <span className="font-medium uppercase tracking-wide">
-                        {connectionMode === 'mock'
-                          ? status?.activeProvider === 'simulation'
-                            ? 'Simulated'
-                            : 'Manual (Default)'
-                          : ['local-llama', 'simulation', 'manual'].includes(
+                {/* Tier 2: Workflow/Context - Only visible in AI Router mode */}
+                {mounted && connectionMode === 'analysis-router' && (
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-bold text-slate-500 uppercase tracking-tight">
+                      Tier 2: Context
+                    </label>
+                    <div className="relative">
+                      <button
+                        onClick={() => {
+                          setShowTier2Selector(!showTier2Selector);
+                          setShowTier1Selector(false);
+                        }}
+                        className="w-full text-[11px] px-3 py-2 rounded-md border border-gray-200 bg-white text-slate-600 flex items-center justify-between hover:bg-gray-50 transition-colors cursor-pointer shadow-sm"
+                      >
+                        <span className="font-medium uppercase tracking-wide">
+                          {['local-llama', 'simulation', 'manual'].includes(
                             status?.activeProvider || ''
                           )
                             ? 'Local (Default)'
                             : 'Cloud'}
-                      </span>
-                      <ChevronDown
-                        size={12}
-                        className={`text-gray-400 transition-transform duration-200 ${showTier2Selector ? 'rotate-180' : ''}`}
-                      />
-                    </button>
+                        </span>
+                        <ChevronDown
+                          size={12}
+                          className={`text-gray-400 transition-transform duration-200 ${showTier2Selector ? 'rotate-180' : ''}`}
+                        />
+                      </button>
 
-                    {showTier2Selector && (
-                      <div className="absolute top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg py-1 z-[60]">
-                        {connectionMode === 'mock'
-                          ? [
-                            { id: 'manual', label: 'Manual (Default)' },
-                            { id: 'simulation', label: 'Simulated' },
-                          ].map((p) => (
-                            <button
-                              key={p.id}
-                              onClick={() => {
-                                aiRouterIntegration.setProvider(p.id);
-                                setShowTier2Selector(false);
-                              }}
-                              className={`w-full text-left px-3 py-2 text-[10px] hover:bg-gray-50 uppercase font-bold tracking-wider ${status?.activeProvider === p.id ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-600'}`}
-                            >
-                              {p.label}
-                            </button>
-                          ))
-                          : [
+                      {showTier2Selector && (
+                        <div className="absolute top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg py-1 z-[60]">
+                          {[
                             { id: 'local-llama', label: 'Local (Default)' },
                             { id: 'cloud', label: 'Cloud' },
                           ].map((p) => (
@@ -298,10 +301,11 @@ const TopBar = ({
                               {p.label}
                             </button>
                           ))}
-                      </div>
-                    )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Tier 3: Platforms */}
                 {connectionMode === 'analysis-router' &&
@@ -323,8 +327,8 @@ const TopBar = ({
                             onClick={() => { }}
                             disabled={true}
                             className={`text-[9px] px-1 py-2 rounded font-bold transition-all uppercase tracking-tight border ${status?.activeProvider === p.id
-                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                                : 'bg-white text-gray-400 border-gray-100 opacity-50 cursor-not-allowed'
+                              ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                              : 'bg-white text-gray-400 border-gray-100 opacity-50 cursor-not-allowed'
                               }`}
                             title={`${p.label} (Disabled for Safety)`}
                           >
@@ -334,6 +338,18 @@ const TopBar = ({
                       </div>
                     </div>
                   )}
+
+                {/* Infrastructure Loading State */}
+                {infraLoading && (
+                  <div className="flex items-center gap-2 justify-center py-2 bg-indigo-50/50 rounded-md border border-indigo-100 animate-pulse">
+                    <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                    <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                    <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce"></div>
+                    <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-widest pl-1">
+                      Updating Infrastructure...
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           )}
