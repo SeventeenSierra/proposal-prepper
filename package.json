@@ -12,6 +12,7 @@
         "typecheck": "pnpm -r run typecheck",
         "format": "pnpm -r run format",
         "unused": "pnpm -r run unused",
+        "ci:local": "./scripts/ci-local.sh",
         "clean": "pnpm -r run clean && rm -rf node_modules"
     },
     "packageManager": "pnpm@10.26.2",

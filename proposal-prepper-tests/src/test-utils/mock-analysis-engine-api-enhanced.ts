@@ -215,3 +215,10 @@ export class MockStrandsAPIEnhanced {
  * Default enhanced mock API instance
  */
 export const mockStrandsAPIEnhanced = new MockStrandsAPIEnhanced();
+
+/**
+ * Backward compatibility alias
+ * @deprecated Use MockStrandsAPIEnhanced instead
+ */
+export const MockAnalysisEngineAPIEnhanced = MockStrandsAPIEnhanced;
+export const mockAnalysisEngineAPIEnhanced = mockStrandsAPIEnhanced;
