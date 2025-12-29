@@ -3,7 +3,7 @@
  * SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
  */
 
-export type ConnectionMode = 'mock' | 'analysis-router' | 'real' | 'fallback';
+export type ConnectionMode = 'demo' | 'mock' | 'analysis-router' | 'real' | 'fallback';
 
 export const apiConfig = {
   // Use VITE_ prefix for client-side environment variables if needed
@@ -14,7 +14,7 @@ export const apiConfig = {
   maxRetries: 3,
   retryDelay: 1000,
   useMockApis: process.env.NEXT_PUBLIC_USE_MOCK_APIS === 'true' || true,
-  defaultMode: (process.env.NEXT_PUBLIC_DEFAULT_CONNECTION_MODE as ConnectionMode) || 'mock',
+  defaultMode: (process.env.NEXT_PUBLIC_DEFAULT_CONNECTION_MODE as ConnectionMode) || 'demo',
   websocket: {
     maxReconnectAttempts: 10,
     reconnectInterval: 5000,

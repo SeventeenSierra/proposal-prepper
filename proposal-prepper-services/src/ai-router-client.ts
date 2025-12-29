@@ -280,77 +280,68 @@ class HttpClient {
   }
 
   /**
-   * Upload file with progress tracking
+   * Upload file using fetch (works in both browser and Node.js)
+   * Note: Progress tracking is not available with native fetch.
+   * For progress, the client should poll the upload status endpoint.
    */
   async uploadFile(
     endpoint: string,
     file: File,
-    onProgress?: (progress: number) => void
+    _onProgress?: (progress: number) => void
   ): Promise<ApiResponse<UploadSessionResponse>> {
-    return new Promise((resolve) => {
-      const xhr = new XMLHttpRequest();
+    try {
       const formData = new FormData();
       formData.append('file', file);
 
-      xhr.upload.addEventListener('progress', (event) => {
-        if (event.lengthComputable && onProgress) {
-          const progress = (event.loaded / event.total) * 100;
-          onProgress(progress);
-        }
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+        method: 'POST',
+        body: formData,
+        signal: controller.signal,
+        // Note: Do NOT set Content-Type header - browser/node will set it with boundary
       });
 
-      xhr.addEventListener('load', () => {
-        try {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            const rawData = JSON.parse(xhr.responseText);
-            console.log('[AIRouterClient] Upload Raw Response:', JSON.stringify(rawData));
+      clearTimeout(timeoutId);
 
-            // Recursive unwrapping logic
-            let data = rawData;
-            while (data && typeof data === 'object' && data.success === true && 'data' in data) {
-              console.log('[AIRouterClient] Unwrapping upload one level...');
-              data = data.data;
-            }
-
-            console.log('[AIRouterClient] Upload Unwrapped Data:', JSON.stringify(data));
-
-            resolve({ success: true, data });
-          } else {
-            resolve({
-              success: false,
-              error: `Upload failed: ${xhr.statusText}`,
-              code: errorConfig.codes.UPLOAD_FAILED,
-            });
-          }
-        } catch (_error) {
-          resolve({
-            success: false,
-            error: 'Failed to parse upload response',
-            code: errorConfig.codes.UPLOAD_FAILED,
-          });
-        }
-      });
-
-      xhr.addEventListener('error', () => {
-        resolve({
+      if (!response.ok) {
+        return {
           success: false,
-          error: 'Upload network error',
-          code: errorConfig.codes.NETWORK_ERROR,
-        });
-      });
+          error: `Upload failed: ${response.statusText}`,
+          code: errorConfig.codes.UPLOAD_FAILED,
+        };
+      }
 
-      xhr.addEventListener('timeout', () => {
-        resolve({
+      const rawData = await response.json();
+      console.log('[AIRouterClient] Upload Raw Response:', JSON.stringify(rawData));
+
+      // Recursive unwrapping logic for multi-layered middleware responses
+      let data = rawData;
+      while (data && typeof data === 'object' && data.success === true && 'data' in data) {
+        console.log('[AIRouterClient] Unwrapping upload one level...');
+        data = data.data;
+      }
+
+      console.log('[AIRouterClient] Upload Unwrapped Data:', JSON.stringify(data));
+
+      return { success: true, data };
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        return {
           success: false,
           error: 'Upload timeout',
           code: errorConfig.codes.TIMEOUT_ERROR,
-        });
-      });
+        };
+      }
 
-      xhr.timeout = this.timeout;
-      xhr.open('POST', `${this.baseUrl}${endpoint}`);
-      xhr.send(formData);
-    });
+      console.error('[AIRouterClient] Upload error:', error);
+      return {
+        success: false,
+        error: 'Upload network error',
+        code: errorConfig.codes.NETWORK_ERROR,
+      };
+    }
   }
 }
 

@@ -7,18 +7,27 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  FileText,
   Send,
+  User,
+  Bot,
+  Paperclip,
+  Trash2,
+  FileUp,
+  ChevronDown,
+  Monitor,
+  Zap,
   CheckCircle2,
+  Clock,
+  AlertCircle,
+  Play,
+  FileText,
   Circle,
   Loader2,
-  AlertCircle,
   Shield,
   Search,
   Lock,
   MessageSquare,
   ChevronRight,
-  ChevronDown,
   Settings,
   AlertTriangle,
   ExternalLink
@@ -33,9 +42,22 @@ import {
 } from '@17sierra/ui';
 import { uploadService } from '@/services/upload-service';
 import { analysisService, AnalysisStatus } from '@/services/analysis-service';
-import { resultsService, type AnalysisResults } from '@/services/results-service';
+import { resultsService, type AnalysisResults, ComplianceStatus } from '@/services/results-service';
 import { generateUUID } from '@/utils/crypto';
 import { type ConnectionMode } from '@/services/config/app';
+import { seedGrants } from '@/seed-data';
+
+// Seed PDF files for demo mode
+const SEED_PDF_FILES = seedGrants.map(grant => {
+  const proposalDoc = grant.documents.find(doc => doc.type === 'PROPOSAL');
+  return {
+    id: grant.metadata.UUID,
+    name: grant.metadata.Title,
+    filename: proposalDoc?.filename || `${grant.metadata.UUID}.pdf`,
+    size: 1024 * 1024, // 1MB estimate
+    url: proposalDoc?.url,
+  };
+});
 
 interface Message {
   role: 'user' | 'bot';
@@ -143,7 +165,28 @@ const AgentInterface: React.FC<AgentInterfaceProps> = ({
   onAnalysisStart,
   onAnalysisComplete,
   onAnalysisError,
+  connectionMode,
 }) => {
+  // Derived states for current connection mode
+  const isDemoModeActive = connectionMode === 'demo';
+  const isMockModeActive = connectionMode === 'mock';
+  const isLiveModeActive = connectionMode === 'analysis-router';
+  const isOfflineMode = isDemoModeActive || isMockModeActive;
+
+  // New categorizations for seeds
+  const demoScenarios = seedGrants.map(grant => ({
+    ...grant,
+    category: 'scenario' as const,
+    displayName: grant.metadata.Title.includes('High Throughput') ? 'J&A - Army' : 'J&A - IRS'
+  })).slice(0, 2);
+
+  const testCases = seedGrants.map((grant, idx) => ({
+    ...grant,
+    category: 'test-case' as const,
+    displayName: idx === 0 ? 'Large Document test-case-1' : idx === 1 ? 'Small Document test-case-2' : 'No-Graphics test-case-3'
+  })).slice(0, 3);
+
+  const activeSeeds = isDemoModeActive ? demoScenarios : isMockModeActive ? testCases : [];
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'bot',
@@ -159,9 +202,18 @@ const AgentInterface: React.FC<AgentInterfaceProps> = ({
   const [analysisSessionId, setAnalysisSessionId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'chat' | 'steps' | 'results'>('chat');
   const [apiStatus, setApiStatus] = useState<{ isConnected: boolean; isMock: boolean }>({ isConnected: true, isMock: true });
+  const [selectedSeedPdf, setSelectedSeedPdf] = useState<{ id: string, name: string, displayName: string } | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Clear seed selection when leaving demo/mock mode
+  useEffect(() => {
+    if (!isOfflineMode && selectedSeedPdf) {
+      setSelectedSeedPdf(null);
+      setSelectedFile(null);
+    }
+  }, [isOfflineMode, selectedSeedPdf]);
 
   // Auto-scroll messages
   useEffect(() => {
@@ -196,6 +248,7 @@ const AgentInterface: React.FC<AgentInterfaceProps> = ({
         return;
       }
       setSelectedFile(file);
+      setSelectedSeedPdf(null); // Clear seed selection if a real file is chosen
       setUploadError(null);
       setMessages((prev) => [
         ...prev,
@@ -205,8 +258,99 @@ const AgentInterface: React.FC<AgentInterfaceProps> = ({
     }
   };
 
+  const handleSeedPdfSelect = (seed: { id: string, name: string, displayName: string }) => {
+    setSelectedSeedPdf(seed);
+    setSelectedFile(null); // Clear real file selection if a seed is chosen
+    setUploadError(null);
+    setMessages((prev) => [
+      ...prev,
+      { role: 'user', content: `Selected seed PDF: ${seed.displayName}` },
+      { role: 'bot', content: `I've loaded the demo proposal "${seed.displayName}". Click "Start Analysis" when you're ready.` },
+    ]);
+  };
+
+  // Simulate analysis using seed grant's mock results (for test mode)
+  const simulateMockAnalysis = async (seedGrant: typeof seedGrants[0]) => {
+    const mockResult = seedGrant.mockAnalysisResult!;
+    const sessionId = `demo_${generateUUID()}`;
+
+    setAnalysisSessionId(sessionId);
+    onAnalysisStart(sessionId);
+
+    // Animate through each step with delays
+    for (let i = 0; i < analysisSteps.length; i++) {
+      setSteps((prev) =>
+        prev.map((step, idx) => {
+          if (idx < i) return { ...step, status: 'complete' };
+          if (idx === i) return { ...step, status: 'running' };
+          return { ...step, status: 'pending' };
+        })
+      );
+      setUploadProgress(Math.round(((i + 1) / analysisSteps.length) * 100));
+
+      // Delay between steps (faster for demo)
+      await new Promise(resolve => setTimeout(resolve, 400));
+    }
+
+    // Mark all steps complete
+    setSteps((prev) => prev.map((step) => ({ ...step, status: 'complete' })));
+    setIsAnalysisComplete(true);
+    setIsUploading(false);
+
+    // Convert seed mock results to AnalysisResults format
+    const results: AnalysisResults = {
+      sessionId,
+      proposalId: seedGrant.metadata.UUID,
+      overallScore: mockResult.overallScore,
+      status: mockResult.status === 'pass'
+        ? ComplianceStatus.PASS
+        : mockResult.status === 'fail'
+          ? ComplianceStatus.FAIL
+          : ComplianceStatus.WARNING,
+      issues: mockResult.issues.map(issue => ({
+        ...issue,
+        severity: issue.severity as any,
+        regulation: `${issue.regulation.section} ${issue.regulation.title}`,
+        location: {
+          ...issue.location,
+          lineNumber: 0,
+        }
+      })),
+      metadata: {
+        totalPages: 12, // Simulated for demo
+        processingTime: 2400, // Simulated ms
+        rulesChecked: ['FAR 15.204-5', 'FAR 19.3', 'DFARS 252.204-7012'],
+        completedAt: new Date(),
+        issueCounts: {
+          critical: mockResult.issues.filter(i => i.severity === 'critical').length,
+          warning: mockResult.issues.filter(i => i.severity === 'warning').length,
+          info: mockResult.issues.filter(i => i.severity === 'info').length,
+        }
+      }
+    };
+
+    const issueCount = results.issues.length;
+    const criticalCount = results.issues.filter((i) => i.severity === 'critical').length;
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: 'bot',
+        content: `Analysis complete. I found ${issueCount} compliance issues (${criticalCount} critical). The proposal has an overall score of ${results.overallScore}%.`,
+      },
+    ]);
+
+    onAnalysisComplete(results);
+    setActiveTab('results');
+  };
+
   const handleStartAnalysis = async () => {
-    if (!selectedFile) return;
+    // Determine active file/seed
+    const targetFile = selectedSeedPdf
+      ? new File([new Blob(['mock content'], { type: 'application/pdf' })], selectedSeedPdf.name, { type: 'application/pdf' })
+      : selectedFile;
+
+    if (!targetFile && !selectedSeedPdf) return;
 
     setIsUploading(true);
     setUploadError(null);
@@ -214,18 +358,27 @@ const AgentInterface: React.FC<AgentInterfaceProps> = ({
     setActiveTab('steps');
 
     try {
+      const displayName = selectedSeedPdf?.displayName || targetFile?.name || 'document';
       setMessages((prev) => [
         ...prev,
-        { role: 'bot', content: `Starting high-fidelity compliance scan on ${selectedFile.name}...` },
+        { role: 'bot', content: `Starting high-fidelity compliance scan on ${displayName}...` },
       ]);
 
-      const proposalId = generateUUID();
+      // NEW LOGIC: Mock mode runs simulation, Demo/Live run real service
+      if (isMockModeActive && selectedSeedPdf) {
+        const fullSeedGrant = seedGrants.find((sg) => sg.metadata.UUID === selectedSeedPdf.id);
+        if (fullSeedGrant) {
+          await simulateMockAnalysis(fullSeedGrant);
+          return;
+        }
+      }
+
+      // Real analysis flow
       const analysisResult = await analysisService.startAnalysis({
-        proposalId,
-        file: selectedFile,
-        onProgress: (progress: number) => {
-          setUploadProgress(progress);
-        },
+        proposalId: `proposal_${generateUUID().substring(0, 8)}`,
+        file: targetFile || undefined,
+        documentId: selectedSeedPdf?.id,
+        onProgress: (progress) => setUploadProgress(progress),
       });
 
       if (!analysisResult.success) {
@@ -461,6 +614,65 @@ const AgentInterface: React.FC<AgentInterfaceProps> = ({
             >
               Analyze Another Document
             </button>
+            {/* Seed selection for Demo/Mock modes */}
+            {isOfflineMode && (
+              <div className="flex-1 max-w-sm">
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                  {isDemoModeActive ? 'Select Presentation Scenario' : 'Select Validation Test Case'}
+                </div>
+                <select
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium"
+                  onChange={(e) => {
+                    const seed = activeSeeds.find(s => s.metadata.UUID === e.target.value);
+                    if (seed) {
+                      handleSeedPdfSelect({
+                        id: seed.metadata.UUID,
+                        name: seed.documents[0].filename,
+                        displayName: seed.displayName
+                      });
+                    } else {
+                      setSelectedSeedPdf(null);
+                      setSelectedFile(null);
+                    }
+                  }}
+                  value={selectedSeedPdf?.id || ''}
+                >
+                  <option value="">-- Choose {isDemoModeActive ? 'Scenario' : 'Test Case'} --</option>
+                  {activeSeeds.map((seed) => (
+                    <option key={seed.metadata.UUID} value={seed.metadata.UUID}>
+                      {seed.displayName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* File picker for Live mode */}
+            {isLiveModeActive && (
+              <div className="flex-1 max-w-sm">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileSelect}
+                  accept=".pdf"
+                  className="hidden"
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full flex items-center justify-between px-4 py-2 bg-indigo-50 border border-indigo-100 rounded-lg hover:bg-indigo-100 transition-all group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="bg-indigo-600 text-white p-1.5 rounded shadow-sm group-hover:scale-110 transition-transform">
+                      <FileUp size={14} />
+                    </div>
+                    <span className="text-xs font-bold text-indigo-700 uppercase tracking-wide">
+                      {selectedFile ? selectedFile.name : 'Select PDF for Analysis'}
+                    </span>
+                  </div>
+                  <ChevronDown size={14} className="text-indigo-400" />
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="flex gap-2 w-full">
@@ -471,15 +683,45 @@ const AgentInterface: React.FC<AgentInterfaceProps> = ({
               accept=".pdf"
               className="hidden"
             />
+            {isOfflineMode ? (
+              <div className="flex-1 relative">
+                <select
+                  value={selectedSeedPdf?.id || ''}
+                  onChange={(e) => {
+                    const seed = activeSeeds.find(s => s.metadata.UUID === e.target.value);
+                    if (seed) {
+                      handleSeedPdfSelect({
+                        id: seed.metadata.UUID,
+                        name: seed.documents[0].filename,
+                        displayName: seed.displayName
+                      });
+                    } else {
+                      setSelectedSeedPdf(null);
+                      setSelectedFile(null);
+                    }
+                  }}
+                  className="w-full py-2 px-3 border border-primary/30 rounded-lg text-xs font-bold bg-muted/50 hover:bg-muted transition-colors appearance-none cursor-pointer"
+                >
+                  <option value="">Select a {isDemoModeActive ? 'presentation scenario' : 'test case'}...</option>
+                  {activeSeeds.map((seed) => (
+                    <option key={seed.metadata.UUID} value={seed.metadata.UUID}>
+                      {seed.displayName}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none text-muted-foreground" />
+              </div>
+            ) : (
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="flex-1 py-1.5 border border-primary/30 rounded-lg text-xs font-bold bg-muted/50 hover:bg-muted transition-colors flex items-center justify-center gap-2"
+              >
+                <FileText className="h-4 w-4" />
+                {selectedFile ? 'Change PDF' : 'Select PDF'}
+              </button>
+            )}
             <button
-              onClick={() => fileInputRef.current?.click()}
-              className="flex-1 py-1.5 border border-primary/30 rounded-lg text-xs font-bold bg-muted/50 hover:bg-muted transition-colors flex items-center justify-center gap-2"
-            >
-              <FileText className="h-4 w-4" />
-              {selectedFile ? 'Change PDF' : 'Select PDF'}
-            </button>
-            <button
-              disabled={!selectedFile || isUploading}
+              disabled={(!selectedFile && !selectedSeedPdf) || isUploading}
               onClick={handleStartAnalysis}
               className="flex-[1.5] py-2 bg-primary text-primary-foreground rounded-lg text-sm font-bold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:shadow-none active:scale-[0.98] flex items-center justify-center gap-2"
             >

@@ -16,6 +16,7 @@ import {
   type ComplianceIssue as LocalComplianceIssue,
 } from './components/results/types';
 
+export { ComplianceStatus, IssueSeverity };
 export type { AnalysisResults };
 import type {
   ComplianceIssue,
