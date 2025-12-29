@@ -8,7 +8,7 @@ import { NextResponse } from 'next/server';
 /**
  * Simple health check endpoint for container orchestration.
  * This endpoint responds immediately without checking external services.
- * For full service health including Strands, use /api/status instead.
+ * For full service health including Analysis Engine, use /api/status instead.
  */
 export async function GET() {
   return NextResponse.json({

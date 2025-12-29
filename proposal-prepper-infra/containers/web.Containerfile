@@ -2,26 +2,31 @@
 # SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 # Development Dockerfile for Next.js web application
-FROM node:20-alpine
+FROM node:22-alpine
 
 # Set working directory
 WORKDIR /app
 
 # Install curl for health checks and pnpm
-RUN apk add --no-cache curl && npm install -g pnpm@10.24.0
+RUN apk add --no-cache curl && npm install -g pnpm@10.26.2
+
+# Ensure permissions for node user
+RUN mkdir -p /app && chown -R node:node /app
+
+USER node
 
 # Copy package files
-COPY pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY proposal-prepper-web/package.json ./proposal-prepper-web/
-COPY proposal-prepper-services/package.json ./proposal-prepper-services/
-COPY proposal-prepper-middleware/package.json ./proposal-prepper-middleware/
-COPY proposal-prepper-tests/package.json ./proposal-prepper-tests/
+COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY --chown=node:node proposal-prepper-web/package.json ./proposal-prepper-web/
+COPY --chown=node:node proposal-prepper-services/package.json ./proposal-prepper-services/
+COPY --chown=node:node proposal-prepper-middleware/package.json ./proposal-prepper-middleware/
+COPY --chown=node:node proposal-prepper-tests/package.json ./proposal-prepper-tests/
 
 # Install dependencies (allow lockfile updates in development)
 RUN pnpm install
 
 # Copy source code
-COPY . .
+COPY --chown=node:node . .
 
 # Set working directory to the web app
 WORKDIR /app/proposal-prepper-web
@@ -29,16 +34,9 @@ WORKDIR /app/proposal-prepper-web
 # Expose port
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD curl -f http://localhost:3000/api/health || exit 1
-
 # Set environment variables for development
 ENV NODE_ENV=development
 ENV NEXT_TELEMETRY_DISABLED=1
-
-# Ensure permissions for node user
-RUN chown -R node:node /app
 
 # Switch to non-root user
 USER node

@@ -5,7 +5,8 @@
 
 'use client';
 
-import { Button, HelpCircle, Settings, User } from '@17sierra/ui';
+import { Button } from '@17sierra/ui';
+import { HelpCircle, Settings, ShieldCheck, User } from 'lucide-react';
 import type React from 'react';
 
 /**
@@ -143,15 +144,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
       <div className="flex items-center gap-3 text-slate-800 font-semibold text-lg">
         {logo || (
           <div className="bg-primary text-primary-foreground p-1.5 rounded-lg">
-            <svg
-              className="w-5 h-5"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              role="img"
-              aria-label="Logo"
-            >
-              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <ShieldCheck size={20} />
           </div>
         )}
 

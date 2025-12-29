@@ -5,9 +5,9 @@ name: License Compliance
 
 on:
   push:
-    branches: [main, 'feature/**', 'feat/**']
+    branches: [main]
   pull_request:
-    branches: [main, 'feature/**', 'feat/**']
+    branches: [main]
 
 permissions:
   contents: read

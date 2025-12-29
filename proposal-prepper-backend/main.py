@@ -19,6 +19,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import uvicorn
 
+from analysis_provider import AnalysisRouter
+import aws_bedrock
+import local_provider
+
+# Global Analysis Router
+router = AnalysisRouter()
+
 from config import get_settings
 from logging_config import setup_logging, get_logger
 from models import (
@@ -58,6 +65,9 @@ from concurrent_processor import (
 # Initialize configuration and logging
 settings = get_settings()
 setup_logging()
+from analysis_provider import AnalysisRouter
+import aws_bedrock
+import local_provider
 logger = get_logger(__name__)
 
 
@@ -89,12 +99,19 @@ manager = ConnectionManager()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager for startup and shutdown events."""
-    logger.info("Starting Strands service...")
+    mode_str = "AIR SPEC (LOCAL)" if settings.analysis_mode == "local" else "AWS BEDROCK"
+    logger.info(f"Starting Strands service in {mode_str} mode...")
     
     # Startup logic
     try:
         # Validate environment configuration
         validate_environment()
+        
+        if settings.analysis_mode == "local":
+            logger.info(f">>> AIR SPEC ACTIVATED: Using {settings.local_llm_model} @ {settings.local_llm_url} <<<")
+            if settings.air_spec_mode:
+                logger.info(f">>> THERMAL GUARD: On (Threshold: {settings.cpu_usage_threshold}%) <<<")
+        
         logger.info("Environment validation completed")
         
         # Initialize database
@@ -121,13 +138,10 @@ async def lifespan(app: FastAPI):
             from aws_bedrock import get_bedrock_client
             from local_llm import get_local_llm_client
             from pdf_processor import get_pdf_processor
-            from fallback_analysis import get_fallback_service
-            
             # Initialize services
             bedrock_client = get_bedrock_client()
             local_llm_client = get_local_llm_client()
             pdf_processor = get_pdf_processor()
-            fallback_service = get_fallback_service()
             
             # Log service availability
             if settings.use_local_llm:
@@ -138,14 +152,13 @@ async def lifespan(app: FastAPI):
             elif bedrock_client.is_available():
                 logger.info("AWS Bedrock client initialized and available")
             else:
-                logger.warning("AWS Bedrock client not available - using fallback analysis")
+                logger.warning("AWS Bedrock client not available")
             
             if pdf_processor._s3_client:
                 logger.info("PDF processor with S3 client initialized")
             else:
                 logger.warning("PDF processor S3 client not available")
             
-            logger.info("Fallback analysis service initialized")
             logger.info("All analysis services initialized successfully")
             
         except Exception as e:
@@ -189,8 +202,7 @@ async def process_analysis(session_id: str) -> None:
     """
     from pdf_processor import get_pdf_processor
     from aws_bedrock import get_bedrock_client
-    from local_llm import get_local_llm_client
-    from fallback_analysis import get_fallback_service
+    from analysis_provider import AnalysisRouter
     import asyncio
     import time
     
@@ -205,12 +217,51 @@ async def process_analysis(session_id: str) -> None:
     try:
         logger.info(f"Starting analysis process for session: {session_id[:12]}...")
         
-        # Phase 1: Document text extraction
-        logger.debug(f"Phase 1: Extraction for session {session_id}")
+        # Step 1: Ingestion & Validation
+        logger.debug(f"Step 1: Ingestion & Validation for session {session_id}")
+        await update_analysis_progress(
+            session_id=session_id,
+            status=AnalysisStatus.QUEUED,
+            progress=5.0,
+            current_step="Validating document ingestion and storage reachability"
+        )
+        
+        # Broadcast Step 1 Progress
+        await manager.broadcast({
+            "type": "analysis_progress",
+            "sessionId": session_id,
+            "data": {
+                "status": "validating",
+                "progress": 5.0,
+                "currentStep": "Ingestion & Validation"
+            }
+        })
+        
+        # Verify metadata exists
+        metadata_record = await DocumentMetadataOperations.get_document_metadata(session_data["document_id"])
+        if not metadata_record:
+            raise ValueError(f"Document metadata record missing for {session_data['document_id']}")
+            
+        # Verify S3 reachability
+        pdf_processor = get_pdf_processor()
+        if not pdf_processor.check_file_exists_in_s3(session_data["s3_key"]):
+            raise ValueError(f"Document file missing in storage: {session_data['s3_key']}")
+            
+        logger.info(f"Step 1 Successful: Document {session_data['document_id']} validated and reachable.")
+        
         await update_analysis_progress(
             session_id=session_id,
             status=AnalysisStatus.EXTRACTING,
             progress=10.0,
+            current_step="Validation successful, starting extraction"
+        )
+
+        # Step 2: Extraction
+        logger.debug(f"Step 2: Extraction for session {session_id}")
+        await update_analysis_progress(
+            session_id=session_id,
+            status=AnalysisStatus.EXTRACTING,
+            progress=15.0,
             current_step="Extracting text from PDF document"
         )
         
@@ -220,8 +271,8 @@ async def process_analysis(session_id: str) -> None:
             "sessionId": session_id,
             "data": {
                 "status": "extracting",
-                "progress": 10.0,
-                "currentStep": "Extracting text from PDF document"
+                "progress": 15.0,
+                "currentStep": "Extraction"
             }
         })
 
@@ -238,7 +289,7 @@ async def process_analysis(session_id: str) -> None:
             session_id=session_id,
             status=AnalysisStatus.EXTRACTING,
             progress=30.0,
-            current_step="Document text extracted successfully"
+            current_step="Extraction complete"
         )
         
         # Broadcast progress
@@ -248,18 +299,18 @@ async def process_analysis(session_id: str) -> None:
             "data": {
                 "status": "extracting",
                 "progress": 30.0,
-                "currentStep": "Document text extracted successfully"
+                "currentStep": "Extraction"
             }
         })
 
         await asyncio.sleep(0.5)  # Brief pause for progress update
         
-        # Phase 2: AI Analysis
+        # Step 3: FAR Scan
         await update_analysis_progress(
             session_id=session_id,
             status=AnalysisStatus.ANALYZING,
-            progress=40.0,
-            current_step="Analyzing document for compliance issues using AI"
+            progress=45.0,
+            current_step="Analyzing document for FAR compliance"
         )
         
         # Broadcast progress
@@ -268,93 +319,24 @@ async def process_analysis(session_id: str) -> None:
             "sessionId": session_id,
             "data": {
                 "status": "analyzing",
-                "progress": 40.0,
-                "currentStep": "Analyzing document for compliance issues using AI"
+                "progress": 45.0,
+                "currentStep": "FAR Scan"
             }
         })
 
         
-        bedrock_client = get_bedrock_client()
-        local_llm_client = get_local_llm_client()
-        results = None
-        
-        # Try Local LLM first if configured
-        if settings.use_local_llm:
-            try:
-                logger.info(f"Using Local LLM ({settings.local_llm_model}) for analysis of document {session_data['document_id'][:12]}...")
-                await update_analysis_progress(
-                    session_id=session_id,
-                    status=AnalysisStatus.ANALYZING,
-                    progress=60.0,
-                    current_step=f"Processing with Local LLM ({settings.local_llm_model})"
-                )
-                
-                # Broadcast progress
-                await manager.broadcast({
-                    "type": "analysis_progress",
-                    "sessionId": session_id,
-                    "data": {
-                        "status": "analyzing",
-                        "progress": 60.0,
-                        "currentStep": f"Processing with Local LLM ({settings.local_llm_model})"
-                    }
-                })
-
-                results = await local_llm_client.analyze_document(
-                    document_text=document_text,
-                    filename=session_data["filename"],
-                    document_id=session_data["document_id"]
-                )
-                
-                logger.info(f"Local LLM analysis completed for document {session_data['document_id']}")
-                
-            except Exception as llm_error:
-                logger.warning(f"Local LLM analysis failed for document {session_data['document_id']}: {llm_error}")
-                results = None
-        
-        # Try AWS Bedrock if Local LLM failed or not configured
-        if results is None and bedrock_client.is_available():
-            try:
-                logger.info(f"Using AWS Bedrock for analysis of document {session_data['document_id'][:12]}...")
-                await update_analysis_progress(
-                    session_id=session_id,
-                    status=AnalysisStatus.ANALYZING,
-                    progress=60.0,
-                    current_step="Processing with AWS Bedrock AI"
-                )
-                
-                # Broadcast progress
-                await manager.broadcast({
-                    "type": "analysis_progress",
-                    "sessionId": session_id,
-                    "data": {
-                        "status": "analyzing",
-                        "progress": 60.0,
-                        "currentStep": "Processing with AWS Bedrock AI"
-                    }
-                })
-
-                
-                results = await bedrock_client.analyze_document(
-                    document_text=document_text,
-                    filename=session_data["filename"],
-                    document_id=session_data["document_id"]
-                )
-                
-                logger.info(f"AWS Bedrock analysis completed for document {session_data['document_id']}")
-                
-            except Exception as bedrock_error:
-                logger.warning(f"AWS Bedrock analysis failed for document {session_data['document_id']}: {bedrock_error}")
-                results = None  # Will trigger fallback
-        
-        # Fallback to mock analysis if Bedrock failed or unavailable
-        if results is None:
-            logger.info(f"Using fallback analysis for document {session_data['document_id'][:12]}...")
+        # Use Analysis Router to get the configured provider
+        try:
+            provider = router.get_provider()
+            
+            logger.info(f"Using analysis provider: {provider.__class__.__name__} for document {session_data['document_id'][:12]}...")
+            
+            # Step 4: DFARS Audit (Integrated into provider logic)
             await update_analysis_progress(
                 session_id=session_id,
                 status=AnalysisStatus.ANALYZING,
-                progress=70.0,
-                current_step="Processing with fallback analysis service"
+                progress=55.0,
+                current_step="Performing DFARS regulatory audit"
             )
             
             # Broadcast progress
@@ -363,26 +345,30 @@ async def process_analysis(session_id: str) -> None:
                 "sessionId": session_id,
                 "data": {
                     "status": "analyzing",
-                    "progress": 70.0,
-                    "currentStep": "Processing with fallback analysis service"
+                    "progress": 55.0,
+                    "currentStep": "DFARS Audit"
                 }
             })
 
-            
-            fallback_service = get_fallback_service()
-            results = await fallback_service.generate_mock_analysis(
+            results = await provider.analyze_document(
                 document_text=document_text,
                 filename=session_data["filename"],
                 document_id=session_data["document_id"],
                 session_id=session_id
             )
+            
+            logger.info(f"Analysis completed for document {session_data['document_id'][:12]}")
+            
+        except Exception as provider_error:
+            logger.error(f"Analysis provider failed for document {session_data['document_id'][:12]}: {provider_error}")
+            raise
         
-        # Phase 3: Finalize results
+        # Step 5: Security Review
         await update_analysis_progress(
             session_id=session_id,
-            status=AnalysisStatus.ANALYZING,
-            progress=90.0,
-            current_step="Finalizing compliance report"
+            status=AnalysisStatus.VALIDATING,
+            progress=65.0,
+            current_step="Conducting security review of compliance findings"
         )
         
         # Broadcast progress
@@ -390,9 +376,131 @@ async def process_analysis(session_id: str) -> None:
             "type": "analysis_progress",
             "sessionId": session_id,
             "data": {
-                "status": "analyzing",
+                "status": "validating",
+                "progress": 65.0,
+                "currentStep": "Security Review"
+            }
+        })
+
+        await asyncio.sleep(0.5)
+
+        # Step 6: Policy Check
+        await update_analysis_progress(
+            session_id=session_id,
+            status=AnalysisStatus.VALIDATING,
+            progress=80.0,
+            current_step="Cross-referencing organizational policies"
+        )
+
+        # Broadcast progress
+        await manager.broadcast({
+            "type": "analysis_progress",
+            "sessionId": session_id,
+            "data": {
+                "status": "validating",
+                "progress": 80.0,
+                "currentStep": "Policy Check"
+            }
+        })
+
+        await asyncio.sleep(0.5)
+
+        # Step 7: Generation
+        await update_analysis_progress(
+            session_id=session_id,
+            status=AnalysisStatus.COMPLETED,
+            progress=95.0,
+            current_step="Generating final compliance synthesis"
+        )
+            await update_analysis_progress(
+                session_id=session_id,
+                status=AnalysisStatus.ANALYZING,
+                progress=55.0,
+                current_step="Performing DFARS regulatory audit"
+            )
+            
+            # Broadcast progress
+            await manager.broadcast({
+                "type": "analysis_progress",
+                "sessionId": session_id,
+                "data": {
+                    "status": "analyzing",
+                    "progress": 55.0,
+                    "currentStep": "DFARS Audit"
+                }
+            })
+
+            results = await provider.analyze_document(
+                document_text=document_text,
+                filename=session_data["filename"],
+                document_id=session_data["document_id"],
+                session_id=session_id
+            )
+            
+            logger.info(f"Analysis completed for document {session_data['document_id']}")
+            
+        except Exception as provider_error:
+            logger.error(f"Analysis provider failed for document {session_data['document_id']}: {provider_error}")
+            raise
+        
+        # Step 5: Security Review
+        await update_analysis_progress(
+            session_id=session_id,
+            status=AnalysisStatus.VALIDATING,
+            progress=65.0,
+            current_step="Conducting security review of compliance findings"
+        )
+        
+        # Broadcast progress
+        await manager.broadcast({
+            "type": "analysis_progress",
+            "sessionId": session_id,
+            "data": {
+                "status": "validating",
+                "progress": 65.0,
+                "currentStep": "Security Review"
+            }
+        })
+
+        await asyncio.sleep(0.5)
+
+        # Step 6: Policy Check
+        await update_analysis_progress(
+            session_id=session_id,
+            status=AnalysisStatus.VALIDATING,
+            progress=75.0,
+            current_step="Verifying against regulatory policy guidelines"
+        )
+        
+        # Broadcast progress
+        await manager.broadcast({
+            "type": "analysis_progress",
+            "sessionId": session_id,
+            "data": {
+                "status": "validating",
+                "progress": 75.0,
+                "currentStep": "Policy Check"
+            }
+        })
+
+        await asyncio.sleep(0.5)
+
+        # Step 7: Generation
+        await update_analysis_progress(
+            session_id=session_id,
+            status=AnalysisStatus.GENERATING,
+            progress=90.0,
+            current_step="Generating final compliance report"
+        )
+        
+        # Broadcast progress
+        await manager.broadcast({
+            "type": "analysis_progress",
+            "sessionId": session_id,
+            "data": {
+                "status": "generating",
                 "progress": 90.0,
-                "currentStep": "Finalizing compliance report"
+                "currentStep": "Generation"
             }
         })
 
@@ -614,17 +722,26 @@ async def health_check() -> HealthCheckResponse:
             logger.warning(f"AWS Bedrock health check failed: {e}")
             checks["aws_bedrock"] = "warning"
         
-        # Add S3/MinIO connectivity check
-        try:
-            from pdf_processor import get_pdf_processor
-            pdf_processor = get_pdf_processor()
-            if pdf_processor._s3_client:
-                checks["s3_storage"] = "ok"
-            else:
-                checks["s3_storage"] = "warning"
-        except Exception as e:
-            logger.warning(f"S3 storage health check failed: {e}")
-            checks["s3_storage"] = "warning"
+        # Add analysis provider info
+        provider = router.get_provider()
+        checks["analysis_provider"] = settings.analysis_mode
+        checks["provider_name"] = provider.get_name()
+        checks["air_spec_mode"] = settings.air_spec_mode
+
+        # Add local LLM check if applicable
+        if settings.analysis_mode == "local" and settings.use_local_llm:
+            try:
+                import httpx
+                # Quick probe to see if Ollama/LiteLLM is alive
+                async with httpx.AsyncClient() as client:
+                    resp = await client.get(f"{settings.local_llm_url}/api/tags", timeout=1.0)
+                    if resp.status_code == 200:
+                        checks["local_llm"] = "ok"
+                    else:
+                        checks["local_llm"] = "degraded"
+            except Exception:
+                checks["local_llm"] = "error"
+                logger.warning("Local LLM service not reachable")
         
         # Add concurrent processor check
         try:

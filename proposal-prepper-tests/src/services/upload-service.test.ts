@@ -9,374 +9,401 @@
  * upload management, and API integration.
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { type UploadSession, UploadStatus } from '@/types/app';
-import { UploadService } from 'proposal-prepper-services/upload-service';
-import { aiRouterClient } from 'proposal-prepper-services/ai-router-client';
+import { aiRouterClient } from "proposal-prepper-services/ai-router-client";
+import { UploadService } from "proposal-prepper-services/upload-service";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { type UploadSession, UploadStatus } from "@/types/app";
 
 // Mock the AI Router client with all needed methods
-vi.mock('proposal-prepper-services/ai-router-client', () => ({
-  aiRouterClient: {
-    uploadDocument: vi.fn(),
-    getUploadStatus: vi.fn(),
-    connectWebSocket: vi.fn(),
-    subscribeToUploadProgress: vi.fn(),
-    disconnectWebSocket: vi.fn(),
-  },
+vi.mock("proposal-prepper-services/ai-router-client", () => ({
+	aiRouterClient: {
+		uploadDocument: vi.fn(),
+		getUploadStatus: vi.fn(),
+		connectWebSocket: vi.fn(),
+		subscribeToUploadProgress: vi.fn(),
+		disconnectWebSocket: vi.fn(),
+	},
 }));
 
 // Get the mocked client
 const mockAiRouterClient = vi.mocked(aiRouterClient);
 
-describe('UploadService', () => {
-  let uploadService: UploadService;
+describe("UploadService", () => {
+	let uploadService: UploadService;
 
-  beforeEach(() => {
-    uploadService = new UploadService();
-    uploadService.clearAllSessions(); // Ensure clean state
-    // Reset all mocks
-    vi.clearAllMocks();
-  });
+	beforeEach(() => {
+		uploadService = new UploadService();
+		uploadService.clearAllSessions(); // Ensure clean state
+		// Reset all mocks
+		vi.clearAllMocks();
+	});
 
-  afterEach(() => {
-    uploadService.clearAllSessions();
-  });
+	afterEach(() => {
+		uploadService.clearAllSessions();
+	});
 
-  describe('File Validation', () => {
-    it('should accept valid PDF files', () => {
-      // Create a file with sufficient size (> 1KB)
-      const content = 'x'.repeat(2048); // 2KB
-      const validFile = new File([content], 'test.pdf', { type: 'application/pdf' });
-      const result = uploadService.validateFile(validFile);
+	describe("File Validation", () => {
+		it("should accept valid PDF files", () => {
+			// Create a file with sufficient size (> 1KB)
+			const content = "x".repeat(2048); // 2KB
+			const validFile = new File([content], "test.pdf", {
+				type: "application/pdf",
+			});
+			const result = uploadService.validateFile(validFile);
 
-      expect(result.isValid).toBe(true);
-      expect(result.error).toBeUndefined();
-    });
+			expect(result.isValid).toBe(true);
+			expect(result.error).toBeUndefined();
+		});
 
-    it('should reject non-PDF files', () => {
-      const invalidFile = new File(['test content'], 'test.txt', { type: 'text/plain' });
-      const result = uploadService.validateFile(invalidFile);
+		it("should reject non-PDF files", () => {
+			const invalidFile = new File(["test content"], "test.txt", {
+				type: "text/plain",
+			});
+			const result = uploadService.validateFile(invalidFile);
 
-      expect(result.isValid).toBe(false);
-      expect(result.error).toContain('Only PDF files are accepted');
-      expect(result.errorCode).toBe('VALIDATION_001');
-    });
+			expect(result.isValid).toBe(false);
+			expect(result.error).toContain("Only PDF files are accepted");
+			expect(result.errorCode).toBe("VALIDATION_001");
+		});
 
-    it('should reject files that are too large', () => {
-      // Create a mock file with large size without actually creating the content
-      const largeFile = new File(['test content'], 'large.pdf', {
-        type: 'application/pdf',
-      });
+		it("should reject files that are too large", () => {
+			// Create a mock file with large size without actually creating the content
+			const largeFile = new File(["test content"], "large.pdf", {
+				type: "application/pdf",
+			});
 
-      // Mock the size property to simulate a large file
-      Object.defineProperty(largeFile, 'size', {
-        value: 101 * 1024 * 1024, // 101MB
-        writable: false,
-      });
+			// Mock the size property to simulate a large file
+			Object.defineProperty(largeFile, "size", {
+				value: 101 * 1024 * 1024, // 101MB
+				writable: false,
+			});
 
-      const result = uploadService.validateFile(largeFile);
+			const result = uploadService.validateFile(largeFile);
 
-      expect(result.isValid).toBe(false);
-      expect(result.error).toContain('exceeds the maximum limit');
-    });
+			expect(result.isValid).toBe(false);
+			expect(result.error).toContain("exceeds the maximum limit");
+		});
 
-    it('should reject files that are too small', () => {
-      const smallFile = new File(['x'], 'small.pdf', { type: 'application/pdf' });
-      const result = uploadService.validateFile(smallFile);
+		it("should reject files that are too small", () => {
+			const smallFile = new File(["x"], "small.pdf", {
+				type: "application/pdf",
+			});
+			const result = uploadService.validateFile(smallFile);
 
-      expect(result.isValid).toBe(false);
-      expect(result.error).toContain('too small');
-    });
+			expect(result.isValid).toBe(false);
+			expect(result.error).toContain("too small");
+		});
 
-    it('should reject files with very long filenames', () => {
-      const longName = `${'x'.repeat(300)}.pdf`;
-      const content = 'x'.repeat(2048); // Ensure file is large enough
-      const file = new File([content], longName, { type: 'application/pdf' });
-      const result = uploadService.validateFile(file);
+		it("should reject files with very long filenames", () => {
+			const longName = `${"x".repeat(300)}.pdf`;
+			const content = "x".repeat(2048); // Ensure file is large enough
+			const file = new File([content], longName, { type: "application/pdf" });
+			const result = uploadService.validateFile(file);
 
-      expect(result.isValid).toBe(false);
-      expect(result.error).toContain('Filename is too long');
-    });
-  });
+			expect(result.isValid).toBe(false);
+			expect(result.error).toContain("Filename is too long");
+		});
+	});
 
-  describe('Upload Management', () => {
-    it('should upload a valid file successfully', async () => {
-      uploadService.clearAllSessions(); // Ensure clean state
-      const file = new File(['test content'], 'test.pdf', { type: 'application/pdf' });
-      const mockResponse = {
-        success: true,
-        data: {
-          id: 'upload-123',
-          filename: 'test.pdf',
-          fileSize: file.size,
-          mimeType: 'application/pdf',
-          status: 'completed',
-          progress: 100,
-          startedAt: new Date().toISOString(),
-        },
-      };
+	describe("Upload Management", () => {
+		it("should upload a valid file successfully", async () => {
+			uploadService.clearAllSessions(); // Ensure clean state
+			const file = new File(["test content"], "test.pdf", {
+				type: "application/pdf",
+			});
+			const mockResponse = {
+				success: true,
+				data: {
+					id: "upload-123",
+					filename: "test.pdf",
+					fileSize: file.size,
+					mimeType: "application/pdf",
+					status: "completed",
+					progress: 100,
+					startedAt: new Date().toISOString(),
+				},
+			};
 
-      mockAiRouterClient.uploadDocument.mockResolvedValueOnce(mockResponse);
+			mockAiRouterClient.uploadDocument.mockResolvedValueOnce(mockResponse);
 
-      const result = await uploadService.uploadDocument(file);
+			const result = await uploadService.uploadDocument(file);
 
-      expect(result.success).toBe(true);
-      expect(result.sessionId).toBe('upload-123');
-      expect(mockAiRouterClient.uploadDocument).toHaveBeenCalledWith(file, expect.any(Function));
-    });
+			expect(result.success).toBe(true);
+			expect(result.sessionId).toBe("upload-123");
+			expect(mockAiRouterClient.uploadDocument).toHaveBeenCalledWith(
+				file,
+				expect.any(Function),
+			);
+		});
 
-    it('should handle upload failures', async () => {
-      uploadService.clearAllSessions(); // Ensure clean state
-      const file = new File(['test content'], 'test.pdf', { type: 'application/pdf' });
-      const mockResponse = {
-        success: false,
-        error: 'Server error',
-      };
+		it("should handle upload failures", async () => {
+			uploadService.clearAllSessions(); // Ensure clean state
+			const file = new File(["test content"], "test.pdf", {
+				type: "application/pdf",
+			});
+			const mockResponse = {
+				success: false,
+				error: "Server error",
+			};
 
-      mockAiRouterClient.uploadDocument.mockResolvedValueOnce(mockResponse);
+			mockAiRouterClient.uploadDocument.mockResolvedValueOnce(mockResponse);
 
-      const result = await uploadService.uploadDocument(file);
+			const result = await uploadService.uploadDocument(file);
 
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Server error');
-    });
+			expect(result.success).toBe(false);
+			expect(result.error).toBe("Server error");
+		});
 
-    it('should track upload progress', async () => {
-      uploadService.clearAllSessions(); // Ensure clean state
-      const file = new File(['test content'], 'test.pdf', { type: 'application/pdf' });
-      const progressCallback = vi.fn();
+		it("should track upload progress", async () => {
+			uploadService.clearAllSessions(); // Ensure clean state
+			const file = new File(["test content"], "test.pdf", {
+				type: "application/pdf",
+			});
+			const progressCallback = vi.fn();
 
-      uploadService.setEventHandlers({
-        onProgress: progressCallback,
-      });
+			uploadService.setEventHandlers({
+				onProgress: progressCallback,
+			});
 
-      mockAiRouterClient.uploadDocument.mockImplementationOnce(
-        (file: File, onProgress: (progress: number) => void) => {
-          // Simulate progress updates
-          onProgress(25);
-          onProgress(50);
-          onProgress(75);
-          onProgress(100);
+			mockAiRouterClient.uploadDocument.mockImplementationOnce(
+				(file: File, onProgress: (progress: number) => void) => {
+					// Simulate progress updates
+					onProgress(25);
+					onProgress(50);
+					onProgress(75);
+					onProgress(100);
 
-          return Promise.resolve({
-            success: true,
-            data: {
-              id: 'upload-123',
-              filename: 'test.pdf',
-              fileSize: file.size,
-              mimeType: 'application/pdf',
-              status: 'completed',
-              progress: 100,
-              startedAt: new Date().toISOString(),
-            },
-          });
-        }
-      );
+					return Promise.resolve({
+						success: true,
+						data: {
+							id: "upload-123",
+							filename: "test.pdf",
+							fileSize: file.size,
+							mimeType: "application/pdf",
+							status: "completed",
+							progress: 100,
+							startedAt: new Date().toISOString(),
+						},
+					});
+				},
+			);
 
-      await uploadService.uploadDocument(file);
+			await uploadService.uploadDocument(file);
 
-      expect(progressCallback).toHaveBeenCalledWith(expect.any(String), 25);
-      expect(progressCallback).toHaveBeenCalledWith(expect.any(String), 50);
-      expect(progressCallback).toHaveBeenCalledWith(expect.any(String), 75);
-      expect(progressCallback).toHaveBeenCalledWith(expect.any(String), 100);
-    });
+			expect(progressCallback).toHaveBeenCalledWith(expect.any(String), 25);
+			expect(progressCallback).toHaveBeenCalledWith(expect.any(String), 50);
+			expect(progressCallback).toHaveBeenCalledWith(expect.any(String), 75);
+			expect(progressCallback).toHaveBeenCalledWith(expect.any(String), 100);
+		});
 
-    it('should handle upload exceptions', async () => {
-      uploadService.clearAllSessions(); // Ensure clean state
-      const file = new File(['test content'], 'test.pdf', { type: 'application/pdf' });
+		it("should handle upload exceptions", async () => {
+			uploadService.clearAllSessions(); // Ensure clean state
+			const file = new File(["test content"], "test.pdf", {
+				type: "application/pdf",
+			});
 
-      mockAiRouterClient.uploadDocument.mockRejectedValueOnce(new Error('Network error'));
+			mockAiRouterClient.uploadDocument.mockRejectedValueOnce(
+				new Error("Network error"),
+			);
 
-      const result = await uploadService.uploadDocument(file);
+			const result = await uploadService.uploadDocument(file);
 
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Network error');
-    });
-  });
+			expect(result.success).toBe(false);
+			expect(result.error).toBe("Network error");
+		});
+	});
 
-  describe('Session Management', () => {
-    it('should track active sessions', async () => {
-      // Ensure clean state for this test
-      uploadService.clearAllSessions();
+	describe("Session Management", () => {
+		it("should track active sessions", async () => {
+			// Ensure clean state for this test
+			uploadService.clearAllSessions();
 
-      const content = 'x'.repeat(2048); // Ensure file is large enough
-      const file = new File([content], 'test.pdf', { type: 'application/pdf' });
+			const content = "x".repeat(2048); // Ensure file is large enough
+			const file = new File([content], "test.pdf", { type: "application/pdf" });
 
-      mockAiRouterClient.uploadDocument.mockResolvedValueOnce({
-        success: true,
-        data: {
-          id: 'upload-123',
-          filename: 'test.pdf',
-          fileSize: file.size,
-          mimeType: 'application/pdf',
-          status: 'completed',
-          progress: 100,
-          startedAt: new Date().toISOString(),
-        },
-      });
+			mockAiRouterClient.uploadDocument.mockResolvedValueOnce({
+				success: true,
+				data: {
+					id: "upload-123",
+					filename: "test.pdf",
+					fileSize: file.size,
+					mimeType: "application/pdf",
+					status: "completed",
+					progress: 100,
+					startedAt: new Date().toISOString(),
+				},
+			});
 
-      await uploadService.uploadDocument(file);
-      const sessions = uploadService.getActiveSessions();
+			await uploadService.uploadDocument(file);
+			const sessions = uploadService.getActiveSessions();
 
-      expect(sessions).toHaveLength(1);
-      expect(sessions[0].id).toBe('upload-123');
-      expect(sessions[0].status).toBe(UploadStatus.COMPLETED);
-    });
+			expect(sessions).toHaveLength(1);
+			expect(sessions[0].id).toBe("upload-123");
+			expect(sessions[0].status).toBe(UploadStatus.COMPLETED);
+		});
 
-    it('should get upload status from server', async () => {
-      const mockResponse = {
-        success: true,
-        data: {
-          id: 'upload-123',
-          filename: 'test.pdf',
-          fileSize: 1024,
-          mimeType: 'application/pdf',
-          status: 'processing',
-          progress: 75,
-          startedAt: new Date().toISOString(),
-        },
-      };
+		it("should get upload status from server", async () => {
+			const mockResponse = {
+				success: true,
+				data: {
+					id: "upload-123",
+					filename: "test.pdf",
+					fileSize: 1024,
+					mimeType: "application/pdf",
+					status: "processing",
+					progress: 75,
+					startedAt: new Date().toISOString(),
+				},
+			};
 
-      mockAiRouterClient.getUploadStatus.mockResolvedValueOnce(mockResponse);
+			mockAiRouterClient.getUploadStatus.mockResolvedValueOnce(mockResponse);
 
-      const session = await uploadService.getUploadStatus('upload-123');
+			const session = await uploadService.getUploadStatus("upload-123");
 
-      expect(session).toBeTruthy();
-      expect(session?.id).toBe('upload-123');
-      expect(session?.status).toBe(UploadStatus.PROCESSING);
-      expect(session?.progress).toBe(75);
-    });
+			expect(session).toBeTruthy();
+			expect(session?.id).toBe("upload-123");
+			expect(session?.status).toBe(UploadStatus.PROCESSING);
+			expect(session?.progress).toBe(75);
+		});
 
-    it('should cancel upload sessions', () => {
-      // Manually add a session in uploading state
-      const sessionId = 'upload-123';
-      uploadService.activeSessions.set(sessionId, {
-        id: sessionId,
-        filename: 'test.pdf',
-        fileSize: 1024,
-        mimeType: 'application/pdf',
-        status: UploadStatus.UPLOADING,
-        progress: 50,
-        startedAt: new Date(),
-      });
+		it("should cancel upload sessions", () => {
+			// Manually add a session in uploading state
+			const sessionId = "upload-123";
+			uploadService.activeSessions.set(sessionId, {
+				id: sessionId,
+				filename: "test.pdf",
+				fileSize: 1024,
+				mimeType: "application/pdf",
+				status: UploadStatus.UPLOADING,
+				progress: 50,
+				startedAt: new Date(),
+			});
 
-      const result = uploadService.cancelUpload(sessionId);
-      const session = uploadService.activeSessions.get(sessionId);
+			const result = uploadService.cancelUpload(sessionId);
+			const session = uploadService.activeSessions.get(sessionId);
 
-      expect(result).toBe(true);
-      expect(session?.status).toBe(UploadStatus.FAILED);
-      expect(session?.errorMessage).toContain('cancelled');
-    });
+			expect(result).toBe(true);
+			expect(session?.status).toBe(UploadStatus.FAILED);
+			expect(session?.errorMessage).toContain("cancelled");
+		});
 
-    it('should clear completed sessions', () => {
-      const sessionId = 'upload-123';
-      uploadService.activeSessions.set(sessionId, {
-        id: sessionId,
-        filename: 'test.pdf',
-        fileSize: 1024,
-        mimeType: 'application/pdf',
-        status: UploadStatus.COMPLETED,
-        progress: 100,
-        startedAt: new Date(),
-        completedAt: new Date(),
-      });
+		it("should clear completed sessions", () => {
+			const sessionId = "upload-123";
+			uploadService.activeSessions.set(sessionId, {
+				id: sessionId,
+				filename: "test.pdf",
+				fileSize: 1024,
+				mimeType: "application/pdf",
+				status: UploadStatus.COMPLETED,
+				progress: 100,
+				startedAt: new Date(),
+				completedAt: new Date(),
+			});
 
-      const result = uploadService.clearSession(sessionId);
+			const result = uploadService.clearSession(sessionId);
 
-      expect(result).toBe(true);
-      expect(uploadService.activeSessions.has(sessionId)).toBe(false);
-    });
+			expect(result).toBe(true);
+			expect(uploadService.activeSessions.has(sessionId)).toBe(false);
+		});
 
-    it('should clear all sessions', () => {
-      const mockSession1: UploadSession = {
-        id: 'session1',
-        filename: 'test1.pdf',
-        fileSize: 1024,
-        mimeType: 'application/pdf',
-        status: UploadStatus.UPLOADING,
-        progress: 50,
-        startedAt: new Date(),
-      };
-      const mockSession2: UploadSession = {
-        id: 'session2',
-        filename: 'test2.pdf',
-        fileSize: 2048,
-        mimeType: 'application/pdf',
-        status: UploadStatus.UPLOADING,
-        progress: 30,
-        startedAt: new Date(),
-      };
-      uploadService.activeSessions.set('session1', mockSession1);
-      uploadService.activeSessions.set('session2', mockSession2);
+		it("should clear all sessions", () => {
+			const mockSession1: UploadSession = {
+				id: "session1",
+				filename: "test1.pdf",
+				fileSize: 1024,
+				mimeType: "application/pdf",
+				status: UploadStatus.UPLOADING,
+				progress: 50,
+				startedAt: new Date(),
+			};
+			const mockSession2: UploadSession = {
+				id: "session2",
+				filename: "test2.pdf",
+				fileSize: 2048,
+				mimeType: "application/pdf",
+				status: UploadStatus.UPLOADING,
+				progress: 30,
+				startedAt: new Date(),
+			};
+			uploadService.activeSessions.set("session1", mockSession1);
+			uploadService.activeSessions.set("session2", mockSession2);
 
-      uploadService.clearAllSessions();
+			uploadService.clearAllSessions();
 
-      expect(uploadService.getActiveSessions()).toHaveLength(0);
-    });
-  });
+			expect(uploadService.getActiveSessions()).toHaveLength(0);
+		});
+	});
 
-  describe('Real-time Updates', () => {
-    it('should subscribe to WebSocket updates', async () => {
-      mockAiRouterClient.connectWebSocket.mockResolvedValueOnce(undefined);
-      mockAiRouterClient.subscribeToUploadProgress.mockImplementationOnce(() => { });
+	describe("Real-time Updates", () => {
+		it("should subscribe to WebSocket updates", async () => {
+			mockAiRouterClient.connectWebSocket.mockResolvedValueOnce(undefined);
+			mockAiRouterClient.subscribeToUploadProgress.mockImplementationOnce(
+				() => {},
+			);
 
-      await uploadService.subscribeToRealTimeUpdates();
+			await uploadService.subscribeToRealTimeUpdates();
 
-      expect(mockAiRouterClient.connectWebSocket).toHaveBeenCalled();
-      expect(mockAiRouterClient.subscribeToUploadProgress).toHaveBeenCalled();
-    });
+			expect(mockAiRouterClient.connectWebSocket).toHaveBeenCalled();
+			expect(mockAiRouterClient.subscribeToUploadProgress).toHaveBeenCalled();
+		});
 
-    it('should handle WebSocket connection errors', async () => {
-      mockAiRouterClient.connectWebSocket.mockRejectedValueOnce(new Error('Connection failed'));
+		it("should handle WebSocket connection errors", async () => {
+			mockAiRouterClient.connectWebSocket.mockRejectedValueOnce(
+				new Error("Connection failed"),
+			);
 
-      // Should not throw
-      await expect(uploadService.subscribeToRealTimeUpdates()).resolves.toBeUndefined();
-    });
+			// Should not throw
+			await expect(
+				uploadService.subscribeToRealTimeUpdates(),
+			).resolves.toBeUndefined();
+		});
 
-    it('should unsubscribe from WebSocket updates', () => {
-      uploadService.unsubscribeFromRealTimeUpdates();
+		it("should unsubscribe from WebSocket updates", () => {
+			uploadService.unsubscribeFromRealTimeUpdates();
 
-      expect(mockAiRouterClient.disconnectWebSocket).toHaveBeenCalled();
-    });
-  });
+			expect(mockAiRouterClient.disconnectWebSocket).toHaveBeenCalled();
+		});
+	});
 
-  describe('Event Handlers', () => {
-    it('should call event handlers for upload events', async () => {
-      const onComplete = vi.fn();
-      const onError = vi.fn();
-      const onProgress = vi.fn();
+	describe("Event Handlers", () => {
+		it("should call event handlers for upload events", async () => {
+			const onComplete = vi.fn();
+			const onError = vi.fn();
+			const onProgress = vi.fn();
 
-      uploadService.setEventHandlers({
-        onComplete,
-        onError,
-        onProgress,
-      });
+			uploadService.setEventHandlers({
+				onComplete,
+				onError,
+				onProgress,
+			});
 
-      const file = new File(['test content'], 'test.pdf', { type: 'application/pdf' });
+			const file = new File(["test content"], "test.pdf", {
+				type: "application/pdf",
+			});
 
-      mockAiRouterClient.uploadDocument.mockImplementationOnce(
-        (file: File, onProgress: (progress: number) => void) => {
-          onProgress(100);
-          return Promise.resolve({
-            success: true,
-            data: {
-              id: 'upload-123',
-              filename: 'test.pdf',
-              fileSize: file.size,
-              mimeType: 'application/pdf',
-              status: 'completed',
-              progress: 100,
-              startedAt: new Date().toISOString(),
-            },
-          });
-        }
-      );
+			mockAiRouterClient.uploadDocument.mockImplementationOnce(
+				(file: File, onProgress: (progress: number) => void) => {
+					onProgress(100);
+					return Promise.resolve({
+						success: true,
+						data: {
+							id: "upload-123",
+							filename: "test.pdf",
+							fileSize: file.size,
+							mimeType: "application/pdf",
+							status: "completed",
+							progress: 100,
+							startedAt: new Date().toISOString(),
+						},
+					});
+				},
+			);
 
-      await uploadService.uploadDocument(file);
+			await uploadService.uploadDocument(file);
 
-      expect(onProgress).toHaveBeenCalled();
-      expect(onComplete).toHaveBeenCalled();
-      expect(onError).not.toHaveBeenCalled();
-    });
-  });
+			expect(onProgress).toHaveBeenCalled();
+			expect(onComplete).toHaveBeenCalled();
+			expect(onError).not.toHaveBeenCalled();
+		});
+	});
 });

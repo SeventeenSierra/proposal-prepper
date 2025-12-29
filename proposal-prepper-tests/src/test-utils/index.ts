@@ -8,9 +8,15 @@
  * threshold functionality tests.
  */
 
-export * from './mock-strands-api';
-export * from './mock-strands-api-enhanced';
-export * from './property-testing';
+import {
+	MockAnalysisEngineAPIEnhanced,
+	mockAnalysisEngineAPIEnhanced,
+} from "./mock-analysis-engine-api-enhanced";
+import {
+	type MockAnalysisEngineApiClient,
+	createMockAnalysisEngineApiClient,
+} from "./mock-analysis-engine-api";
+export * from "./property-testing";
 
 /**
  * Common Test Helpers
@@ -26,16 +32,16 @@ export * from './property-testing';
  * depend on upload state.
  */
 export function createMockUploadSession(overrides = {}) {
-  return {
-    id: 'test-upload-123',
-    filename: 'test-proposal.pdf',
-    fileSize: 1024 * 1024, // 1MB
-    mimeType: 'application/pdf',
-    status: 'pending' as const,
-    progress: 0,
-    startedAt: new Date(),
-    ...overrides,
-  };
+	return {
+		id: "test-upload-123",
+		filename: "test-proposal.pdf",
+		fileSize: 1024 * 1024, // 1MB
+		mimeType: "application/pdf",
+		status: "pending" as const,
+		progress: 0,
+		startedAt: new Date(),
+		...overrides,
+	};
 }
 
 /**
@@ -45,15 +51,15 @@ export function createMockUploadSession(overrides = {}) {
  * depend on analysis state.
  */
 export function createMockAnalysisSession(overrides = {}) {
-  return {
-    id: 'test-analysis-456',
-    proposalId: 'test-proposal-789',
-    status: 'queued' as const,
-    progress: 0,
-    startedAt: new Date(),
-    currentStep: 'Initializing analysis',
-    ...overrides,
-  };
+	return {
+		id: "test-analysis-456",
+		proposalId: "test-proposal-789",
+		status: "queued" as const,
+		progress: 0,
+		startedAt: new Date(),
+		currentStep: "Initializing analysis",
+		...overrides,
+	};
 }
 
 /**
@@ -63,17 +69,17 @@ export function createMockAnalysisSession(overrides = {}) {
  * management components.
  */
 export function createMockUIState(overrides = {}) {
-  return {
-    currentView: 'dashboard' as const,
-    navigationHistory: ['/dashboard'],
-    notifications: [],
-    preferences: {
-      theme: 'system' as const,
-      showDetailedProgress: true,
-      autoDismissNotifications: true,
-      notificationTimeout: 5000,
-      showAdvancedOptions: false,
-    },
-    ...overrides,
-  };
+	return {
+		currentView: "dashboard" as const,
+		navigationHistory: ["/dashboard"],
+		notifications: [],
+		preferences: {
+			theme: "system" as const,
+			showDetailedProgress: true,
+			autoDismissNotifications: true,
+			notificationTimeout: 5000,
+			showAdvancedOptions: false,
+		},
+		...overrides,
+	};
 }

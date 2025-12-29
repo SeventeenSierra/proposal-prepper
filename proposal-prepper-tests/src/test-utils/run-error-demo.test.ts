@@ -3,16 +3,16 @@
  * SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
  */
 
-import { describe, it } from 'vitest';
-import { ErrorMessagingDemo } from './error-demo';
+import { describe, it } from "vitest";
+import { ErrorMessagingDemo } from "./error-demo";
 
-describe('Error Messaging Demo', () => {
-  it('should demonstrate improved error messaging', async () => {
-    const demo = new ErrorMessagingDemo();
+describe("Error Messaging Demo", () => {
+	it("should demonstrate improved error messaging", async () => {
+		const demo = new ErrorMessagingDemo();
 
-    // Run all demonstrations
-    demo.demonstrateErrorCategorization();
-    demo.demonstrateCompleteWorkflow();
-    await demo.demonstrateErrorScenarios();
-  });
+		// Run all demonstrations
+		demo.demonstrateErrorCategorization();
+		demo.demonstrateCompleteWorkflow();
+		await demo.demonstrateErrorScenarios();
+	});
 });

@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 """
-Database operations for the Strands service.
+Database operations for the Analysis Engine service.
 
 This module provides high-level database operations for analysis sessions,
 compliance results, and document metadata with proper error handling and retry logic.

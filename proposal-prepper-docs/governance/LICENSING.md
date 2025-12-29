@@ -43,7 +43,7 @@ The monorepo structure, build configurations, and DevSecOps automation are licen
 We use a combination of open source and proprietary licenses for core components:
 
 - **Web App** (`proposal-prepper-web/`): Licensed under [AGPL-3.0-or-later](../../proposal-prepper-web/LICENSE). This ensures the frontend remains open and collaborative.
-- **Backend Service** (`proposal-prepper-backend/`): **Proprietary (All Rights Reserved)**. Python/FastAPI service for Strands agents.
+- **Backend Service** (`proposal-prepper-backend/`): **Proprietary (All Rights Reserved)**. Python/FastAPI service for Analysis Engine agents.
 - **Middleware** (`proposal-prepper-middleware/`): **Proprietary (All Rights Reserved)**. Traffic coordination service.
 - **Shared Services** (`proposal-prepper-services/`): **Proprietary (All Rights Reserved)**. Common logic and API clients.
 

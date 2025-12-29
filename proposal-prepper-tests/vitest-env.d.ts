@@ -13,23 +13,25 @@
 
 /// <reference types="@testing-library/jest-dom" />
 
-import type { TestingLibraryMatchers } from '@testing-library/jest-dom/matchers';
+import type { TestingLibraryMatchers } from "@testing-library/jest-dom/matchers";
 
-declare module 'vitest' {
-  // biome-ignore lint/suspicious/noExplicitAny: Testing types require any
-  interface Assertion<T = any> extends TestingLibraryMatchers<T, void> {}
-  // biome-ignore lint/suspicious/noExplicitAny: Testing types require any
-  interface AsymmetricMatchersContaining extends TestingLibraryMatchers<any, void> {}
+declare module "vitest" {
+	// biome-ignore lint/suspicious/noExplicitAny: Testing types require any
+	interface Assertion<T = any> extends TestingLibraryMatchers<T, void> {}
+	// biome-ignore lint/suspicious/noExplicitAny: Testing types require any
+	interface AsymmetricMatchersContaining
+		extends TestingLibraryMatchers<any, void> {}
 }
 
 declare global {
-  namespace Vi {
-    // biome-ignore lint/suspicious/noExplicitAny: Testing types require any
-    interface JestAssertion<T = any> extends TestingLibraryMatchers<T, void> {}
-  }
+	namespace Vi {
+		// biome-ignore lint/suspicious/noExplicitAny: Testing types require any
+		interface JestAssertion<T = any> extends TestingLibraryMatchers<T, void> {}
+	}
 
-  // Ensure expect is properly typed with Testing Library matchers
-  namespace jest {
-    interface Matchers<R> extends TestingLibraryMatchers<typeof expect.stringContaining, R> {}
-  }
+	// Ensure expect is properly typed with Testing Library matchers
+	namespace jest {
+		interface Matchers<R>
+			extends TestingLibraryMatchers<typeof expect.stringContaining, R> {}
+	}
 }

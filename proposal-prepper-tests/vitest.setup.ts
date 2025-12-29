@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Strict-1.0.0
 // SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
-import '@testing-library/jest-dom';
-import './src/test-utils/vitest-dom.d.ts';
+import "@testing-library/jest-dom";
+import "./src/test-utils/vitest-dom.d.ts";
 
 // Ensure DOM matchers are available globally
 // This import extends the expect interface with DOM-specific matchers

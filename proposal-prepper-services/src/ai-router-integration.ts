@@ -4,13 +4,15 @@
 /**
  * AI Router Integration
  *
- * Provides high-level integration utilities for the AI routing service.s utilities for managing the integration between the web service
- * and the Strands service, including health monitoring, service discovery,
+ * Provides high-level integration utilities for the AI routing service. Utilities for managing the integration between the web service
+ * and the Analysis Engine service, including health monitoring, service discovery,
  * and error recovery.
  */
 
 import { apiConfigManager } from './config/api-config';
 import { AIRouterClient, aiRouterClient } from './ai-router-client';
+
+import { type ConnectionMode } from './config/app';
 
 /**
  * Service integration status
@@ -20,6 +22,8 @@ export interface ServiceIntegrationStatus {
   healthy: boolean;
   baseUrl: string;
   lastChecked: number;
+  currentMode?: ConnectionMode;
+  activeProvider?: string;
   error?: string;
   checks?: Record<string, string>;
   version?: string;
@@ -43,24 +47,24 @@ export class AIRouterIntegration {
       // Assuming AIRouterClient can be re-instantiated with a new base URL if needed
       // Or, if it's a singleton, its internal config might need updating.
       // For now, we'll assume it's re-instantiated if the config changes.
-      // This part of the original code was specific to StrandsApiClient and its baseUrl.
+      // This part of the original code was specific to AIRouterClient and its baseUrl.
       // If AIRouterClient doesn't have a baseUrl in the same way, this might need adjustment.
       // Sticking to the provided diff, which doesn't explicitly change this line.
-      // However, the original `this.client = new StrandsApiClient(config.baseUrl);`
+      // However, the original `this.client = new AIRouterClient(config.baseUrl);`
       // implies `AIRouterClient` should also be able to take a `baseUrl`.
       // Given the diff only changes the constructor signature, I'll keep the subscription logic as is,
       // but it might be a logical inconsistency if AIRouterClient doesn't use baseUrl.
       // For now, I'll assume `AIRouterClient` can be constructed with `config.baseUrl` if needed,
       // or that `aiRouterClient` itself handles config updates.
       // The diff does not explicitly change the body of the constructor beyond the signature.
-      // So, the original body remains, but `StrandsApiClient` becomes `AIRouterClient`.
+      // So, the original body remains.
       this.client = new AIRouterClient(config.baseUrl); // Assuming AIRouterClient constructor takes baseUrl
       this.checkServiceHealth();
     });
   }
 
   /**
-   * Get the current Strands API client
+   * Get the current Analysis Engine API client
    */
   getClient(): AIRouterClient {
     return this.client;
@@ -81,21 +85,27 @@ export class AIRouterIntegration {
       // Use getServiceStatus which exists on AIRouterClient
       const serviceStatus = await this.client.getServiceStatus();
 
-      this.status = {
+      const newStatus: ServiceIntegrationStatus = {
         connected: true,
         healthy: serviceStatus.healthy,
-        baseUrl: serviceStatus.baseUrl, // Assuming health status includes baseUrl
+        baseUrl: serviceStatus.baseUrl,
         lastChecked: Date.now(),
+        currentMode: this.status?.currentMode || 'mock',
+        activeProvider: this.status?.activeProvider,
         error: serviceStatus.error,
         checks: serviceStatus.checks,
         version: serviceStatus.version,
       };
+
+      this.status = newStatus;
     } catch (error) {
       this.status = {
         connected: false,
         healthy: false,
-        baseUrl: this.client.getBaseUrl(), // Assuming AIRouterClient has getBaseUrl
+        baseUrl: this.client.getBaseUrl(),
         lastChecked: Date.now(),
+        currentMode: this.status?.currentMode || 'mock',
+        activeProvider: this.status?.activeProvider,
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
@@ -103,6 +113,26 @@ export class AIRouterIntegration {
     // Notify listeners
     this.notifyStatusListeners();
     return this.status;
+  }
+
+  /**
+   * Set the active connection mode
+   */
+  setMode(mode: ConnectionMode): void {
+    if (this.status) {
+      this.status = { ...this.status, currentMode: mode };
+      this.notifyStatusListeners();
+    }
+  }
+
+  /**
+   * Set the active LLM provider
+   */
+  setProvider(provider: string): void {
+    if (this.status) {
+      this.status = { ...this.status, activeProvider: provider };
+      this.notifyStatusListeners();
+    }
   }
 
   /**
@@ -181,7 +211,8 @@ export class AIRouterIntegration {
   async recoverConnection(): Promise<boolean> {
     // Try different base URLs if the current one fails
     const fallbackUrls = [
-      'http://strands:8080', // Docker container name
+      'http://analysis-engine:8080', // Analysis Engine service name
+      'http://strands:8080', // Legacy container name
       'http://localhost:8080', // Local development
       'http://127.0.0.1:8080', // Alternative localhost
     ];

@@ -5,7 +5,8 @@
 
 'use client';
 
-import { Badge, Button, CheckCircle2, Download, Maximize2 } from '@17sierra/ui';
+import { Badge, Button } from '@17sierra/ui';
+import { CheckCircle2, Download, Maximize2 } from 'lucide-react';
 import type { AnalysisResults } from '@/components/results/types';
 
 /**

@@ -57,6 +57,31 @@ class PDFProcessor:
             logger.error(f"Failed to initialize S3 client: {e}")
             self._s3_client = None
     
+    def check_file_exists_in_s3(self, s3_key: str, bucket_name: Optional[str] = None) -> bool:
+        """
+        Check if a document exists in S3/MinIO.
+        
+        Args:
+            s3_key: S3 object key for the PDF document
+            bucket_name: S3 bucket name (defaults to configured bucket)
+            
+        Returns:
+            True if document exists, False otherwise
+        """
+        if not self._s3_client:
+            return False
+        
+        bucket = bucket_name or settings.s3_bucket_name
+        
+        try:
+            self._s3_client.head_object(Bucket=bucket, Key=s3_key)
+            return True
+        except ClientError:
+            return False
+        except Exception as e:
+            logger.error(f"Error checking S3 file existence for {s3_key}: {e}")
+            return False
+
     async def extract_text_from_s3(self, s3_key: str, bucket_name: Optional[str] = None) -> Tuple[str, Dict[str, Any]]:
         """
         Extract text from a PDF document stored in S3/MinIO.
@@ -137,10 +162,11 @@ class PDFProcessor:
             
             for page_num, page in enumerate(pdf_reader.pages):
                 try:
+                    # Add page marker for context/structure regardless of text content
+                    extracted_text.append(f"\n--- Page {page_num + 1} ---\n")
+                    
                     page_text = page.extract_text()
-                    if page_text.strip():  # Only add non-empty pages
-                        # Add page marker for location tracking
-                        extracted_text.append(f"\n--- Page {page_num + 1} ---\n")
+                    if page_text and page_text.strip():
                         extracted_text.append(page_text)
                         
                 except Exception as e:
@@ -149,17 +175,17 @@ class PDFProcessor:
             
             full_text = "".join(extracted_text)
             
+            # Clean and normalize the text
+            cleaned_text = self._clean_extracted_text(full_text)
+            
             # Update metadata with extraction results
             metadata.update({
                 'page_count': page_count,
-                'text_length': len(full_text),
+                'text_length': len(cleaned_text),
                 'extraction_method': 'pypdf',
                 'pages_processed': page_count,
                 'extraction_successful': True
             })
-            
-            # Clean and normalize the text
-            cleaned_text = self._clean_extracted_text(full_text)
             
             return cleaned_text, metadata
             

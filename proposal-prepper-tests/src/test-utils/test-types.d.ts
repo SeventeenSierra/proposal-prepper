@@ -6,17 +6,17 @@
  * Provides more permissive typing for testing scenarios
  */
 
-import '@testing-library/jest-dom';
+import "@testing-library/jest-dom";
 
 // Allow accessing private members in tests
-declare module '*.test.ts' {
-  interface AnalysisService {
-    activeSessions: Map<string, unknown>;
-    eventHandlers: Record<string, unknown>;
-    mapApiResponseToSession: (response: unknown) => unknown;
-  }
+declare module "*.test.ts" {
+	interface AnalysisService {
+		activeSessions: Map<string, unknown>;
+		eventHandlers: Record<string, unknown>;
+		mapApiResponseToSession: (response: unknown) => unknown;
+	}
 
-  interface UploadService {
-    activeSessions: Map<string, unknown>;
-  }
+	interface UploadService {
+		activeSessions: Map<string, unknown>;
+	}
 }

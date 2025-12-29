@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 """
-SQLAlchemy database models for the Strands service.
+SQLAlchemy database models for the Analysis Engine service.
 
 This module defines the database schema for analysis sessions,
 compliance results, and related entities using SQLAlchemy ORM.
@@ -27,6 +27,8 @@ class AnalysisStatus(str, enum.Enum):
     QUEUED = "queued"
     EXTRACTING = "extracting"
     ANALYZING = "analyzing"
+    VALIDATING = "validating"
+    GENERATING = "generating"
     COMPLETED = "completed"
     FAILED = "failed"
 

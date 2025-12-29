@@ -5,7 +5,8 @@
 
 'use client';
 
-import { Bot, Button, CheckCircle, FileCheck, Sparkles, XCircle } from '@17sierra/ui';
+import { Button } from '@17sierra/ui';
+import { Bot, CheckCircle, FileCheck, Sparkles, XCircle } from 'lucide-react';
 import { AIRouterIntegrationUtils } from 'proposal-prepper-services/ai-router-integration';
 import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
@@ -36,7 +37,7 @@ type WorkflowState = 'welcome' | 'upload' | 'analysis' | 'chat' | 'results';
 
 /**
  * Service Status Indicator Component
- * Shows the current status of the Strands analysis service
+ * Shows the current status of the Analysis Engine analysis service
  */
 const ServiceStatusIndicator: React.FC = () => {
   const [serviceStatus, setServiceStatus] = useState<{
@@ -237,7 +238,7 @@ export const RFPInterface: React.FC<RFPInterfaceProps> = ({
 
     setChatHistory((prev) => [...prev, userMessage]);
 
-    // Simulate AI response (in real implementation, this would call strands API)
+    // Simulate AI response (in real implementation, this would call Analysis Engine API)
     setTimeout(() => {
       const aiResponse = {
         id: (Date.now() + 1).toString(),

@@ -1,47 +1,63 @@
+/**
+ * SPDX-License-Identifier: PolyForm-Strict-1.0.0
+ * SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
+ */
+
 'use client';
 
-import { Button, Textarea, Upload } from '@17sierra/ui';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  AlertCircle,
-  Bot,
-  CheckCircle2,
-  FileCheck,
-  Loader2,
+  FileText,
   Send,
-  Sparkles,
-  Upload as UploadIcon,
-  Zap,
+  CheckCircle2,
+  Circle,
+  Loader2,
+  AlertCircle,
+  Shield,
+  Search,
+  Lock,
+  MessageSquare,
+  ChevronRight,
+  ChevronDown,
+  Settings,
+  AlertTriangle,
+  ExternalLink
 } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { AnalysisStatus } from '@/components/analysis/types';
-import type { AnalysisResults } from '@/components/results/types';
-import { AnalysisService, analysisService } from '@/services/analysis-service';
-import { apiConfig } from '@/services/config/app';
-import { resultsService } from '@/services/results-service';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter
+} from '@17sierra/ui';
 import { uploadService } from '@/services/upload-service';
+import { analysisService, AnalysisStatus } from '@/services/analysis-service';
+import { resultsService, type AnalysisResults } from '@/services/results-service';
+import { generateUUID } from '@/utils/crypto';
+import { type ConnectionMode } from '@/services/config/app';
 
-type Step = {
+interface Message {
+  role: 'user' | 'bot';
+  content: string;
+}
+
+interface Step {
   id: number;
   message: string;
   status: 'pending' | 'running' | 'complete' | 'error';
-  agent?: 'coordinator' | 'rag' | 'compliance' | 'writer';
+  agent: 'coordinator' | 'rag' | 'compliance' | 'writer';
   details?: string;
-};
+}
 
-type Message = {
-  role: 'user' | 'bot';
-  content: string;
-};
-
-type AgentInterfaceProps = {
-  activeProject: string | null;
-  onAnalysisStart: () => void;
+interface AgentInterfaceProps {
+  onAnalysisStart: (sessionId: string) => void;
   onAnalysisComplete: (results: AnalysisResults) => void;
   onAnalysisError: (error: string) => void;
-  apiMode?: 'real' | 'mock';
-};
+  activeProject?: string | null;
+  connectionMode?: ConnectionMode;
+}
 
-// Map analysis status to step information
 const analysisSteps: Step[] = [
   {
     id: 1,
@@ -94,562 +110,386 @@ const analysisSteps: Step[] = [
   },
 ];
 
-// Map AnalysisStatus and currentStep to step index
-function getStepIndexFromStatus(status: AnalysisStatus, currentStep?: string): number {
+// Map AnalysisStatus and progress/currentStep to step index
+function getStepIndexFromStatus(status: AnalysisStatus, progress = 0, currentStep?: string): number {
   if (status === AnalysisStatus.FAILED) return -1;
   if (status === AnalysisStatus.COMPLETED) return 6;
 
-  // Base indices for statuses
-  let baseIndex = 0;
+  // Primary mapping by Status
   switch (status) {
     case AnalysisStatus.QUEUED:
-      baseIndex = 0;
-      break;
+      return 0;
     case AnalysisStatus.EXTRACTING:
-      baseIndex = 1;
-      break;
+      return 1;
     case AnalysisStatus.ANALYZING:
-      baseIndex = 2; // Default for ANALYZING
-      // Specific sub-steps based on currentStep string
-      if (currentStep?.includes('DFARS')) baseIndex = 3;
-      else if (currentStep?.includes('Cybersecurity')) baseIndex = 4;
-      break;
+      // Sub-stages of ANALYZING (Steps 3-4-5-6)
+      if (currentStep?.includes('DFARS')) return 3;
+      if (currentStep?.includes('Security') || currentStep?.includes('NIST') || currentStep?.includes('Cyber')) return 4;
+      if (currentStep?.includes('Small Business') || currentStep?.includes('Policy')) return 5;
+
+      // Fallback to progress based mapping for ANALYZING
+      if (progress >= 80) return 5;
+      if (progress >= 65) return 4;
+      if (progress >= 50) return 3;
+      return 2; // Default for ANALYZING
     case AnalysisStatus.VALIDATING:
-      baseIndex = 5;
-      break;
+      return 6;
+    default:
+      return 0;
   }
-  return baseIndex;
 }
 
-const AgentInterface = ({
-  activeProject,
+const AgentInterface: React.FC<AgentInterfaceProps> = ({
   onAnalysisStart,
   onAnalysisComplete,
   onAnalysisError,
-  apiMode,
-}: AgentInterfaceProps) => {
-  const [activeTab, setActiveTab] = useState<'steps' | 'results'>('steps');
-  const [steps, setSteps] = useState<Step[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputValue, setInputValue] = useState('');
-  const [isSending, setIsSending] = useState(false);
-  const [isAnalysisComplete, setIsAnalysisComplete] = useState(false);
+}) => {
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: 'bot',
+      content: 'Hello! I am your AI compliance officer. Upload a proposal PDF and I will check it against FAR and DFARS regulations.',
+    },
+  ]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isAnalysisComplete, setIsAnalysisComplete] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [_analysisSessionId, setAnalysisSessionId] = useState<string | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [steps, setSteps] = useState<Step[]>(analysisSteps);
+  const [analysisSessionId, setAnalysisSessionId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'chat' | 'steps' | 'results'>('chat');
+  const [apiStatus, setApiStatus] = useState<{ isConnected: boolean; isMock: boolean }>({ isConnected: true, isMock: true });
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, []);
+  // Auto-scroll messages
   useEffect(() => {
-    scrollToBottom();
-  }, [scrollToBottom]);
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
-  // Handle file selection
+  // Check API status on mount
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const response = await fetch('/api/health');
+        if (response.ok) {
+          const data = await response.json();
+          setApiStatus({
+            isConnected: data.status === 'healthy' || data.status === 'degraded',
+            isMock: data.integration_status === 'fallback' || data.integration_status === 'unavailable'
+          });
+        }
+      } catch (err) {
+        console.warn('Could not fetch health status, using default mock state');
+      }
+    };
+    checkStatus();
+  }, []);
+
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Validate file
       const validation = uploadService.validateFile(file);
       if (!validation.isValid) {
-        setUploadError(validation.error || 'Invalid file');
+        setUploadError(validation.error || 'Invalid file selection');
         return;
       }
       setSelectedFile(file);
       setUploadError(null);
+      setMessages((prev) => [
+        ...prev,
+        { role: 'user', content: `Selected file: ${file.name}` },
+        { role: 'bot', content: `Great! I've validated ${file.name}. Click "Start Analysis" when you're ready.` },
+      ]);
     }
   };
 
-  // Handle upload and analysis
-  const handleUploadAndAnalyze = async () => {
+  const handleStartAnalysis = async () => {
     if (!selectedFile) return;
 
     setIsUploading(true);
     setUploadError(null);
-    setSteps(analysisSteps.map((step) => ({ ...step, status: 'pending' })));
-    setIsAnalysisComplete(false);
-    setMessages([]);
-
-    // Notify parent that analysis is starting
-    onAnalysisStart();
+    setSteps(analysisSteps);
+    setActiveTab('steps');
 
     try {
-      // Step 1: Upload document
-      setSteps((prev) =>
-        prev.map((step, idx) => (idx === 0 ? { ...step, status: 'running' } : step))
-      );
+      setMessages((prev) => [
+        ...prev,
+        { role: 'bot', content: `Starting high-fidelity compliance scan on ${selectedFile.name}...` },
+      ]);
 
-      const uploadResult = await uploadService.uploadDocument(selectedFile);
-
-      console.log('[AgentInterface] Upload Result:', JSON.stringify(uploadResult));
-      console.log('[AgentInterface] Session ID from result:', uploadResult.sessionId);
-      console.log('[AgentInterface] Upload success:', uploadResult.success);
-
-      if (!uploadResult.success) {
-        console.error('[AgentInterface] Upload failed:', uploadResult.error);
-        throw new Error(uploadResult.error || 'Upload failed');
-      }
-
-      // Mark upload complete, start analysis
-      setSteps((prev) =>
-        prev.map((step, idx) =>
-          idx === 0
-            ? { ...step, status: 'complete' }
-            : idx === 1
-              ? { ...step, status: 'running' }
-              : step
-        )
-      );
-
-      console.log('[AgentInterface] Starting Analysis with Request Parameters:', {
-        proposalId: uploadResult.sessionId,
-        documentId: uploadResult.sessionId,
-        frameworks: ['FAR', 'DFARS'],
-      });
-
-      // Step 2-5: Start analysis
+      const proposalId = generateUUID();
       const analysisResult = await analysisService.startAnalysis({
-        proposalId: uploadResult.sessionId,
-        documentId: uploadResult.sessionId,
-        frameworks: ['FAR', 'DFARS'],
+        proposalId,
+        file: selectedFile,
+        onProgress: (progress: number) => {
+          setUploadProgress(progress);
+        },
       });
 
       if (!analysisResult.success) {
-        console.error('[AgentInterface] Analysis failed to start:', analysisResult.error);
-        throw new Error(analysisResult.error || 'Analysis failed to start');
+        throw new Error(analysisResult.error || 'Deep scan initiation failed');
       }
 
-      setAnalysisSessionId(analysisResult.sessionId);
+      const sessionId = analysisResult.sessionId;
+      setAnalysisSessionId(sessionId);
+      onAnalysisStart(sessionId);
 
       // Set up event handlers for progress updates
       analysisService.setEventHandlers({
-        onProgress: (sessionId, _progress, currentStep) => {
-          // Update steps based on current step info
-          const session = analysisService.getActiveSessions().find((s) => s.id === sessionId);
+        onProgress: (sId: string, progress: number, currentStep: string) => {
+          if (sId !== sessionId) return;
+
+          const session = analysisService.getActiveSessions().find((s) => s.id === sId);
           if (session) {
-            const stepIndex = getStepIndexFromStatus(session.status, currentStep);
+            const stepIndex = getStepIndexFromStatus(session.status, progress, currentStep);
             setSteps((prev) =>
               prev.map((step, idx) => {
                 if (idx < stepIndex) return { ...step, status: 'complete' };
                 if (idx === stepIndex) return { ...step, status: 'running' };
-                return step;
+                return { ...step, status: 'pending' };
               })
             );
           }
         },
-        onComplete: async (sessionId, _session) => {
-          // Mark all steps complete
+        onComplete: async (sId: string, _session: any) => {
+          if (sId !== sessionId) return;
+
           setSteps((prev) => prev.map((step) => ({ ...step, status: 'complete' })));
           setIsAnalysisComplete(true);
           setIsUploading(false);
 
-          // Fetch results
           try {
-            // Use sessionId (Analysis Session ID) not proposalId
-            const resultsResponse = await resultsService.getResults(sessionId);
+            const resultsResponse = await resultsService.getResults(sId);
             if (resultsResponse.success && resultsResponse.results) {
               const results = resultsResponse.results;
               const issueCount = results.issues.length;
               const criticalCount = results.issues.filter((i) => i.severity === 'critical').length;
 
-              setMessages([
+              setMessages((prev) => [
+                ...prev,
                 {
                   role: 'bot',
-                  content: `Analysis complete. I found ${issueCount} compliance issue${issueCount !== 1 ? 's' : ''} (${criticalCount} critical). The proposal has a ${results.overallScore}% compliance score. You can view the full details in the report panel.`,
+                  content: `Analysis complete. I found ${issueCount} compliance issues (${criticalCount} critical). The proposal has an overall score of ${results.overallScore}%.`,
                 },
               ]);
-              setActiveTab('results');
-
-              // Notify parent with the results
               onAnalysisComplete(results);
+              setActiveTab('results');
             }
           } catch (err) {
             console.error('Failed to fetch results:', err);
-            onAnalysisError('Failed to fetch analysis results');
+            onAnalysisError('Failed to fetch final report data');
           }
         },
-        onError: (sessionId, error) => {
-          console.error(`[AgentInterface] Analysis error for session ${sessionId}:`, error);
+        onError: (sId: string, error: string) => {
+          if (sId !== sessionId) return;
+
           setSteps((prev) =>
-            prev.map((step, idx) => {
-              const runningIdx = prev.findIndex((s) => s.status === 'running');
-              if (idx === runningIdx || (runningIdx === -1 && idx === prev.length - 1)) {
-                return { ...step, status: 'error' };
-              }
-              return step;
-            })
+            prev.map((step) => step.status === 'running' ? { ...step, status: 'error' } : step)
           );
           setUploadError(error);
           setIsUploading(false);
           onAnalysisError(error);
         },
       });
-
-      // Start monitoring (polling for progress)
-      // The analysis service handles this internally
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
-      setUploadError(errorMessage);
-      setSteps((prev) =>
-        prev.map((step, _idx) => {
-          if (step.status === 'running') return { ...step, status: 'error' };
-          return step;
-        })
-      );
+    } catch (err: any) {
+      console.error('Analysis failed:', err);
       setIsUploading(false);
-      onAnalysisError(errorMessage);
+      setUploadError(err.message || 'Workflow execution failed');
+      onAnalysisError(err.message || 'Workflow execution failed');
     }
   };
-
-  const handleSendMessage = async () => {
-    if (!inputValue.trim()) return;
-
-    const userMessage: Message = { role: 'user', content: inputValue };
-    setMessages((prev) => [...prev, userMessage]);
-    setInputValue('');
-    setIsSending(true);
-
-    // For now, provide a contextual response
-    // In full implementation, this would query an AI for follow-up questions
-    setTimeout(() => {
-      const botMessage: Message = {
-        role: 'bot',
-        content:
-          'I can help you understand the compliance findings. Ask me about specific FAR/DFARS clauses, remediation steps, or how to address the identified issues.',
-      };
-      setMessages((prev) => [...prev, botMessage]);
-      setIsSending(false);
-    }, 1000);
-  };
-
-  const getAgentIcon = (agent: string) => {
-    switch (agent) {
-      case 'coordinator':
-        return <Zap size={14} className="text-blue-500" />;
-      case 'rag':
-        return <SearchIcon size={14} className="text-purple-500" />;
-      case 'compliance':
-        return <CheckCircle2 size={14} className="text-green-500" />;
-      case 'writer':
-        return <FileCheck size={14} className="text-orange-500" />;
-      default:
-        return <Bot size={14} className="text-gray-500" />;
-    }
-  };
-
-  // Helper for SearchIcon
-  const SearchIcon = ({ size, className }: { size: number; className: string }) => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-label="Search"
-    >
-      <title>Search</title>
-      <circle cx="11" cy="11" r="8" />
-      <path d="m21 21-4.3-4.3" />
-    </svg>
-  );
 
   const getStepIcon = (status: Step['status']) => {
     switch (status) {
       case 'complete':
-        return <CheckCircle2 size={20} className="text-green-500" />;
+        return <CheckCircle2 className="h-5 w-5 text-green-500" />;
       case 'running':
-        return <Loader2 size={20} className="text-blue-500 animate-spin" />;
+        return <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />;
       case 'error':
-        return <AlertCircle size={20} className="text-red-500" />;
+        return <AlertCircle className="h-5 w-5 text-red-500" />;
       default:
-        return <div className="w-5 h-5 rounded-full border-2 border-gray-200" />;
+        return <Circle className="h-5 w-5 text-gray-400" />;
     }
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-white relative">
-      <div className="flex-1 overflow-y-auto scrollbar-hide p-6">
-        {/* API Status Badge */}
-        <div className="absolute top-4 right-6 z-30">
-          <div
-            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-sm ${
-              apiMode === 'mock'
-                ? 'bg-amber-100 text-amber-700 border-amber-200'
-                : 'bg-emerald-100 text-emerald-700 border-emerald-200'
+    <Card className="h-full flex flex-col shadow-lg border-opacity-50 overflow-hidden bg-background">
+      <CardHeader className="py-4 px-6 border-b flex flex-row items-center justify-between space-y-0">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <Shield className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <CardTitle className="text-lg font-bold">Compliance Officer</CardTitle>
+            <CardDescription className="text-xs">
+              NSF PAPPG & FAR/DFARS Expert
+            </CardDescription>
+          </div>
+        </div>
+        <div className={`px-2 py-1 rounded text-[10px] font-medium flex items-center gap-1 ${apiStatus.isMock ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30' : 'bg-green-100 text-green-700 dark:bg-green-900/30'
+          }`}>
+          {apiStatus.isMock ? <AlertTriangle className="h-3 w-3" /> : <Shield className="h-3 w-3" />}
+          {apiStatus.isMock ? 'DEMO MODE' : 'REAL AI ACTIVATED'}
+        </div>
+      </CardHeader>
+
+      <div className="flex border-b text-xs">
+        <button
+          onClick={() => setActiveTab('chat')}
+          className={`flex-1 py-3 font-medium transition-colors ${activeTab === 'chat' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:bg-muted/50'
             }`}
-          >
-            <span
-              className={`w-1 h-1 rounded-full ${apiMode === 'mock' ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}
-            ></span>
-            {apiMode === 'mock' ? 'Demo' : 'Real'}
-          </div>
-        </div>
+        >
+          Intelligence Feed
+        </button>
+        <button
+          onClick={() => setActiveTab('steps')}
+          className={`flex-1 py-3 font-medium transition-colors ${activeTab === 'steps' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:bg-muted/50'
+            }`}
+        >
+          Analysis Steps
+        </button>
+      </div>
 
-        <div className="max-w-3xl mx-auto w-full space-y-8">
-          {!activeProject && (
-            <div className="text-center py-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <div className="bg-blue-50 w-24 h-24 rounded-3xl mx-auto mb-8 flex items-center justify-center text-blue-600 shadow-sm">
-                <Sparkles size={40} />
-              </div>
-              <h2 className="text-3xl font-bold text-slate-900 mb-3 tracking-tight">
-                AI Regulatory Assistant
-              </h2>
-              <p className="text-gray-500 max-w-md mx-auto mb-10 text-lg leading-relaxed">
-                Upload your proposal to analyze against FAR/DFARS requirements using our multi-agent
-                compliance engine.
-              </p>
-
-              {/* File Upload Section */}
-              <div className="flex flex-col items-center gap-4 max-w-md mx-auto">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf,application/pdf"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-4 p-5 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md hover:bg-blue-50/30 transition-all group bg-white w-full"
+      <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
+        {activeTab === 'chat' && (
+          <div className="space-y-4 h-full flex flex-col justify-end">
+            <div className="flex-1 flex flex-col gap-3 py-2">
+              {messages.map((m, i) => (
+                <div
+                  key={i}
+                  className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className="p-3 bg-blue-100 text-blue-600 rounded-lg group-hover:scale-110 transition-transform">
-                    <UploadIcon size={24} />
-                  </div>
-                  <div className="text-left">
-                    <div className="font-semibold text-slate-800 text-base">
-                      {selectedFile ? selectedFile.name : 'Select Proposal PDF'}
-                    </div>
-                    <p className="text-sm text-gray-500 mt-1 leading-relaxed">
-                      {selectedFile
-                        ? `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB`
-                        : 'Upload a PDF document for compliance analysis'}
-                    </p>
-                  </div>
-                </button>
-
-                {uploadError && (
-                  <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg w-full">
-                    <AlertCircle size={16} />
-                    {uploadError}
-                  </div>
-                )}
-
-                {selectedFile && (
-                  <Button
-                    onClick={handleUploadAndAnalyze}
-                    disabled={isUploading}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
-                  >
-                    {isUploading ? (
-                      <>
-                        <Loader2 size={16} className="animate-spin mr-2" />
-                        Analyzing...
-                      </>
-                    ) : (
-                      <>
-                        <FileCheck size={16} className="mr-2" />
-                        Start Compliance Analysis
-                      </>
-                    )}
-                  </Button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {activeProject && (
-            <div className="flex flex-col h-full">
-              <div className="flex border-b border-gray-200 mb-6 bg-white sticky top-0 z-10 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('steps')}
-                  className={`pb-3 px-1 text-sm font-medium mr-6 transition-colors border-b-2 ${
-                    activeTab === 'steps'
-                      ? 'text-blue-600 border-blue-600'
-                      : 'text-gray-500 border-transparent hover:text-slate-800'
-                  }`}
-                >
-                  Live Analysis
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('results')}
-                  className={`pb-3 px-1 text-sm font-medium transition-colors border-b-2 ${
-                    activeTab === 'results'
-                      ? 'text-blue-600 border-blue-600'
-                      : 'text-gray-500 border-transparent hover:text-slate-800'
-                  }`}
-                >
-                  Results & Chat
-                </button>
-              </div>
-
-              {activeTab === 'steps' && (
-                <div className="space-y-4 animate-in fade-in duration-300">
-                  {steps.map((step) => (
-                    <div
-                      key={step.id}
-                      className={`flex gap-3 p-4 rounded-xl border transition-all ${
-                        step.status === 'running'
-                          ? 'bg-blue-50/50 border-blue-100 shadow-sm'
-                          : step.status === 'error'
-                            ? 'bg-red-50/50 border-red-100'
-                            : 'bg-white border-gray-100'
+                  <div
+                    className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm shadow-sm ${m.role === 'user'
+                      ? 'bg-primary text-primary-foreground rounded-tr-none'
+                      : 'bg-muted text-foreground rounded-tl-none border'
                       }`}
-                    >
-                      <div className="mt-1 shrink-0">{getStepIcon(step.status)}</div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          {getAgentIcon(step.agent || 'coordinator')}
-                          <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
-                            {step.details}
-                          </span>
-                        </div>
-                        <div
-                          className={`text-sm font-medium ${
-                            step.status === 'pending'
-                              ? 'text-gray-400'
-                              : step.status === 'error'
-                                ? 'text-red-600'
-                                : 'text-slate-700'
-                          }`}
-                        >
-                          {step.message}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-
-                  {isAnalysisComplete && (
-                    <div className="mt-6 p-4 bg-green-50 border border-green-100 rounded-xl text-sm text-green-800 flex items-center gap-3 animate-in fade-in zoom-in-95 duration-500">
-                      <div className="p-2 bg-green-100 rounded-full">
-                        <CheckCircle2 size={20} />
-                      </div>
-                      <div>
-                        <div className="font-semibold">Analysis Complete</div>
-                        <div className="text-green-700">
-                          All compliance checks have finished. View results in the chat tab.
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  >
+                    {m.content}
+                  </div>
                 </div>
-              )}
-
-              {activeTab === 'results' && (
-                <div className="space-y-6 animate-in fade-in duration-300 pb-4">
-                  {messages.map((message, index) => (
-                    <div
-                      // biome-ignore lint/suspicious/noArrayIndexKey: Chat log is append-only
-                      key={index}
-                      className={`flex gap-4 ${message.role === 'user' ? 'justify-end' : ''}`}
-                    >
-                      {message.role === 'bot' && (
-                        <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0 p-1">
-                          <Bot size={18} className="text-indigo-600" />
-                        </div>
-                      )}
-
-                      <div
-                        className={`flex-1 max-w-xl ${
-                          message.role === 'user' ? 'flex justify-end' : ''
-                        }`}
-                      >
-                        <div
-                          className={`p-4 rounded-2xl text-slate-800 leading-relaxed text-sm shadow-sm ${
-                            message.role === 'bot'
-                              ? 'bg-white border border-gray-100 rounded-tl-none'
-                              : 'bg-blue-600 text-white rounded-br-none'
-                          }`}
-                        >
-                          {message.content}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  {isSending && (
-                    <div className="flex gap-4 animate-pulse">
-                      <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0 p-1">
-                        <Bot size={18} className="text-indigo-600" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="bg-white border border-gray-100 p-4 rounded-2xl rounded-tl-none text-slate-800 leading-relaxed text-sm w-32 h-12 flex items-center">
-                          <div className="flex gap-1">
-                            <div
-                              className="w-2 h-2 bg-gray-300 rounded-full animate-bounce"
-                              style={{ animationDelay: '0ms' }}
-                            ></div>
-                            <div
-                              className="w-2 h-2 bg-gray-300 rounded-full animate-bounce"
-                              style={{ animationDelay: '150ms' }}
-                            ></div>
-                            <div
-                              className="w-2 h-2 bg-gray-300 rounded-full animate-bounce"
-                              style={{ animationDelay: '300ms' }}
-                            ></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  <div ref={messagesEndRef} />
-                </div>
-              )}
+              ))}
+              <div ref={messagesEndRef} />
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+        )}
 
-      <div className="bg-white/80 backdrop-blur-md p-4 border-t border-gray-200 shrink-0 z-20">
-        <div className="max-w-3xl mx-auto w-full">
-          <div className="relative group">
-            <Textarea
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-              placeholder={
-                activeProject
-                  ? 'Ask follow-up questions...'
-                  : 'Upload a proposal to start analysis.'
-              }
-              className="w-full p-4 pr-14 text-sm resize-none bg-white min-h-[56px] shadow-sm border-gray-200 focus:border-blue-400 focus:ring-blue-100 rounded-xl transition-all"
-              rows={1}
-              disabled={!activeProject || isSending}
-            />
-            <div className="absolute bottom-3 right-3">
-              <Button
-                size="icon"
-                className={`h-8 w-8 rounded-lg transition-all ${inputValue ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}
-                disabled={!inputValue || isSending || !activeProject}
-                onClick={handleSendMessage}
+        {activeTab === 'steps' && (
+          <div className="space-y-3 pt-2">
+            {steps.map((step) => (
+              <div
+                key={step.id}
+                className={`flex items-start space-x-3 p-3 rounded-xl border transition-all ${step.status === 'running'
+                  ? 'bg-primary/5 border-primary/20 shadow-sm'
+                  : step.status === 'complete'
+                    ? 'bg-green-50/30 border-green-100 dark:bg-green-900/10'
+                    : 'bg-muted/30 border-transparent opacity-60'
+                  }`}
               >
-                {isSending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-              </Button>
+                <div className="mt-1">{getStepIcon(step.status)}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <p className={`text-sm font-semibold tracking-tight ${step.status === 'running' ? 'text-primary' : ''
+                      }`}>
+                      {step.message}
+                    </p>
+                    <span className="text-[10px] uppercase font-bold text-muted-foreground px-1.5 py-0.5 bg-muted rounded">
+                      {step.agent}
+                    </span>
+                  </div>
+                  {step.details && (
+                    <p className="text-[11px] text-muted-foreground mt-1 font-medium opacity-80">
+                      {step.details}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+
+      <CardFooter className="p-4 border-t flex flex-col gap-3">
+        {uploadError && (
+          <div className="text-xs text-red-500 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg flex items-center gap-2 border border-red-100 dark:border-red-900/30 w-full mb-1">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span className="font-medium">{uploadError}</span>
+          </div>
+        )}
+
+        {isUploading ? (
+          <div className="w-full space-y-2">
+            <div className="flex justify-between items-center text-xs font-semibold">
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                Scrutinizing Proposal...
+              </span>
+              <span className="text-primary">{uploadProgress}%</span>
+            </div>
+            <div className="h-2 w-full bg-muted rounded-full overflow-hidden border border-black/5">
+              <div
+                className="h-full bg-primary transition-all duration-300 relative overflow-hidden"
+                style={{ width: `${uploadProgress}%` }}
+              >
+                <div className="absolute inset-0 bg-white/20 animate-[pulse_2s_infinite]" />
+              </div>
             </div>
           </div>
-          <div className="text-center mt-2">
-            <span className="text-[10px] text-gray-400 font-medium">
-              AI can make mistakes. Review generated compliance reports.
-            </span>
+        ) : isAnalysisComplete ? (
+          <div className="flex flex-col gap-3 w-full">
+            <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg flex items-center gap-3 border border-green-100 dark:border-green-900/30">
+              <CheckCircle2 className="h-5 w-5 text-green-500" />
+              <div>
+                <p className="text-xs font-bold text-green-700 dark:text-green-400">Analysis Session Complete</p>
+                <p className="text-[10px] text-green-600 dark:text-green-500">All compliance modules passed.</p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setSelectedFile(null);
+                setIsAnalysisComplete(false);
+                setSteps(analysisSteps);
+                setActiveTab('chat');
+                setMessages([{
+                  role: 'bot',
+                  content: 'Ready for another round? Upload the next proposal whenever you are ready.',
+                }]);
+              }}
+              className="w-full py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-bold shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
+            >
+              Analyze Another Document
+            </button>
           </div>
-        </div>
-      </div>
-    </div>
+        ) : (
+          <div className="flex gap-2 w-full">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+              accept=".pdf"
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="flex-1 py-1.5 border border-primary/30 rounded-lg text-xs font-bold bg-muted/50 hover:bg-muted transition-colors flex items-center justify-center gap-2"
+            >
+              <FileText className="h-4 w-4" />
+              {selectedFile ? 'Change PDF' : 'Select PDF'}
+            </button>
+            <button
+              disabled={!selectedFile || isUploading}
+              onClick={handleStartAnalysis}
+              className="flex-[1.5] py-2 bg-primary text-primary-foreground rounded-lg text-sm font-bold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:shadow-none active:scale-[0.98] flex items-center justify-center gap-2"
+            >
+              <Send className="h-4 w-4" />
+              Start Analysis
+            </button>
+          </div>
+        )}
+      </CardFooter>
+    </Card>
   );
 };
 

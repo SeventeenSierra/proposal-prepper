@@ -19,6 +19,7 @@ pydantic-settings==2.1.0
 
 # HTTP client for external API calls
 httpx==0.25.2
+opensearch-py==2.4.2
 
 # PDF processing
 pypdf==6.4.0
@@ -41,3 +42,10 @@ python-jose[cryptography]==3.4.0
 
 # Async utilities
 asyncio-mqtt==0.16.1
+
+# AI Intelligence (Air Spec)
+litellm==1.15.0
+langgraph==0.0.15
+psutil==5.9.6
+langchain-openai==0.0.5
+pgvector==0.2.1

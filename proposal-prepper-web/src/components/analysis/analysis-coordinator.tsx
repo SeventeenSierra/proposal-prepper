@@ -210,7 +210,7 @@ export const AnalysisCoordinator: React.FC<AnalysisCoordinatorProps> = ({
   }, [session, onProgressUpdate]);
 
   /**
-   * Start analysis process using Strands API
+   * Start analysis process using Analysis Engine API
    * Implements Requirements 2.1, 2.2, 2.4: Analysis orchestration
    */
   const startAnalysis = useCallback(async () => {

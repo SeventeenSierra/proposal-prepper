@@ -7,6 +7,7 @@
 -- Create extensions if they don't exist
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+CREATE EXTENSION IF NOT EXISTS "vector";
 
 -- Create analysis_sessions table for Strands service
 CREATE TABLE IF NOT EXISTS analysis_sessions (
@@ -114,10 +115,87 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+-- Create document_metadata table if it doesn't exist
+CREATE TABLE IF NOT EXISTS document_metadata (
+    id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    document_id VARCHAR(255) NOT NULL UNIQUE,
+    filename VARCHAR(255) NOT NULL,
+    original_filename VARCHAR(255) NOT NULL,
+    file_size INTEGER NOT NULL,
+    mime_type VARCHAR(100) NOT NULL,
+    s3_key VARCHAR(500) NOT NULL UNIQUE,
+    upload_status VARCHAR(50) NOT NULL DEFAULT 'uploaded',
+    text_extracted BOOLEAN NOT NULL DEFAULT FALSE,
+    text_length INTEGER,
+    pdf_metadata JSONB DEFAULT '{}',
+    processing_metadata JSONB DEFAULT '{}',
+    uploaded_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    last_processed_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+-- Create indexes for document_metadata
+CREATE INDEX IF NOT EXISTS idx_document_metadata_document_id ON document_metadata(document_id);
+CREATE INDEX IF NOT EXISTS idx_document_metadata_filename ON document_metadata(filename);
+CREATE INDEX IF NOT EXISTS idx_document_metadata_uploaded_at ON document_metadata(uploaded_at);
+CREATE INDEX IF NOT EXISTS idx_document_metadata_upload_status ON document_metadata(upload_status);
+
+-- Create OBI knowledge base tables
+CREATE TABLE IF NOT EXISTS obi_knowledge_sources (
+    id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    name VARCHAR(255) NOT NULL UNIQUE,
+    source_type VARCHAR(50) NOT NULL,
+    version VARCHAR(50),
+    last_ingested TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    metadata JSONB DEFAULT '{}'
+);
+
+CREATE TABLE IF NOT EXISTS obi_knowledge_chunks (
+    id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    source_id VARCHAR(255) NOT NULL REFERENCES obi_knowledge_sources(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    reference_id VARCHAR(255) NOT NULL,
+    title VARCHAR(255),
+    embedding vector(1536),
+    chunk_index INTEGER NOT NULL,
+    page_number INTEGER,
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_obi_chunks_source_id ON obi_knowledge_chunks(source_id);
+CREATE INDEX IF NOT EXISTS idx_obi_chunks_reference_id ON obi_knowledge_chunks(reference_id);
+CREATE INDEX IF NOT EXISTS idx_obi_chunks_source_ref ON obi_knowledge_chunks(source_id, reference_id);
+
+CREATE TABLE IF NOT EXISTS obi_eo_crawl_status (
+    id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    eo_number VARCHAR(100) NOT NULL UNIQUE,
+    title VARCHAR(500) NOT NULL,
+    signing_date TIMESTAMP WITH TIME ZONE,
+    publication_date TIMESTAMP WITH TIME ZONE,
+    federal_register_url VARCHAR(500),
+    status VARCHAR(50) NOT NULL DEFAULT 'discovered',
+    last_crawl_attempt TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    error_message TEXT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
 -- Create triggers for updated_at columns
 DROP TRIGGER IF EXISTS update_analysis_sessions_updated_at ON analysis_sessions;
 CREATE TRIGGER update_analysis_sessions_updated_at 
     BEFORE UPDATE ON analysis_sessions
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_document_metadata_updated_at ON document_metadata;
+CREATE TRIGGER update_document_metadata_updated_at 
+    BEFORE UPDATE ON document_metadata
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_obi_eo_crawl_status_updated_at ON obi_eo_crawl_status;
+CREATE TRIGGER update_obi_eo_crawl_status_updated_at 
+    BEFORE UPDATE ON obi_eo_crawl_status
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Create a view to unify document access across services

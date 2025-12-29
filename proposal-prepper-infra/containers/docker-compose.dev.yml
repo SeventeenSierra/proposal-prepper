@@ -25,7 +25,7 @@ services:
       start_period: 30s
       retries: 2
 
-  strands:
+  analysis-engine:
     # Enable hot reload for Python development
     volumes:
       - ../../proposal-prepper-backend:/app

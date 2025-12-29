@@ -20,7 +20,7 @@ This directory contains the Docker configuration for the Proposal Prepper applic
 
 The application will be available at:
 - **Web UI**: http://localhost:3000
-- **Strands API**: http://localhost:8080/api/health
+- **Analysis Engine API**: http://localhost:8080/api/health
 - **MinIO Console**: http://localhost:9001 (admin/minioadmin)
 
 ## Architecture
@@ -45,7 +45,7 @@ The system consists of 5 containerized services:
 
 ### Dockerfiles
 - `web.Dockerfile` - Next.js web service container
-- `api.Dockerfile` - Python Strands service container
+- `api.Containerfile` - Python Analysis Engine service container
 
 ### Environment Configuration
 - `.env.template` - Template with all available configuration options
@@ -87,7 +87,7 @@ BEDROCK_MODEL_ID=anthropic.claude-3-sonnet-20240229-v1:0
 The services start in this order with health check dependencies:
 
 1. **Infrastructure Services** (postgres, redis, minio)
-2. **Strands Service** (depends on infrastructure)
+2. **Analysis Engine Service** (depends on infrastructure)
 3. **Web Service** (depends on all others)
 
 Each service has health checks that ensure proper startup sequencing.
@@ -115,7 +115,7 @@ docker-compose -p proposal-prepper down
 ### Hot Reload
 Both web and strands services support hot reload in development:
 - **Web**: Next.js hot reload with file watching
-- **Strands**: Python file watching with automatic restart
+- **Analysis Engine**: Python file watching with automatic restart
 
 ### Database Operations
 ```bash
@@ -185,7 +185,7 @@ Services communicate using Docker's internal DNS:
 
 ### Port Mapping
 - `3000` → Web UI
-- `8080` → Strands API
+- `8080` → Analysis Engine API
 - `5432` → PostgreSQL (development only)
 - `6379` → Redis (development only)
 - `9000` → MinIO API
@@ -302,10 +302,10 @@ open http://localhost:9001
 
 **AI analysis not working**
 ```bash
-# Check Strands service health
+# Check Analysis Engine service health
 curl http://localhost:8080/api/health
 
-# View Strands logs
+# View Analysis Engine logs
 docker-compose -p proposal-prepper logs strands
 
 # Verify AWS credentials (if using real AI)

@@ -10,6 +10,11 @@ import type { ApiResponse } from '@/services/ai-router-client';
 /**
  * Next.js API Route Adapter
  *
+ * @WARNING This adapter is designed for MOCK and TESTING usage ONLY.
+ * It strictly uses the internal MockApiServer and does NOT connect to
+ * the real AI Router service. For production routes, use the
+ * AIRouterHandlers from 'proposal-prepper-middleware/ai-router-adapter'.
+ *
  * Thin adapter layer that connects Next.js API routes to the
  * framework-independent mock API server. This allows the same
  * business logic to be used across different frameworks.

@@ -91,7 +91,7 @@ class AnalysisStatusResponse(BaseModel):
     """Response model for analysis status requests."""
     success: bool = Field(..., description="Whether the request was successful")
     session_id: str = Field(..., description="Session identifier")
-    status: Literal["queued", "extracting", "analyzing", "completed", "failed"] = Field(..., description="Current analysis status")
+    status: Literal["queued", "extracting", "analyzing", "validating", "generating", "completed", "failed"] = Field(..., description="Current analysis status")
     progress: float = Field(..., ge=0.0, le=100.0, description="Progress percentage (0-100)")
     current_step: str = Field(..., description="Description of current processing step")
     started_at: datetime = Field(..., description="When analysis started")
@@ -127,7 +127,7 @@ class ErrorResponse(BaseModel):
     error: str = Field(..., description="Error message")
     code: str = Field(..., description="Error code for programmatic handling")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="When error occurred")
-    service: str = Field(default="strands", description="Service that generated the error")
+    service: str = Field(default="analysis-engine", description="Service that generated the error")
     request_id: str = Field(..., description="Unique request identifier for tracing")
     details: Optional[Dict[str, Any]] = Field(None, description="Additional error details")
 
@@ -135,7 +135,7 @@ class ErrorResponse(BaseModel):
 class HealthCheckResponse(BaseModel):
     """Health check response model."""
     status: Literal["healthy", "degraded", "unhealthy"] = Field(..., description="Overall service status")
-    service: str = Field(default="strands", description="Service name")
+    service: str = Field(default="analysis-engine", description="Service name")
     version: str = Field(..., description="Service version")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Health check timestamp")
     environment: str = Field(..., description="Deployment environment")

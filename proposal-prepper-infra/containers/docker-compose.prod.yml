@@ -32,7 +32,7 @@ services:
           memory: 512M
           cpus: '0.5'
 
-  strands:
+  analysis-engine:
     # Production build configuration
     build:
       target: production

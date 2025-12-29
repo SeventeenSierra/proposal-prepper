@@ -4,7 +4,7 @@
 /**
  * Upload Service
  *
- * Service layer for managing document uploads and integrating with the Strands API.
+ * Service layer for managing document uploads and integrating with the Analysis Engine API.
  * Provides upload session management, progress tracking, and error handling.
  * Implements requirements 1.1, 1.2, 1.3, 1.4, and 1.5 for upload functionality.
  */
@@ -31,7 +31,7 @@ export interface UploadServiceEvents {
 /**
  * Upload Service Class
  *
- * Manages document uploads with the Strands API, providing session tracking,
+ * Manages document uploads with the Analysis Engine API, providing session tracking,
  * progress monitoring, and error handling capabilities.
  */
 export class UploadService {
@@ -52,6 +52,7 @@ export class UploadService {
    */
   async uploadDocument(
     file: File,
+    onProgress?: (progress: number) => void,
     sessionId?: string
   ): Promise<{ success: boolean; sessionId: string; error?: string }> {
     // Create or update session
@@ -77,6 +78,7 @@ export class UploadService {
         const updatedSession = { ...session, progress };
         this.activeSessions.set(session.id, updatedSession);
         this.eventHandlers.onProgress?.(session.id, progress);
+        if (onProgress) onProgress(progress);
       });
 
       if (response.success && response.data) {

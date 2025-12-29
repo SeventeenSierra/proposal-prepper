@@ -12,6 +12,7 @@ export enum AnalysisStatus {
   EXTRACTING = 'extracting',
   ANALYZING = 'analyzing',
   VALIDATING = 'validating',
+  GENERATING = 'generating',
   COMPLETED = 'completed',
   FAILED = 'failed',
 }

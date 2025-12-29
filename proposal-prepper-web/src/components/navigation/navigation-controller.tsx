@@ -6,7 +6,7 @@
 'use client';
 
 import { Button } from '@17sierra/ui';
-import { ChevronLeft, ChevronRight, Home } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Home } from 'lucide-react';
 import type React from 'react';
 import { useCallback, useMemo } from 'react';
 
@@ -133,14 +133,7 @@ export function NavigationController({
       if (step.isCompleted) {
         return (
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-600 text-white">
-            <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <title>Completed</title>
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <Check className="h-5 w-5" />
           </div>
         );
       }

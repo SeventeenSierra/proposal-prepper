@@ -10,7 +10,7 @@
     "prepare": "husky",
     "dev": "next dev",
     "dev:local": "cd containers && docker-compose up --build",
-    "dev:strands": "cd services/strands-agent && python -m uvicorn app.main:app --reload --port 8080",
+    "dev:analysis-engine": "cd ../proposal-prepper-backend && python startup.py",
     "build": "next build",
     "lint": "biome check .",
     "format": "biome format --write .",
