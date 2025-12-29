@@ -34,13 +34,13 @@ describe("AgentInterface Live Component", () => {
 		localStorage.clear();
 	});
 
-	it('should initialize with default mode from apiConfig', () => {
+	it("should initialize with default mode from apiConfig", () => {
 		render(
 			<AgentInterface
 				activeProject={null}
-				onAnalysisStart={() => { }}
-				onAnalysisComplete={() => { }}
-				onAnalysisError={() => { }}
+				onAnalysisStart={() => {}}
+				onAnalysisComplete={() => {}}
+				onAnalysisError={() => {}}
 			/>,
 		);
 
@@ -48,15 +48,15 @@ describe("AgentInterface Live Component", () => {
 		expect(screen.getByText("AI Regulatory Assistant")).toBeInTheDocument();
 	});
 
-	it('should handle localStorage use-mock-api preference', () => {
+	it("should handle localStorage use-mock-api preference", () => {
 		localStorage.setItem("use-mock-api", "false");
 
 		render(
 			<AgentInterface
 				activeProject={null}
-				onAnalysisStart={() => { }}
-				onAnalysisComplete={() => { }}
-				onAnalysisError={() => { }}
+				onAnalysisStart={() => {}}
+				onAnalysisComplete={() => {}}
+				onAnalysisError={() => {}}
 			/>,
 		);
 
@@ -67,9 +67,9 @@ describe("AgentInterface Live Component", () => {
 		render(
 			<AgentInterface
 				activeProject={null}
-				onAnalysisStart={() => { }}
-				onAnalysisComplete={() => { }}
-				onAnalysisError={() => { }}
+				onAnalysisStart={() => {}}
+				onAnalysisComplete={() => {}}
+				onAnalysisError={() => {}}
 			/>,
 		);
 
@@ -84,7 +84,7 @@ describe("AgentInterface Live Component", () => {
 			}),
 		);
 
-		// No explicit UI change to check in AgentInterface now, 
+		// No explicit UI change to check in AgentInterface now,
 		// but we verify it doesn't crash
 		expect(screen.getByText("AI Regulatory Assistant")).toBeInTheDocument();
 	});

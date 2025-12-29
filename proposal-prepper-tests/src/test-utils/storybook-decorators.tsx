@@ -6,7 +6,7 @@
 import type { Decorator, StoryContext } from "@storybook/react";
 import React from "react";
 import { ErrorScenario } from "./mock-data-provider";
-import { MockStrandsAPIEnhanced } from "./mock-strands-api-enhanced";
+import { MockAnalysisEngineAPIEnhanced } from "./mock-analysis-engine-api-enhanced";
 
 /**
  * Story decorators and context providers for Storybook
@@ -17,14 +17,14 @@ import { MockStrandsAPIEnhanced } from "./mock-strands-api-enhanced";
  * Mock API Context for providing mock API instances to stories
  */
 export const MockAPIContext =
-	React.createContext<MockStrandsAPIEnhanced | null>(null);
+	React.createContext<MockAnalysisEngineAPIEnhanced | null>(null);
 
 /**
  * Mock API Provider component
  */
 interface MockAPIProviderProps {
 	children: React.ReactNode;
-	mockAPI?: MockStrandsAPIEnhanced;
+	mockAPI?: MockAnalysisEngineAPIEnhanced;
 	errorScenario?: ErrorScenario;
 	delay?: number;
 }
@@ -40,7 +40,7 @@ export const MockAPIProvider: React.FC<MockAPIProviderProps> = ({
 
 		// Create a new instance with the specified delay
 		// Error scenarios can be handled by the consuming component
-		return new MockStrandsAPIEnhanced("http://localhost:8080", delay);
+		return new MockAnalysisEngineAPIEnhanced("http://localhost:8080", delay);
 	}, [mockAPI, delay]);
 
 	return (
@@ -51,7 +51,7 @@ export const MockAPIProvider: React.FC<MockAPIProviderProps> = ({
 /**
  * Hook to use mock API in components
  */
-export const useMockAPI = (): MockStrandsAPIEnhanced => {
+export const useMockAPI = (): MockAnalysisEngineAPIEnhanced => {
 	const context = React.useContext(MockAPIContext);
 	if (!context) {
 		throw new Error("useMockAPI must be used within a MockAPIProvider");

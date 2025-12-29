@@ -5,15 +5,8 @@
 
 'use client';
 
-import {
-  AlertCircle,
-  Button,
-  CheckCircle,
-  Download,
-  FileText,
-  RefreshCw,
-  XCircle,
-} from '@17sierra/ui';
+import { Button } from '@17sierra/ui';
+import { AlertCircle, CheckCircle, Download, FileText, RefreshCw, XCircle } from 'lucide-react';
 import { resultsService } from 'proposal-prepper-services/results-service';
 import { IssueList } from '@/components/issues';
 import { RegulatoryReferences } from './regulatory-references';

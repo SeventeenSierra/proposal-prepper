@@ -5,7 +5,7 @@
  * Traffic Cop: Mesh Router
  *
  * Central API Gateway that routes requests to specialized backend services.
- * Allows swapping backends (Strands -> Other) without changing UI code.
+ * Allows swapping backends (Analysis Engine -> Other) without changing UI code.
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
@@ -23,7 +23,7 @@ interface ErrorResponse {
 
 // Framework endpoint configuration
 const FRAMEWORK_ENDPOINTS: Record<string, string> = {
-  strands: process.env.STRANDS_AGENT_URL || 'http://localhost:8080',
+  analysis_engine: process.env.ANALYSIS_ENGINE_URL || 'http://localhost:8080',
 };
 
 export async function handleServiceStatus(_request: NextRequest): Promise<NextResponse> {

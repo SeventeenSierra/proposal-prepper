@@ -4,7 +4,7 @@
 /**
  * Analysis Service
  *
- * Service layer for managing compliance analysis and integrating with the Strands API.
+ * Service layer for managing compliance analysis and integrating with the Analysis Engine API.
  * Provides analysis session management, progress tracking, and results retrieval.
  * Implements requirements 2.1, 2.2, 2.3, 2.4, and 2.5 for analysis functionality.
  */
@@ -31,8 +31,9 @@ export interface AnalysisServiceEvents {
  */
 export interface AnalysisRequest {
   proposalId: string;
-  documentId: string; // Added documentId
+  documentId: string;
   frameworks?: ('FAR' | 'DFARS')[];
+  provider?: string;
   options?: {
     includeTextExtraction?: boolean;
     includeCriticalValidation?: boolean;
@@ -43,7 +44,7 @@ export interface AnalysisRequest {
 /**
  * Analysis Service Class
  *
- * Manages compliance analysis with the Strands API, providing session tracking,
+ * Manages compliance analysis with the Analysis Engine API, providing session tracking,
  * progress monitoring, and results retrieval capabilities.
  */
 export class AnalysisService {
@@ -78,10 +79,13 @@ export class AnalysisService {
 
       console.log(`[AnalysisService] Starting analysis for proposal: ${request.proposalId}, document: ${request.documentId}`);
 
-      // Start analysis with Strands API
+      // Start analysis with Analysis Engine API
       const response = await aiRouterClient.startAnalysis(
         request.proposalId,
-        request.documentId
+        request.documentId,
+        undefined, // filename
+        undefined, // s3Key
+        request.provider
       );
 
       if (response.success && response.data) {
@@ -188,7 +192,7 @@ export class AnalysisService {
   }
 
   /**
-   * Get Strands service status
+   * Get Analysis Engine service status
    */
   async getServiceStatus(): Promise<{
     healthy: boolean;

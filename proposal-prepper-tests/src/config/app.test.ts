@@ -66,11 +66,11 @@ describe("Application Configuration", () => {
 			if (typeof window !== "undefined") {
 				// In browser/jsdom, default is usually empty string (relative path)
 				// But in container tests, it might pick up the env var
-				const isRelative = apiConfig.strandsBaseUrl === "";
-				const isServerUrl = apiConfig.strandsBaseUrl.includes("8080");
+				const isRelative = apiConfig.engineBaseUrl === "";
+				const isServerUrl = apiConfig.engineBaseUrl.includes("8080");
 				expect(isRelative || isServerUrl).toBe(true);
 			} else {
-				expect(apiConfig.strandsBaseUrl).toContain("8080");
+				expect(apiConfig.engineBaseUrl).toContain("8080");
 			}
 		});
 

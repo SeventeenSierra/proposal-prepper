@@ -19,7 +19,7 @@ import { UploadStatus } from "@/types/app";
 // Mock the config imports
 vi.mock("@/config/app", () => ({
 	apiConfig: {
-		strandsBaseUrl: "http://localhost:8080",
+		engineBaseUrl: "http://localhost:8080",
 		websocket: {
 			maxReconnectAttempts: 5,
 			reconnectInterval: 1000,

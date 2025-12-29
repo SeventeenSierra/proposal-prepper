@@ -2,12 +2,12 @@
 // SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 /**
- * Mock utilities for StrandsApiClient in tests
+ * Mock utilities for AnalysisEngineApiClient in tests
  */
 
 import { vi } from "vitest";
 
-export type MockStrandsApiClient = {
+export type MockAnalysisEngineApiClient = {
 	// Analysis methods
 	startAnalysis: ReturnType<typeof vi.fn>;
 	getAnalysisStatus: ReturnType<typeof vi.fn>;
@@ -30,7 +30,7 @@ export type MockStrandsApiClient = {
 	subscribeToErrors: ReturnType<typeof vi.fn>;
 };
 
-export function createMockStrandsApiClient(): MockStrandsApiClient {
+export function createMockAnalysisEngineApiClient(): MockAnalysisEngineApiClient {
 	return {
 		startAnalysis: vi.fn(),
 		getAnalysisStatus: vi.fn(),

@@ -4,7 +4,7 @@
 # SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 """
-Startup script for the Strands service.
+Startup script for the Analysis Engine service.
 
 This script handles initialization tasks before starting the main FastAPI application:
 1. Wait for database connectivity
@@ -73,13 +73,13 @@ async def wait_for_database(max_retries: int = 30, delay: float = 2.0) -> bool:
 
 async def initialize_service() -> bool:
     """
-    Initialize the Strands service.
+    Initialize the Analysis Engine service.
     
     Returns:
         True if initialization successful, False otherwise
     """
     try:
-        logger.info("Starting Strands service initialization...")
+        logger.info("Starting Analysis Engine service initialization...")
         
         # Step 1: Wait for database
         if not await wait_for_database():
@@ -120,13 +120,16 @@ async def initialize_service() -> bool:
         # Step 4: Verify service dependencies
         logger.info("Verifying service dependencies...")
         try:
-            # Check AWS Bedrock availability
-            from aws_bedrock import get_bedrock_client
-            bedrock_client = get_bedrock_client()
-            if bedrock_client.is_available():
-                logger.info("AWS Bedrock client is available")
+            # Check AWS Bedrock availability if in aws mode
+            if settings.analysis_mode == "aws":
+                from aws_bedrock import get_bedrock_client
+                bedrock_client = get_bedrock_client()
+                if bedrock_client.is_available():
+                    logger.info("AWS Bedrock client is available")
+                else:
+                    logger.warning("AWS Bedrock client not available - will use fallback analysis")
             else:
-                logger.warning("AWS Bedrock client not available - will use fallback analysis")
+                logger.info(f"Skipping AWS Bedrock verification in {settings.analysis_mode} mode")
             
             # Check S3/MinIO connectivity
             from pdf_processor import get_pdf_processor
@@ -142,7 +145,7 @@ async def initialize_service() -> bool:
             logger.warning(f"Service dependency verification failed: {e}")
             logger.warning("Some services may not be fully functional")
         
-        logger.info("Strands service initialization completed successfully")
+        logger.info("Analysis Engine service initialization completed successfully")
         return True
         
     except Exception as e:
@@ -152,7 +155,7 @@ async def initialize_service() -> bool:
 
 def main():
     """Main startup function."""
-    logger.info("Starting Strands service startup script...")
+    logger.info("Starting Analysis Engine service startup script...")
     
     # Run initialization
     success = asyncio.run(initialize_service())
@@ -173,6 +176,7 @@ def main():
             host=settings.host,
             port=settings.port,
             reload=settings.environment != "production",
+            reload_excludes=["**/.venv/**", "**/__pycache__/**", "**/.pytest_cache/**", "*.pyc"],
             log_level=settings.log_level.lower(),
             access_log=True
         )

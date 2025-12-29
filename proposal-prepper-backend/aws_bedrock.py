@@ -32,10 +32,12 @@ class BedrockClient(AnalysisProvider):
         self.model_id = settings.bedrock_model_id
         self.region = settings.aws_region
         self._client = None
-        self._initialize_client()
     
     def _initialize_client(self) -> None:
         """Initialize the AWS Bedrock client with proper configuration."""
+        if self._client:
+            return
+            
         try:
             # Configure AWS session
             session_kwargs = {
@@ -60,6 +62,7 @@ class BedrockClient(AnalysisProvider):
     
     def is_available(self) -> bool:
         """Check if Bedrock client is available and configured."""
+        self._initialize_client()
         if not self._client:
             return False
         
@@ -96,6 +99,7 @@ class BedrockClient(AnalysisProvider):
             Exception: If analysis fails and no fallback is available
         """
         try:
+            self._initialize_client()
             if not self._client:
                 raise Exception("Bedrock client not initialized")
             

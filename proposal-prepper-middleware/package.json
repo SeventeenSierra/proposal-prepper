@@ -6,7 +6,7 @@
     "main": "src/standalone-server.ts",
     "scripts": {
         "start": "node -r esbuild-register src/standalone-server.ts",
-        "dev": "nodemon -r esbuild-register src/standalone-server.ts"
+        "dev": "PORT=${MIDDLEWARE_PORT:-8081} nodemon --exec \"node -r esbuild-register\" src/standalone-server.ts"
     },
     "dependencies": {
         "express": "^5.2.1",

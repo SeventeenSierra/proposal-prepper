@@ -14,7 +14,7 @@ import {
  * Error scenarios for testing - re-export for convenience
  */
 import { ErrorScenario } from "./error-scenarios";
-import { MockStrandsAPIEnhanced } from "./mock-strands-api-enhanced";
+import { MockAnalysisEngineAPIEnhanced } from "./mock-analysis-engine-api-enhanced";
 export { ErrorScenario };
 
 import { UploadStatus } from "@/types/app";
@@ -42,7 +42,7 @@ export interface MockDataConfig {
  * Mock data context for providing consistent mock data across components
  */
 export interface MockDataContextValue {
-	mockAPI: MockStrandsAPIEnhanced;
+	mockAPI: MockAnalysisEngineAPIEnhanced;
 	mockData: {
 		uploadSession: any;
 		analysisSession: any;
@@ -71,7 +71,7 @@ export const MockDataProvider: React.FC<MockDataProviderProps> = ({
 
 	// Create mock API instance based on config
 	const mockAPI = React.useMemo(() => {
-		return new MockStrandsAPIEnhanced(
+		return new MockAnalysisEngineAPIEnhanced(
 			"http://localhost:8080",
 			config.delay || 500,
 		);

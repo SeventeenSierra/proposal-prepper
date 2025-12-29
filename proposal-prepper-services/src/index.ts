@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 // SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
+// Config Types
+export { type ConnectionMode } from './config/app';
+
 /**
  * Services Layer
  *
@@ -31,7 +34,7 @@ export {
   SeedService,
   seedService,
 } from './seed-service';
-// Strands API Client
+// AI Router API Client
 // AI Router Integration
 export {
   type ServiceIntegrationStatus,

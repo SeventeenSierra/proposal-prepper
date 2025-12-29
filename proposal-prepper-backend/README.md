@@ -1,10 +1,10 @@
-# Strands Python Service
+# Analysis Engine Python Service
 
 AI-powered compliance analysis service for the Proposal Prepper application.
 
 ## Overview
 
-The Strands service provides document analysis capabilities using AWS Bedrock for compliance checking against FAR/DFARS regulations. It's built with FastAPI and designed to run in a containerized environment alongside the Next.js web service.
+The Analysis Engine service provides document analysis capabilities using AWS Bedrock for compliance checking against FAR/DFARS regulations. It's built with FastAPI and designed to run in a containerized environment alongside the Next.js web service.
 
 ## Features
 
@@ -36,12 +36,10 @@ python main.py
 
 The service will start on `http://localhost:8080`
 
-### Docker
-
 Build and run with Docker:
 ```bash
-docker build -t strands-service .
-docker run -p 8080:8080 strands-service
+docker build -t analysis-engine-service .
+docker run -p 8080:8080 analysis-engine-service
 ```
 
 ### Health Check

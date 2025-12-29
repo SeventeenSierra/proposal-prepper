@@ -48,3 +48,4 @@ litellm==1.15.0
 langgraph==0.0.15
 psutil==5.9.6
 langchain-openai==0.0.5
+pgvector==0.2.1

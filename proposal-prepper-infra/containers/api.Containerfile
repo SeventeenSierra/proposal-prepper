@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Strict-1.0.0
 # SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
-# Development Dockerfile for Strands Python service
+# Development Dockerfile for Analysis Engine Python service
 FROM python:3.11-slim
 
 # Set working directory
@@ -9,7 +9,8 @@ WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
+    build-essential \
+    python3-dev \
     curl \
     && rm -rf /var/lib/apt/lists/*
 

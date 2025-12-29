@@ -5,7 +5,7 @@
 
 
 """
-Simple validation script to check the Strands service structure.
+Simple validation script to check the Analysis Engine service structure.
 This script validates the basic structure without requiring dependencies.
 """
 
@@ -14,8 +14,8 @@ import sys
 from pathlib import Path
 
 def validate_structure():
-    """Validate the Strands service structure."""
-    print("🔍 Validating Strands service structure...")
+    """Validate the Analysis Engine service structure."""
+    print("🔍 Validating Analysis Engine service structure...")
     
     # Check required files exist
     required_files = [
@@ -77,7 +77,7 @@ def validate_structure():
         print(f"❌ Dockerfile error: {e}")
         return False
     
-    print("\n🎉 Strands service structure validation completed successfully!")
+    print("\n🎉 Analysis Engine service structure validation completed successfully!")
     print("📋 Summary:")
     print("   - FastAPI application structure ✅")
     print("   - Configuration management ✅") 

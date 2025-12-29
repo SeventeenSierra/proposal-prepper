@@ -8,81 +8,73 @@ import { aiRouterIntegration } from "proposal-prepper-services";
 
 // Mock @17sierra/ui to avoid issues with missing dist
 vi.mock("@17sierra/ui", () => ({
-    Button: ({ children, onClick, title, className }: any) => (
-        <button onClick={onClick} title={title} className={className}>
-            {children}
-        </button>
-    ),
-    Avatar: ({ children }: any) => <div>{children}</div>,
-    AvatarFallback: ({ children }: any) => <div>{children}</div>,
-    Bot: () => <div data-testid="bot-icon" />,
+	Button: ({ children, onClick, title, className }: any) => (
+		<button onClick={onClick} title={title} className={className}>
+			{children}
+		</button>
+	),
+	Avatar: ({ children }: any) => <div>{children}</div>,
+	AvatarFallback: ({ children }: any) => <div>{children}</div>,
+	Bot: () => <div data-testid="bot-icon" />,
 }));
 
 // Mock proposal-prepper-services
 vi.mock("proposal-prepper-services", () => {
-    let statusCallback: (status: any) => void;
-    return {
-        aiRouterIntegration: {
-            subscribeToStatus: vi.fn((cb) => {
-                statusCallback = cb;
-                return () => { };
-            }),
-            // Helper for the test to trigger status changes
-            _triggerStatusChange: (status: any) => {
-                if (statusCallback) statusCallback(status);
-            }
-        }
-    };
+	let statusCallback: (status: any) => void;
+	return {
+		aiRouterIntegration: {
+			subscribeToStatus: vi.fn((cb) => {
+				statusCallback = cb;
+				return () => { };
+			}),
+			// Helper for the test to trigger status changes
+			_triggerStatusChange: (status: any) => {
+				if (statusCallback) statusCallback(status);
+			},
+		},
+	};
 });
 
 describe("TopBar Status Component", () => {
-    beforeEach(() => {
-        vi.clearAllMocks();
-    });
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
 
-    it('should display "Demo" badge when apiMode is mock', () => {
-        render(
-            <TopBar
-                toggleSidebar={() => { }}
-                isSidebarOpen={true}
-                apiMode="mock"
-            />,
-        );
+	it('should display "Demo: Manual" badge when connectionMode is mock', () => {
+		render(
+			<TopBar toggleSidebar={() => { }} isSidebarOpen={true} connectionMode="mock" setConnectionMode={() => { }} />,
+		);
 
-        expect(screen.getByText("Demo")).toBeInTheDocument();
-    });
+		expect(screen.getByText("Demo: Manual")).toBeInTheDocument();
+	});
 
-    it('should display "Real - Online" when healthy in real mode', () => {
-        render(
-            <TopBar
-                toggleSidebar={() => { }}
-                isSidebarOpen={true}
-                apiMode="real"
-            />,
-        );
+	it('should display "Router: Local" when healthy in router mode (local)', () => {
+		render(
+			<TopBar toggleSidebar={() => { }} isSidebarOpen={true} connectionMode="analysis-router" setConnectionMode={() => { }} />,
+		);
 
-        // Manually trigger the healthy status
-        act(() => {
-            (aiRouterIntegration as any)._triggerStatusChange({ healthy: true });
-        });
+		// Manually trigger the healthy status
+		act(() => {
+			(aiRouterIntegration as any)._triggerStatusChange({ healthy: true, activeProvider: 'local-llama' });
+		});
 
-        expect(screen.getByText("Real - Online")).toBeInTheDocument();
-    });
+		expect(screen.getByText("Router: Local")).toBeInTheDocument();
+	});
 
-    it('should display "Real - Offline" when unhealthy in real mode', () => {
-        render(
-            <TopBar
-                toggleSidebar={() => { }}
-                isSidebarOpen={true}
-                apiMode="real"
-            />,
-        );
+	it('should display "Router Offline" when unhealthy in cloud mode', () => {
+		render(
+			<TopBar toggleSidebar={() => { }} isSidebarOpen={true} connectionMode="analysis-router" setConnectionMode={() => { }} />,
+		);
 
-        // Manually trigger unhealthy status
-        act(() => {
-            (aiRouterIntegration as any)._triggerStatusChange({ healthy: false, error: "Connection Refused" });
-        });
+		// Manually trigger unhealthy status
+		act(() => {
+			(aiRouterIntegration as any)._triggerStatusChange({
+				healthy: false,
+				activeProvider: 'aws-bedrock',
+				error: "Connection Refused",
+			});
+		});
 
-        expect(screen.getByText("Real - Offline")).toBeInTheDocument();
-    });
+		expect(screen.getByText("Router Offline")).toBeInTheDocument();
+	});
 });

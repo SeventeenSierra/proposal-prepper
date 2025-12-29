@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 """
-Concurrent processing manager for the Strands service.
+Concurrent processing manager for the Analysis Engine service.
 
 This module provides concurrent processing capabilities with worker pools,
 request queuing, and progress tracking for AI analysis tasks.

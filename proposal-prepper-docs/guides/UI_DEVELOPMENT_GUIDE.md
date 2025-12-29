@@ -390,7 +390,7 @@ const cspHeader = `
   style-src 'self' 'unsafe-inline';
   img-src 'self' blob: data:;
   font-src 'self';
-  connect-src 'self' http://localhost:8080 http://strands:8080;
+  connect-src 'self' http://localhost:8080 http://analysis-engine:8080;
   frame-ancestors 'none';
 `;
 ```

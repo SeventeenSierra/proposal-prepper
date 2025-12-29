@@ -1,99 +1,150 @@
-# Architecture: Strands Service Duality (Local vs. Cloud)
+# Architecture: Pipeline Duality (Local vs. Cloud)
 
-The `strands` service is the "Analysis Engine" of the Proposal Prepper application. It is designed with a **Unified Codebase** that adapts its behavior based on the environment it's running in.
+The `proposal-prepper-backend` service is the "Analysis Engine" of the application. It is designed with a **Unified Codebase** that adapts its behavior based on the environment it's running in.
 
 ## High-Level Architecture
 
 ```mermaid
 graph TD
     subgraph "Application Layer"
-        WEB["Web UI / Desktop App<br/>(Next.js)"]
+        WEB["proposal-prepper-web<br/>(Dashboard & Chat UI)"]
+        BADGE_LOCAL["[LOCAL MODE] Badge"]
+        BADGE_MOCK["[MOCK] Badge"]
+        WEB --- BADGE_LOCAL
+        WEB --- BADGE_MOCK
     end
 
-    subgraph "Platform / SDK Layer (The Gateway)"
-        ROUTER["AI Router / Adapter"]
+    subgraph "Service Layer (The Orchestrator)"
+        SVC["proposal-prepper-services<br/>(AI Router Client)"]
+        HEALTH["/api/health<br/>Handshake"]
+        SVC --> HEALTH
+    end
+
+    subgraph "Engine Layer (The Processor)"
+        ROUTER["Analysis Router"]
+        LOGS["Terminal Logs<br/>'AIR SPEC ACTIVATED'"]
         
-        subgraph "Pluggable Cloud/Local SDKs"
-            LOCAL_SDK["Local Mode<br/>(Open Source: LiteLLM/LangGraph)"]
-            AWS_SDK["AWS Mode<br/>(Strands SDK)"]
-            GCP_SDK["Google Mode<br/>(Vertex AI SDK)"]
-            AZURE_SDK["Azure Mode<br/>(Semantic Kernel)"]
+        subgraph "Pluggable Providers"
+            LOCAL_PROV["LocalAnalysisProvider<br/>(LiteLLM/Ollama)"]
+            AWS_PROV["AWSAnalysisProvider<br/>(Bedrock/Strands)"]
         end
         
-        ROUTER --> LOCAL_SDK
-        ROUTER -.-> AWS_SDK
-        ROUTER -.-> GCP_SDK
-        ROUTER -.-> AZURE_SDK
+        ROUTER --> LOCAL_PROV
+        ROUTER -.-> AWS_PROV
+        LOCAL_PROV --- LOGS
     end
 
-    subgraph "Agents Layer (Cross-Platform Logic)"
+    subgraph "Agents Layer (Specialized Logic)"
         FAR_AGENT["FAR Agent"]
         EO_AGENT["EO Agent"]
-        TECH_AGENT["Tech Agent"]
+        TECH_AGENT["Technical Agent"]
         
-        LOCAL_SDK --> FAR_AGENT
-        LOCAL_SDK --> EO_AGENT
-        LOCAL_SDK --> TECH_AGENT
+        LOCAL_PROV --> FAR_AGENT
+        LOCAL_PROV --> EO_AGENT
+        LOCAL_PROV --> TECH_AGENT
     end
 
-    subgraph "Data & Resource Layer"
-        MINIO[("MinIO / S3")]
-        OS_LOCAL[("OpenSearch / Vector Storage")]
-        DB[("Postgres DB")]
+    subgraph "Infra Layer"
+        STORAGE[("MinIO / S3")]
+        DB[("PostgreSQL")]
     end
 
-    FAR_AGENT --> MINIO
-    EO_AGENT --> OS_LOCAL
-    TECH_AGENT --> DB
-
-    classDef current fill:#d1e7dd,stroke:#0f5132,stroke-width:2px;
-    classDef future fill:#e9ecef,stroke:#6c757d,stroke-dasharray: 5 5;
-    classDef infra fill:#f9f,stroke:#333;
-    
-    class LOCAL_SDK,FAR_AGENT,EO_AGENT,TECH_AGENT current;
-    class AWS_SDK,GCP_SDK,AZURE_SDK future;
-    class MINIO,OS_LOCAL,DB infra;
+    WEB --> SVC
+    SVC --> ROUTER
+    FAR_AGENT --> STORAGE
+    EO_AGENT --> DB
 ```
 
-## The Multi-Cloud "Pluggable" Strategy
+## The 8-Step Analysis Flow (Local Mode Demo)
 
-Our architecture is designed so that the **Agents** (FAR, EO, Tech) are independent of the cloud provider. We use a **Platform / SDK Layer** to bridge the gap.
+This flow illustrates how a document moves from the Web UI through the local AI pipeline.
 
-### 1. Local / Demo Phase (Current)
-Locally, we use **LiteLLM + LangGraph** as our open-source equivalent to the Strands SDK.
-- **LiteLLM**: Provides a unified API to talk to local models (like Llama/Mistral) or mock providers.
-- **LangGraph**: Orchestrates the agents (FAR/EO) just like Strands would in the cloud.
-- **Local Infra**: MinIO and OpenSearch containers provide the S3 and Vector storage equivalents.
+### Step 0: Environment & Entry (The Demo Setup)
+| Substep | Action | Acceptance Criteria |
+| :--- | :--- | :--- |
+| **0.1** | Web UI Access | `http://localhost:3000` loads the dashboard. |
+| **0.2** | Mode Validation | UI confirms `Local Mode` via configuration check. |
+| **0.3** | Backend Handshake | `GET /api/health` returns `healthy` with `air_spec_mode: true`. |
+| **0.4** | Terminal Monitor | Logs show: `AIR SPEC ACTIVATED: Using llama3.2...` |
+| **0.5** | UI Branding | TopBar displays a green **LOCAL MODE** status badge. |
 
-### 2. AWS / Strands Phase (Future)
-When we switch to AWS, we swap the `LOCAL_SDK` for the `AWS_SDK (Strands)`. 
-- The **Agents** remains exactly the same.
-- We point the storage and vector connections to real AWS S3 and Managed OpenSearch.
+### Step 1: Document Upload (Entry Point)
+| Substep | Action | Acceptance Criteria |
+| :--- | :--- | :--- |
+| **1.1** | File Validation | `proposal-prepper-web` confirms PDF type and < 50MB. |
+| **1.2** | API Upload Call | `POST /api/documents/upload` returns `200 OK` with `sessionId`. |
+| **1.3** | MinIO Storage | File exists at `uploads/{sessionId}/{filename}` in MinIO. |
+| **1.4** | DB Indexing | Record created in PostgreSQL `documents` table. |
 
-### 3. Google & Microsoft Phase (Future)
-By using this "Adapter" pattern, we can easily add:
-- **Google Cloud**: Using Vertex AI and Cloud Storage.
-- **Azure**: Using Azure OpenAI and Azure AI Search.
+### Step 2: Extraction (Data Preparation)
+| Substep | Action | Acceptance Criteria |
+| :--- | :--- | :--- |
+| **2.1** | S3 Retrieval | `proposal-prepper-backend` fetches bytes from MinIO. |
+| **2.2** | `pypdf` Parsing | PDF text and metadata extracted into memory. |
+| **2.3** | Text Cleaning | Whitespace normalized; page markers injected. |
+| **2.4** | Status Update | WebSocket broadcasts `status: extracting` (30%). |
 
-## Why this makes sense for the Demo
+### Step 3: FAR Scan (Initial AI Analysis)
+| Substep | Action | Acceptance Criteria |
+| :--- | :--- | :--- |
+| **3.1** | Thermal Guard | Logs show CPU check (and pause if > threshold). |
+| **3.2** | Prompt Build | Specialized FAR context generated for the LLM. |
+| **3.3** | LiteLLM Call | Local AI (Ollama) receives prompt and starts generation. |
+| **3.4** | Status Update | WebSocket broadcasts `status: analyzing` (45%). |
 
-This approach proves that our application is **Cloud-Agnostic**. 
-- For the demo, we show everything running on the desktop using the **Open Source Stack**.
-- We point out that by simply flipping a configuration switch, the exact same Agents will start talking through the **Strands SDK** on AWS, or **Vertex AI** on Google Cloud.
+### Step 4: DFARS Audit (Regulatory Depth)
+| Substep | Action | Acceptance Criteria |
+| :--- | :--- | :--- |
+| **4.1** | Reference Lookup | Logic cross-references text against DFARS specific sections. |
+| **4.2** | Finding Pairing | AI identifies specific DFARS conflicts. |
+| **4.3** | Progress Update | WebSocket broadcasts `status: analyzing` (55%). |
 
-> [!TIP]
-> This design ensures no vendor lock-in. We are building the "Agents" (the value), and treating the "Cloud Platform" as a swappable resource.
+### Step 5: Security Review (Integrity Check)
+| Substep | Action | Acceptance Criteria |
+| :--- | :--- | :--- |
+| **5.1** | Internal Audit | Backend validates AI findings for consistency. |
+| **5.2** | Severity Score | Critical/Warning/Info badges assigned to findings. |
+| **5.3** | Progress Update | WebSocket broadcasts `status: validating` (65%). |
+
+### Step 6: Policy Check (Final Verification)
+| Substep | Action | Acceptance Criteria |
+| :--- | :--- | :--- |
+| **6.1** | Citation Check | Final verification of FAR/DFARS links and URLs. |
+| **6.2** | Confidence Score | Confidence percentage calculated for each issue. |
+| **6.3** | Progress Update | WebSocket broadcasts `status: validating` (75%). |
+
+### Step 7: Report Generation (Delivery)
+| Substep | Action | Acceptance Criteria |
+| :--- | :--- | :--- |
+| **7.1** | Report Synthesis | Final JSON object aggregated with summary and counts. |
+| **7.2** | Results DB Store | Compliance results written to PostgreSQL `results` table. |
+| **7.3** | WS Broadcast | WebSocket sends `type: analysis_complete`. |
+| **7.4** | UI Rendering | Web UI renders the results panel and chat interface. |
+
+## CLI Flag & UI Badge Catalog
+
+The startup behavior is controlled by `proposal-prepper-infra/containers/start.sh`.
+
+| Command Flag | Mode | Expected UI Badge | Backend Status | Persistence |
+| :--- | :--- | :--- | :--- | :--- |
+| (None) | **Local Mode** | `[LOCAL MODE]` (Green) | Running (8080) | Enabled |
+| `-m`, `--mock` | **Mock Mode** | `[MOCK]` (Amber) | **Offline** | Disabled (UI Only) |
+| `-d`, `--detach` | **Background** | Same as above | Detached | Enabled |
+
+### Foreground vs. Background
+- **Foreground (Default)**: `docker-compose up`. Logs stream directly to your terminal. Useful for monitoring Step 0 (Health Checks) and Step 3 (LiteLLM calls) in real-time. Terminating the terminal process (Ctrl+C) stops the services.
+- **Background (`-d`)**: `docker-compose up -d`. Services run in the "background" (detached). Control is returned to your terminal immediately. You must use `docker logs -f` or `docker-compose logs -f` to see activity.
 
 ## Environment Breakdown
 
 | Component | Local / Demo Environment | Production (AWS) Environment |
 | :--- | :--- | :--- |
-| **Logic** | `strands` Container (Same Code) | `strands` on ECS/Lambda (Same Code) |
-| **Database** | Postgres Container | AWS RDS (Postgres) |
-| **Storage** | MinIO Container | AWS S3 Bucket |
-| **Vector Search** | OpenSearch Container | AWS OpenSearch Service |
-| **AI Analysis** | `fallback_analysis.py` | AWS Bedrock (Claude 3) |
+| **Web UI** | `proposal-prepper-web` (Dev) | `proposal-prepper-web` (Amplify/S3) |
+| **Orchestrator** | `proposal-prepper-services` | `proposal-prepper-services` (Lambda) |
+| **Analysis Engine**| `proposal-prepper-backend` | `proposal-prepper-backend` (ECS) |
+| **AI Provider** | **LiteLLM** (Ollama: Llama 3.2) | **AWS Bedrock** (Claude 3.5 Sonnet) |
+| **Storage (S3)** | MinIO Container | AWS S3 Bucket |
+| **Database** | PostgreSQL Container | AWS RDS (PostgreSQL) |
 
 > [!IMPORTANT]
-> This "Environment Duality" ensures that 100% of the code you test locally is the same code that will run in production. The only difference is where the service endpoints point to.
-鼓
+> This "Environment Duality" ensures that 100% of the core agent logic tested locally is the same that runs in production. The only shift is the **Analysis Provider** adapter.

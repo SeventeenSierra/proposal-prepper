@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 """
-Logging configuration for the Strands service.
+Logging configuration for the Analysis Engine service.
 
 This module sets up structured logging with appropriate formatters
 and handlers for both development and production environments.
@@ -52,7 +52,7 @@ def setup_logging() -> None:
                 "level": settings.log_level,
                 "propagate": False
             },
-            "strands": {
+            "analysis_engine": {
                 "handlers": ["console"],
                 "level": settings.log_level,
                 "propagate": False
@@ -76,7 +76,7 @@ def setup_logging() -> None:
             "class": "logging.handlers.RotatingFileHandler",
             "level": settings.log_level,
             "formatter": "detailed",
-            "filename": "strands.log",
+            "filename": "analysis-engine.log",
             "maxBytes": 10485760,  # 10MB
             "backupCount": 5
         }

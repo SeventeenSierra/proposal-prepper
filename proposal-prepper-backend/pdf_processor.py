@@ -57,6 +57,31 @@ class PDFProcessor:
             logger.error(f"Failed to initialize S3 client: {e}")
             self._s3_client = None
     
+    def check_file_exists_in_s3(self, s3_key: str, bucket_name: Optional[str] = None) -> bool:
+        """
+        Check if a document exists in S3/MinIO.
+        
+        Args:
+            s3_key: S3 object key for the PDF document
+            bucket_name: S3 bucket name (defaults to configured bucket)
+            
+        Returns:
+            True if document exists, False otherwise
+        """
+        if not self._s3_client:
+            return False
+        
+        bucket = bucket_name or settings.s3_bucket_name
+        
+        try:
+            self._s3_client.head_object(Bucket=bucket, Key=s3_key)
+            return True
+        except ClientError:
+            return False
+        except Exception as e:
+            logger.error(f"Error checking S3 file existence for {s3_key}: {e}")
+            return False
+
     async def extract_text_from_s3(self, s3_key: str, bucket_name: Optional[str] = None) -> Tuple[str, Dict[str, Any]]:
         """
         Extract text from a PDF document stored in S3/MinIO.

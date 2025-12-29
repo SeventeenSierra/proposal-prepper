@@ -7,7 +7,7 @@ This repository contains the refactored **Proposal Prepper (CtrlCheck)** applica
 | Component | Directory | Description |
 | :--- | :--- | :--- |
 | **Frontend** | [`proposal-prepper-web/`](./proposal-prepper-web) | Next.js 14+ application logic and UI. |
-| **Backend** | [`proposal-prepper-backend/`](./proposal-prepper-backend) | Python/FastAPI service for Strands agents. |
+| **Backend** | [`proposal-prepper-backend/`](./proposal-prepper-backend) | Python/FastAPI service for Analysis Engine agents. |
 | **Middleware** | [`proposal-prepper-middleware/`](./proposal-prepper-middleware) | "Traffic Cop" coordination service. |
 | **Infrastructure** | [`proposal-prepper-infra/`](./proposal-prepper-infra) | Docker orchestration, database init, and build scripts. |
 | **Shared Services** | [`proposal-prepper-services/`](./proposal-prepper-services) | Shared TypeScript business logic and API clients. |
@@ -16,15 +16,19 @@ This repository contains the refactored **Proposal Prepper (CtrlCheck)** applica
 
 ## 🚀 Quick Start
 
-To run the entire system locally:
+The application defaults to **Local Mode** (Full Stack) for a complete on-prem experience.
 
-```bash
-cd proposal-prepper-infra/containers
-./start.sh
-```
+### Local Mode (Default)
+Starts the Web UI, Analysis Engine, and all local infrastructure.
+- Run: `./proposal-prepper-infra/containers/start.sh -d`
+- URL: http://localhost:3000
 
-- **Frontend**: http://localhost:3000
-- **Backend**: http://localhost:8080
+### Mock Mode (UI Only)
+Starts ONLY the Web UI in simulation mode for rapid frontend development.
+- Run: `./proposal-prepper-infra/containers/start.sh --mock -d`
+- URL: http://localhost:3000
+
+See the [Local Development Guide](./proposal-prepper-docs/guides/LOCAL_DEVELOPMENT_GUIDE.md) for full details.
 
 ## 🤝 Contributing
 

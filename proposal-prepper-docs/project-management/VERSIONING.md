@@ -62,7 +62,7 @@ Releases are automated via [release-please](https://github.com/googleapis/releas
 | Component | Versioning |
 |-----------|------------|
 | `apps/web` | Independent versions |
-| `services/strands-agent` | Independent versions |
+| `services/analysis-engine` | Independent versions |
 | `services/genkit-service` | Independent versions |
 | `packages/*` | Independent versions |
 | Root project | Follows web app version |

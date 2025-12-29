@@ -11,8 +11,8 @@
 
 'use client';
 
-import { AlertCircle, Button, Upload } from '@17sierra/ui';
-import { CheckCircle, FileText, X } from 'lucide-react';
+import { Button } from '@17sierra/ui';
+import { AlertCircle, CheckCircle, FileText, Upload as UploadIcon, X } from 'lucide-react';
 import { aiRouterClient } from 'proposal-prepper-services/ai-router-client';
 import type React from 'react';
 import { useCallback, useRef, useState } from 'react';
@@ -149,7 +149,7 @@ export function UploadManager({
   }, []);
 
   /**
-   * Uploads file using Strands API with progress tracking
+   * Uploads file using Analysis Engine API with progress tracking
    * Implements requirement 1.5 (progress tracking) and API integration
    * Falls back to mock client if real API is unavailable
    */
@@ -173,7 +173,7 @@ export function UploadManager({
             status: UploadStatus.COMPLETED,
             progress: 100,
             completedAt: new Date(),
-            // Store analysis session ID if available (from Strands integration)
+            // Store analysis session ID if available (from Analysis Engine integration)
             analysisSessionId: (response.data as any).analysisSessionId,
           };
 
@@ -511,7 +511,7 @@ export function UploadManager({
 
           <div className="mb-4" data-testid="upload-icon">
             {isUploading ? (
-              <Upload className="mx-auto h-12 w-12 text-blue-500 animate-pulse" />
+              <UploadIcon className="mx-auto h-12 w-12 text-blue-500 animate-pulse" />
             ) : hasCompleted ? (
               <CheckCircle className="mx-auto h-12 w-12 text-green-500" />
             ) : hasFailed ? (

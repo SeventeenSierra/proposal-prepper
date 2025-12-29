@@ -4,10 +4,11 @@
  */
 
 /**
- * Next.js API Route for Document Upload
+ * Document Upload API Route
  *
- * This route now uses the Strands integration adapter for end-to-end workflow.
- * Connects to real Strands service with fallback to mock for development.
+ * This route handles document uploads and initiates processing in the Analysis Engine.
+ * Requirements: 1.1, 1.2
+ * Connects to real Analysis Engine service with fallback to mock for development.
  */
 
 // Export the handler from the AI Router integration adapter

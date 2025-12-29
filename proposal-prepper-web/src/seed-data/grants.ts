@@ -280,16 +280,16 @@ export function seedGrantToAnalysisResult(grant: SeedGrant) {
     overallScore: mockResult.overallScore,
     issues: convertedIssues,
     analysisMetadata: {
-      totalPages: (seed % 20) + 10,
-      processingTime: ((seed * 100) % 5000) + 2000,
-      completedAt: new Date(),
+      totalPages: (grant.metadata.UUID.charCodeAt(0) % 20) + 10, // Deterministic page count
+      processingTime: (grant.metadata.UUID.charCodeAt(1) % 10000) + 2000, // Deterministic processing time
+      completedAt: new Date('2025-01-01T00:00:00Z'), // Consistent for tests
       rulesChecked: [
         'FAR 52.204-8',
         'FAR 52.204-21',
         'DFARS 252.204-7012',
         'FAR 52.219-8',
         'FAR 52.222-50',
-      ].slice(0, (seed % 5) + 1),
+      ].slice(0, (grant.metadata.UUID.charCodeAt(2) % 5) + 1), // Deterministic subset
     },
   };
 }

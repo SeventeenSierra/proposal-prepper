@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Strict-1.0.0
 # SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 """
-Database seeding manager for the Strands service.
+Database seeding manager for the Analysis Engine service.
 
 This module handles seeding the database with document metadata from
 the src/seed-data directory and manages file operations for seeded documents.

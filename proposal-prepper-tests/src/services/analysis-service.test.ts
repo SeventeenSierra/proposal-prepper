@@ -145,6 +145,9 @@ describe("AnalysisService", () => {
 			expect(mockAiRouterClient.startAnalysis).toHaveBeenCalledWith(
 				"proposal-123",
 				"doc-456",
+				undefined, // filename
+				undefined, // s3Key
+				undefined, // provider
 			);
 		});
 
@@ -388,12 +391,12 @@ describe("AnalysisService", () => {
 		it("should subscribe to WebSocket updates", async () => {
 			mockAiRouterClient.connectWebSocket.mockResolvedValueOnce(undefined);
 			mockAiRouterClient.subscribeToAnalysisProgress.mockImplementationOnce(
-				() => {},
+				() => { },
 			);
 			mockAiRouterClient.subscribeToAnalysisComplete.mockImplementationOnce(
-				() => {},
+				() => { },
 			);
-			mockAiRouterClient.subscribeToErrors.mockImplementationOnce(() => {});
+			mockAiRouterClient.subscribeToErrors.mockImplementationOnce(() => { });
 
 			await analysisService.subscribeToRealTimeUpdates();
 

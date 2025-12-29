@@ -3,7 +3,7 @@
 
 
 """
-Database configuration and session management for the Strands service.
+Database configuration and session management for the Analysis Engine service.
 
 This module provides SQLAlchemy configuration, connection pooling,
 and database session management with retry logic.

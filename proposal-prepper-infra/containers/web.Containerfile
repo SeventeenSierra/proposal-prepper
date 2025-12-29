@@ -16,7 +16,7 @@ RUN mkdir -p /app && chown -R node:node /app
 USER node
 
 # Copy package files
-COPY --chown=node:node pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY --chown=node:node proposal-prepper-web/package.json ./proposal-prepper-web/
 COPY --chown=node:node proposal-prepper-services/package.json ./proposal-prepper-services/
 COPY --chown=node:node proposal-prepper-middleware/package.json ./proposal-prepper-middleware/

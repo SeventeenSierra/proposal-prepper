@@ -6,7 +6,7 @@ import Sidebar from '@/components/layout/sidebar';
 import TopBar from '@/components/layout/top-bar';
 import ReportPreview from '@/components/report-preview';
 import type { AnalysisResults } from '@/components/results/types';
-import { apiConfig } from '@/services/config/app';
+import { apiConfig, type ConnectionMode } from '@/services/config/app';
 import { AIRouterIntegrationUtils } from 'proposal-prepper-services';
 
 export default function App() {
@@ -14,22 +14,22 @@ export default function App() {
   const [showReport, setShowReport] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [analysisResults, setAnalysisResults] = useState<AnalysisResults | null>(null);
-  const [apiMode, setApiMode] = useState<'real' | 'mock'>(apiConfig.useMockApis ? 'mock' : 'real');
+  const [connectionMode, setConnectionMode] = useState<ConnectionMode>(apiConfig.defaultMode);
 
   useEffect(() => {
     // Initialize health monitoring
     AIRouterIntegrationUtils.initialize();
 
     // Check localStorage on mount
-    const storedMockPref = localStorage.getItem('use-mock-api');
-    if (storedMockPref !== null) {
-      setApiMode(storedMockPref === 'true' ? 'mock' : 'real');
+    const storedMode = localStorage.getItem('connection-mode') as ConnectionMode | null;
+    if (storedMode) {
+      setConnectionMode(storedMode);
     }
 
     // Listen for storage events
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'use-mock-api') {
-        setApiMode(e.newValue === 'true' ? 'mock' : 'real');
+      if (e.key === 'connection-mode' && e.newValue) {
+        setConnectionMode(e.newValue as ConnectionMode);
       }
     };
     window.addEventListener('storage', handleStorageChange);
@@ -72,7 +72,11 @@ export default function App() {
       <TopBar
         toggleSidebar={() => setSidebarOpen(!isSidebarOpen)}
         isSidebarOpen={isSidebarOpen}
-        apiMode={apiMode}
+        connectionMode={connectionMode}
+        setConnectionMode={(mode) => {
+          setConnectionMode(mode);
+          localStorage.setItem('connection-mode', mode);
+        }}
       />
 
       <div className="flex flex-1 overflow-hidden h-[calc(100vh-64px)]">
@@ -89,7 +93,7 @@ export default function App() {
             onAnalysisStart={handleAnalysisStart}
             onAnalysisComplete={handleAnalysisComplete}
             onAnalysisError={handleAnalysisError}
-            apiMode={apiMode}
+            connectionMode={connectionMode}
           />
           <ReportPreview isVisible={showReport} results={analysisResults} />
         </main>

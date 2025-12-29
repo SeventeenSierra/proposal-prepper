@@ -28,9 +28,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Create non-root user for security
-RUN useradd --create-home --shell /bin/bash strands && \
-    chown -R strands:strands /app
-USER strands
+RUN useradd --create-home --shell /bin/bash analysis-engine && \
+    chown -R analysis-engine:analysis-engine /app
+USER analysis-engine
 
 # Expose port
 EXPOSE 8080

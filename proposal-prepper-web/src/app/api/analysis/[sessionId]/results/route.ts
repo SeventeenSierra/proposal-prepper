@@ -6,8 +6,8 @@
 /**
  * Next.js API Route for Analysis Results
  *
- * This route now uses the Strands integration adapter for end-to-end workflow.
- * Connects to real Strands service with fallback to mock for development.
+ * This route now uses the Analysis Engine integration adapter for end-to-end workflow.
+ * Connects to real Analysis Engine service with fallback to mock for development.
  */
 
 // Export the handler from the AI Router integration adapter

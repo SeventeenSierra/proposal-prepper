@@ -161,7 +161,7 @@ export class ErrorMessagingDemo {
 		console.log("   - Immediate feedback for validation failures\n");
 
 		console.log("Step 2: Upload Attempt");
-		console.log("   - Try real Strands API first");
+		console.log("   - Try real Analysis Engine API first");
 		console.log("   - Show progress updates during upload");
 		console.log("   - Detailed error messages for failures\n");
 

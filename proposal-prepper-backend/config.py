@@ -3,7 +3,7 @@
 
 
 """
-Configuration management for the Strands service.
+Configuration management for the Analysis Engine service.
 
 This module handles environment variables and application settings
 using Pydantic for validation and type safety.

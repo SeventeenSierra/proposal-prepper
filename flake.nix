@@ -21,6 +21,7 @@
           buildInputs = with pkgs; [
             nodejs_22
             pnpm
+            tsx
             biome
             
             # Python for strands-agent service
@@ -76,6 +77,10 @@
             echo "Node: $(node --version)"
             echo "pnpm: $(pnpm --version)"
             
+            export PYTHONPATH=$PYTHONPATH:$(pwd)/proposal-prepper-backend
+            export COMPOSE_FILE=proposal-prepper-infra/containers/compose.yaml
+            export DOCKER_HOST=unix:///run/user/$(id -u)/podman/podman.sock
+            
             # Setup Python Virtual Environment for missing nixpkgs
             if [ ! -d ".venv" ]; then
               python3 -m venv .venv
@@ -83,8 +88,14 @@
             source .venv/bin/activate
             pip install --quiet litellm langgraph langchain-openai
             
+            # Favor podman-compose
+            if command -v podman-compose > /dev/null; then
+              alias docker-compose='podman-compose'
+              echo "✓ Podman-native infrastructure detected"
+            fi
+
             # Mimic IDX web preview command
-            alias web='pnpm run dev -- --port ''${PORT:-3000} --hostname 0.0.0.0'
+            alias web='PORT=''${PORT:-3000} HOSTNAME=0.0.0.0 pnpm -r --filter proposal-prepper --filter proposal-prepper-middleware --parallel run dev'
             echo "💡 Run 'web' to start the dev server (host: 0.0.0.0, port: \''${PORT:-3000})"
           '';
         };

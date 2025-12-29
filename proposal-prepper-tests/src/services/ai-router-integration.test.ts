@@ -2,16 +2,16 @@
 // SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 /**
- * Strands Integration Tests
+ * Analysis Engine Integration Tests
  *
- * Unit tests for the Strands service integration utilities.
+ * Unit tests for the Analysis Engine service integration utilities.
  * Tests service status monitoring, health checks, and error recovery.
  */
 
 import { aiRouterClient } from "proposal-prepper-services/ai-router-client";
 import {
 	type AIRouterIntegration,
-	AIRouterIntegrationUtils, // Added import
+	AIRouterIntegrationUtils,
 	aiRouterIntegration,
 	type ServiceIntegrationStatus,
 } from "proposal-prepper-services/ai-router-integration";
@@ -49,11 +49,11 @@ describe("AIRouterIntegration", () => {
 	// Singleton test removed as we use exported instance
 	/*
   describe('getInstance', () => {
-    it('should return singleton instance', () => {
-      const instance1 = StrandsIntegrationManager.getInstance();
-      const instance2 = StrandsIntegrationManager.getInstance();
-      expect(instance1).toBe(instance2);
-    });
+	it('should return singleton instance', () => {
+	  const instance1 = AIRouterIntegration.getInstance();
+	  const instance2 = AIRouterIntegration.getInstance();
+	  expect(instance1).toBe(instance2);
+	});
   });
   */
 

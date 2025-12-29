@@ -1,5 +1,5 @@
 """
-Strands Python service for AI-powered compliance analysis.
+Analysis Engine Python service for AI-powered compliance analysis.
 
 This package provides document analysis capabilities using AWS Bedrock
 for compliance checking against FAR/DFARS regulations.

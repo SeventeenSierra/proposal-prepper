@@ -25,7 +25,10 @@ import {
 } from "@/seed-data/grants";
 import { UploadStatus } from "@/types/app";
 import { ErrorScenario, validateMockData } from "./mock-data-provider";
-import { MockStrandsAPIEnhanced } from "./mock-strands-api-enhanced";
+import {
+	MockAnalysisEngineAPIEnhanced,
+	mockAnalysisEngineAPIEnhanced,
+} from "./mock-analysis-engine-api-enhanced";
 
 describe("Mock Data Consistency Properties", () => {
 	describe("Property 5.1: Upload Session Mock Data Consistency", () => {
@@ -183,6 +186,24 @@ describe("Mock Data Consistency Properties", () => {
 	});
 
 	describe("Property 5.4: Seed Grant Data Consistency", () => {
+		it("should produce consistent results using mockAnalysisEngineAPIEnhanced", async () => {
+			const grant = getRandomSeedGrant();
+			const result1 = await mockAnalysisEngineAPIEnhanced.getAnalysisResults(
+				grant.metadata.UUID,
+			);
+			const result2 = await mockAnalysisEngineAPIEnhanced.getAnalysisResults(
+				grant.metadata.UUID,
+			);
+			expect(result1).toEqual(result2);
+		});
+
+		it("should fail validation for invalid data using MockAnalysisEngineAPIEnhanced", async () => {
+			const api = MockAnalysisEngineAPIEnhanced.createErrorScenario(
+				ErrorScenario.VALIDATION_ERROR,
+			);
+			await expect(api.getAnalysisResults("invalid-id")).rejects.toThrow();
+		});
+
 		it("should maintain consistent data transformation from seed grants", () => {
 			fc.assert(
 				fc.property(
@@ -230,7 +251,7 @@ describe("Mock Data Consistency Properties", () => {
 				fc.asyncProperty(
 					fc.constantFrom(...Object.values(ErrorScenario)),
 					async (errorScenario) => {
-						const mockAPI = MockStrandsAPIEnhanced.createErrorScenario(
+						const mockAPI = MockAnalysisEngineAPIEnhanced.createErrorScenario(
 							errorScenario,
 							10,
 						);

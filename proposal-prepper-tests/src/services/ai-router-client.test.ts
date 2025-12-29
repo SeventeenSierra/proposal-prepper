@@ -3,9 +3,9 @@
 // SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 /**
- * Strands API Client Tests
+ * Analysis Engine API Client Tests
  *
- * Unit tests for the Strands API client HTTP/REST and WebSocket functionality.
+ * Unit tests for the Analysis Engine API client HTTP/REST and WebSocket functionality.
  * Tests error handling, retry logic, and API integration.
  */
 

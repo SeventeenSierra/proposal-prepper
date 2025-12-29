@@ -29,7 +29,7 @@ class LocalAnalysisProvider(AnalysisProvider):
 
     def get_name(self) -> str:
         """Get the human-readable name of the provider."""
-        return "LiteLLM" if settings.use_local_llm else "Strands"
+        return "Local Mode"
 
     async def analyze_document(
         self, 
@@ -79,13 +79,32 @@ class LocalAnalysisProvider(AnalysisProvider):
 
     async def _run_ai_analysis(self, document_text: str, filename: str, document_id: str, session_id: str) -> ComplianceResults:
         """Execute real AI analysis using LiteLLM (Ollama/Llama3.2)."""
-        import litellm
-        import json
-        from agent_personas import get_unified_compliance_prompt
+        if self._graph:
+            try:
+                initial_state = {
+                    "document_text": document_text,
+                    "filename": filename,
+                    "document_id": document_id,
+                    "session_id": session_id,
+                    "findings": [],
+                    "status": "starting"
+                }
+                
+                logger.info(f"Invoking multi-agent LangGraph for session {session_id}...")
+                final_state = await self._graph.ainvoke(initial_state)
+                
+                # Reconstruct ComplianceResults from graph findings
+                return self._process_graph_findings(final_state, document_id, session_id)
+            except Exception as e:
+                logger.error(f"LangGraph analysis failed: {e}")
+                if not settings.use_simulated_data:
+                    raise
         
+        # Fallback to direct single-prompt AI if graph disabled or failed
+        from agent_personas import get_unified_compliance_prompt
         prompt = get_unified_compliance_prompt(document_text=document_text[:8000], filename=filename)
         
-        logger.info(f"Calling local LLM ({settings.local_llm_model}) via LiteLLM...")
+        logger.info(f"Calling local LLM ({settings.local_llm_model}) via direct LiteLLM fallback...")
         
         response = await litellm.acompletion(
             model=f"ollama/{settings.local_llm_model}",
@@ -96,46 +115,161 @@ class LocalAnalysisProvider(AnalysisProvider):
         )
         
         content = response.choices[0].message.content
-        logger.debug(f"Local AI response: {content}")
+        logger.debug(f"Local AI direct response: {content}")
         
-        # Parse AI response using a logic similar to BedrockClient._parse_ai_response
-        # This implementation could be moved to a shared utility later
         return self._parse_local_response(content, document_id, session_id)
 
+    def _process_graph_findings(self, state: Dict[str, Any], document_id: str, session_id: str) -> ComplianceResults:
+        """Convert accumulated graph findings into ComplianceResults."""
+        issues = []
+        critical_count = 0
+        warning_count = 0
+        info_count = 0
+        
+        for i, issue_data in enumerate(state.get("findings", [])):
+            reg_data = issue_data.get("regulation", {})
+            regulation = RegulatoryReference(
+                regulation=reg_data.get("regulation", "N/A"),
+                section=reg_data.get("section", "N/A"),
+                title=reg_data.get("title", "N/A"),
+                url=reg_data.get("url")
+            )
+            
+            severity = issue_data.get("severity", "info").lower()
+            if severity == "critical": critical_count += 1
+            elif severity == "warning": warning_count += 1
+            else: info_count += 1
+            
+            issues.append(ComplianceIssue(
+                id=f"graph_{document_id}_{i}",
+                severity=severity,
+                title=issue_data.get("title", "Issue"),
+                description=issue_data.get("description", ""),
+                regulation=regulation,
+                confidence=issue_data.get("confidence", 0.5),
+                remediation=issue_data.get("remediation")
+            ))
+            
+        summary = ComplianceSummary(
+            total_issues=len(issues),
+            critical_count=critical_count,
+            warning_count=warning_count,
+            info_count=info_count,
+            overall_score=80.0  # Simplified calculation for now
+        )
+        
+        return ComplianceResults(
+            id=f"graph_{document_id}_{int(datetime.utcnow().timestamp())}",
+            session_id=session_id,
+            document_id=document_id,
+            status="warning" if critical_count > 0 or warning_count > 0 else "pass",
+            issues=issues,
+            summary=summary,
+            generated_at=datetime.utcnow(),
+            ai_model=settings.local_llm_model,
+            processing_time=0.0,
+            metadata={
+                "analysis_type": "langgraph_multi_agent",
+                "agents": ["far", "eo", "technical"],
+                "air_spec": settings.air_spec_mode
+            }
+        )
+
     def _build_analysis_graph(self):
-        """Build a basic LangGraph for the analysis pipeline."""
+        """Build the specialized multi-agent LangGraph for local analysis."""
         try:
             from langgraph.graph import StateGraph, END
-            from typing import TypedDict, List
+            from typing import TypedDict, List, Annotated
+            import operator
             
             class AgentState(TypedDict):
                 document_text: str
                 filename: str
                 document_id: str
                 session_id: str
-                findings: List[Dict[str, Any]]
+                findings: Annotated[List[Dict[str, Any]], operator.add]
                 status: str
-            
+
             async def far_agent_node(state: AgentState):
-                # Placeholder for real FAR agent call
-                return {"status": "analyzing_far"}
+                logger.info(">>> [DEBUG] Entering FAR Agent Node... <<<")
+                # In a real impl, we'd slice document_text or use RAG
+                results = await self._call_specialized_agent("far", state["document_text"], state["filename"])
+                return {"findings": results.get("issues", []), "status": "far_complete"}
 
             async def eo_agent_node(state: AgentState):
-                # Placeholder for real EO agent call
-                return {"status": "analyzing_eo"}
+                logger.info(">>> [DEBUG] Entering EO Agent Node... <<<")
+                results = await self._call_specialized_agent("eo", state["document_text"], state["filename"])
+                return {"findings": results.get("issues", []), "status": "eo_complete"}
+
+            async def technical_agent_node(state: AgentState):
+                logger.info(">>> [DEBUG] Entering Technical Agent Node... <<<")
+                results = await self._call_specialized_agent("technical", state["document_text"], state["filename"])
+                return {"findings": results.get("issues", []), "status": "technical_complete"}
 
             workflow = StateGraph(AgentState)
+            
             workflow.add_node("far_agent", far_agent_node)
             workflow.add_node("eo_agent", eo_agent_node)
+            workflow.add_node("technical_agent", technical_agent_node)
             
             workflow.set_entry_point("far_agent")
             workflow.add_edge("far_agent", "eo_agent")
-            workflow.add_edge("eo_agent", END)
+            workflow.add_edge("eo_agent", "technical_agent")
+            workflow.add_edge("technical_agent", END)
             
             return workflow.compile()
         except ImportError:
             logger.warning("langgraph not found, agent graph will be disabled")
             return None
+
+    async def _call_specialized_agent(self, agent_type: str, document_text: str, filename: str) -> Dict[str, Any]:
+        """Helper to call LiteLLM with a specific agent persona."""
+        import litellm
+        import json
+        from agent_personas import get_persona_prompt, get_unified_compliance_prompt
+        
+        persona_sop = get_persona_prompt(agent_type)
+        # We use a condensed version of the unified prompt for individual nodes
+        prompt = f"""{persona_sop}
+        
+Analyze the following document for compliance based on your specialty.
+Document: {filename}
+Content: {document_text[:4000]}
+
+IMPORTANT: Return VALID JSON only.
+JSON Format:
+{{
+    "issues": [
+        {{
+            "severity": "critical|warning|info",
+            "title": "string",
+            "description": "string",
+            "regulation": {{"regulation": "FAR|EO|Technical", "section": "string", "title": "string"}},
+            "confidence": 0-1
+        }}
+    ]
+}}
+"""
+        try:
+            response = await litellm.acompletion(
+                model=f"ollama/{settings.local_llm_model}",
+                messages=[{"role": "user", "content": prompt}],
+                api_base=settings.local_llm_url,
+                temperature=0.1,
+                response_format={"type": "json_object"}
+            )
+            content = response.choices[0].message.content
+            
+            # Handle markdown wrappers if present
+            if "```json" in content:
+                content = content.split("```json")[1].split("```")[0].strip()
+            elif "{" in content:
+                content = content[content.find("{"):content.rfind("}")+1]
+                
+            return json.loads(content)
+        except Exception as e:
+            logger.error(f"Agent {agent_type} failed: {e}")
+            return {"issues": []}
 
     def _parse_local_response(self, content: str, document_id: str, session_id: str) -> ComplianceResults:
         """Parse structured JSON from local LLM."""

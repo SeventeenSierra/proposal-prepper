@@ -5,7 +5,7 @@
 
 'use client';
 
-import { CheckCircle2, Loader2 } from '@17sierra/ui';
+import { CheckCircle2, Loader2 } from 'lucide-react';
 import React from 'react';
 
 /**

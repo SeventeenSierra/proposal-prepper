@@ -8,8 +8,14 @@
  * threshold functionality tests.
  */
 
-export * from "./mock-strands-api";
-export * from "./mock-strands-api-enhanced";
+import {
+	MockAnalysisEngineAPIEnhanced,
+	mockAnalysisEngineAPIEnhanced,
+} from "./mock-analysis-engine-api-enhanced";
+import {
+	type MockAnalysisEngineApiClient,
+	createMockAnalysisEngineApiClient,
+} from "./mock-analysis-engine-api";
 export * from "./property-testing";
 
 /**

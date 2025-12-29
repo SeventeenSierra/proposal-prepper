@@ -72,15 +72,15 @@ Signed-off-by: Human Sponsor <human@seventeensierra.com>
 
 | Type | Purpose | Common Scopes | Example |
 |------|---------|---------------|---------|
-| `feat` | New feature | web, strands, ui, compliance | `feat(web): add NSF compliance dashboard` |
-| `fix` | Bug fix | web, strands, api, components | `fix(api): resolve validation error` |
+| `feat` | New feature | web, analysis-engine, ui, compliance | `feat(web): add NSF compliance dashboard` |
+| `fix` | Bug fix | web, analysis-engine, api, components | `fix(api): resolve validation error` |
 | `docs` | Documentation | docs, web, ui, lib | `docs(readme): update setup instructions` |
 | `style` | Code formatting | web, ui, components | `style(ui): apply biome formatting` |
-| `refactor` | Code restructuring | web, strands, orchestration | `refactor(orchestration): extract validation logic` |
-| `test` | Testing | tests, web, strands, compliance | `test(compliance): add NSF validation tests` |
+| `refactor` | Code restructuring | web, analysis-engine, orchestration | `refactor(orchestration): extract validation logic` |
+| `test` | Testing | tests, web, analysis-engine, compliance | `test(compliance): add NSF validation tests` |
 | `chore` | Maintenance | deps, config, ci | `chore(deps): update dependencies` |
 | `ci` | CI/CD changes | ci, docker, railway, security | `ci(docker): add security workflow` |
-| `perf` | Performance | web, strands, orchestration | `perf(orchestration): optimize mesh routing` |
+| `perf` | Performance | web, analysis-engine, orchestration | `perf(orchestration): optimize mesh routing` |
 | `build` | Build system | docker, railway, config | `build(docker): update compose config` |
 | `revert` | Revert commit | any scope | `revert(web): revert dashboard changes` |
 
@@ -88,7 +88,7 @@ Signed-off-by: Human Sponsor <human@seventeensierra.com>
 
 | Category | Scopes | Purpose |
 |----------|--------|---------|
-| **Services** | `web`, `strands` | Federated Mesh services |
+| **Services** | `web`, `analysis-engine` | Federated Mesh services |
 | **Packages** | `ui`, `lib` | Shared component libraries |
 | **Infrastructure** | `docker`, `railway`, `ci`, `deps` | Deployment and tooling |
 | **Business Logic** | `compliance`, `orchestration`, `api` | Core functionality |
@@ -211,7 +211,7 @@ AI agents must use appropriate scopes based on the files being modified:
 | File Pattern | Required Scope | Zone |
 |--------------|----------------|------|
 | `apps/web/**` | `web` | 2+ |
-| `services/strands-agent/**` | `strands` | 3 (security) |
+| `services/analysis-engine/**` | `analysis-engine` | 3 (security) |
 | `packages/ui/**` | `ui` | 1+ |
 | `packages/lib/**` | `lib` | 1+ |
 | `docker-compose.yml` | `docker` | 4 (human-only) |
@@ -345,7 +345,7 @@ Scope: security
 #### Invalid Scope for Commit Type
 ```bash
 # ❌ INVALID: Style changes shouldn't affect strands service
-style(strands): format Python code
+style(analysis-engine): format Python code
 AI-Agent: kiro
 # ❌ Python service uses Black, not Biome
 # ❌ Should use scope 'web' for style changes

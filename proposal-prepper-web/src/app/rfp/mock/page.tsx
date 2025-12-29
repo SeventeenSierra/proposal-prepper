@@ -5,7 +5,8 @@
 
 'use client';
 
-import { Bug, Button, RefreshCw, Settings } from '@17sierra/ui';
+import { Button } from '@17sierra/ui';
+import { Bug, RefreshCw, Settings } from 'lucide-react';
 import React from 'react';
 import { AppHeader, TwoPanelLayout } from '@/components/layout';
 import { ReportPreview } from '@/components/reports';

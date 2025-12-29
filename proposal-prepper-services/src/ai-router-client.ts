@@ -2,9 +2,9 @@
 // SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 /**
- * Strands API Client
+ * Analysis Engine API Client
  *
- * HTTP/REST and WebSocket client for communicating with the Strands service.
+ * HTTP/REST and WebSocket client for communicating with the Analysis Engine service.
  * Provides document upload, analysis orchestration, and results retrieval.
  * Implements requirements 1.1, 2.1, and 3.1 for API integration.
  *
@@ -25,7 +25,7 @@ export interface ApiResponse<T> {
 }
 
 /**
- * Upload session data from Strands API
+ * Upload session data from Analysis Engine API
  */
 export interface UploadSessionResponse {
   id: string;
@@ -41,7 +41,7 @@ export interface UploadSessionResponse {
 }
 
 /**
- * Analysis session data from Strands API
+ * Analysis session data from Analysis Engine API
  */
 export interface AnalysisSessionResponse {
   id: string;
@@ -55,7 +55,7 @@ export interface AnalysisSessionResponse {
 }
 
 /**
- * Compliance results from Strands API
+ * Compliance results from Analysis Engine API
  */
 export interface ComplianceResultsResponse {
   id: string;
@@ -484,12 +484,10 @@ class WebSocketClient {
 }
 
 /**
- * Main Strands API Client
+ * Main Analysis Engine API Client
  *
- * Provides HTTP/REST * AI Router Client
- * 
- * Handles communication with the external AI service (formerly Strands).
- * Renamed from StrandsApiClient to AIRouterClient to be more generic.lements error handling, retry logic, and real-time updates.
+ * Handles communication with the external AI service (Analysis Engine).
+ * Encapsulates error handling, retry logic, and real-time updates.
  */
 export class AIRouterClient {
   private httpClient: HttpClient;
@@ -498,7 +496,7 @@ export class AIRouterClient {
   private lastHealthCheck: { timestamp: number; healthy: boolean } | null = null;
   private healthCheckCacheMs = 30000; // Cache health check for 30 seconds
 
-  constructor(baseUrl: string = apiConfig.strandsBaseUrl) {
+  constructor(baseUrl: string = apiConfig.engineBaseUrl) {
     this.baseUrl = baseUrl;
     this.httpClient = new HttpClient(baseUrl);
     this.wsClient = new WebSocketClient(baseUrl);
@@ -541,13 +539,14 @@ export class AIRouterClient {
     proposalId: string,
     documentId?: string,
     filename?: string,
-    s3Key?: string
+    s3Key?: string,
+    provider?: string
   ): Promise<ApiResponse<AnalysisSessionResponse>> {
     // Check service health before attempting analysis
     if (!(await this.isServiceHealthy())) {
       return {
         success: false,
-        error: 'Strands service is not available. Please try again later.',
+        error: 'Analysis Engine service is not available. Please try again later.',
         code: 'SERVICE_UNAVAILABLE',
       };
     }
@@ -558,6 +557,7 @@ export class AIRouterClient {
       filename: filename || 'document.pdf',
       s3_key: s3Key || `uploads/${proposalId}/${filename || 'document.pdf'}`,
       frameworks: ['FAR', 'DFARS'],
+      provider: provider,
     });
   }
 
@@ -654,7 +654,7 @@ export class AIRouterClient {
     if (!(await this.isServiceHealthy())) {
       return {
         success: false,
-        error: 'Strands service is not available',
+        error: 'Analysis Engine service is not available',
         code: 'SERVICE_UNAVAILABLE',
       };
     }
@@ -674,7 +674,7 @@ export class AIRouterClient {
   // Health Check
 
   /**
-   * Check if Strands service is available
+   * Check if Analysis Engine service is available
    */
   async healthCheck(): Promise<
     ApiResponse<{ status: string; version: string; checks?: Record<string, string> }>
@@ -696,7 +696,7 @@ export class AIRouterClient {
   }
 
   /**
-   * Check if Strands service is healthy and ready for requests
+   * Check if Analysis Engine service is healthy and ready for requests
    * Uses cached result if available and recent
    */
   async isServiceHealthy(): Promise<boolean> {
@@ -799,7 +799,7 @@ function createAIRouterClient() {
     config = configModule.apiConfiguration;
   } catch (_error) {
     // Fallback configuration if api-config is not available
-    const baseUrl = apiConfig.useMockApis ? 'http://localhost:3000' : apiConfig.strandsBaseUrl;
+    const baseUrl = apiConfig.useMockApis ? 'http://localhost:3000' : apiConfig.engineBaseUrl;
 
     config = {
       baseUrl,
@@ -811,7 +811,7 @@ function createAIRouterClient() {
 }
 
 /**
- * Create a Strands API client with explicit configuration
+ * Create an Analysis Engine API client with explicit configuration
  * Useful for testing or specific deployment scenarios
  */
 export function createAIRouterClientWithConfig(baseUrl: string, _useMock: boolean = false) {
@@ -819,7 +819,7 @@ export function createAIRouterClientWithConfig(baseUrl: string, _useMock: boolea
 }
 
 /**
- * Default Strands API client instance
+ * Default Analysis Engine API client instance
  * Automatically switches between real and mock APIs based on environment
  */
 export const aiRouterClient = createAIRouterClient();

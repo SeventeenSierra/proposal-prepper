@@ -4,7 +4,7 @@
 /**
  * Results Service
  *
- * Service layer for managing compliance analysis results and integrating with the Strands API.
+ * Service layer for managing compliance analysis results and integrating with the Analysis Engine API.
  * Provides results retrieval, issue details, and regulatory references.
  * Implements requirements 3.1, 3.2, 3.3, 3.4, and 3.5 for results functionality.
  */
@@ -32,7 +32,7 @@ export interface ResultsServiceEvents {
 /**
  * Results Service Class
  *
- * Manages compliance analysis results with the Strands API, providing results retrieval,
+ * Manages compliance analysis results with the Analysis Engine API, providing results retrieval,
  * issue details, and regulatory reference capabilities.
  */
 export class ResultsService {

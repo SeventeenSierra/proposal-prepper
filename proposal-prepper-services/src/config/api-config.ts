@@ -47,6 +47,7 @@ const DEFAULT_ENDPOINTS: ApiEndpoints = {
  * Environment variable names for configuration
  */
 const ENV_VARS = {
+  ENGINE_API_URL: 'ENGINE_API_URL',
   STRANDS_API_URL: 'STRANDS_API_URL',
   MOCK_API_URL: 'MOCK_API_URL',
   USE_MOCK_API: 'USE_MOCK_API',
@@ -136,8 +137,12 @@ function getApiBaseUrl(): string {
     }
   }
 
-  // Real Strands API URL - prioritize Docker container networking
-  const realUrl = getEnvVar(ENV_VARS.STRANDS_API_URL) || getEnvVar('STRANDS_SERVICE_URL');
+  // Real Analysis Engine API URL - prioritize Docker container networking
+  const realUrl =
+    getEnvVar(ENV_VARS.ENGINE_API_URL) ||
+    getEnvVar(ENV_VARS.STRANDS_API_URL) ||
+    getEnvVar('ANALYSIS_ENGINE_SERVICE_URL') ||
+    getEnvVar('STRANDS_SERVICE_URL');
   if (realUrl) return realUrl;
 
   // Default real API URL - use Docker service name for server-side, localhost for client-side
@@ -146,7 +151,7 @@ function getApiBaseUrl(): string {
     return 'http://localhost:8080';
   } else {
     // Server environment - use Docker service name
-    return 'http://strands:8080';
+    return 'http://analysis-engine:8080';
   }
 }
 
@@ -221,7 +226,7 @@ export class ApiConfigurationManager {
   useRealApi(realBaseUrl?: string): void {
     this.updateConfiguration({
       useMock: false,
-      baseUrl: realBaseUrl || getEnvVar(ENV_VARS.STRANDS_API_URL, 'http://localhost:8080'),
+      baseUrl: realBaseUrl || getEnvVar(ENV_VARS.ENGINE_API_URL) || getEnvVar(ENV_VARS.STRANDS_API_URL, 'http://localhost:8080'),
     });
   }
 

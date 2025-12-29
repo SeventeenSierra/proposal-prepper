@@ -58,8 +58,8 @@ AI-Agent: <model>                   ← If assisted by AI
 | `chore` | Maintenance, dependencies, etc. |
 | `ci` | CI/CD configuration changes |
 
-**Microservice Scopes:**
-- **Services:** `web` (Next.js), `strands` (Python agent), `genkit` (Node.js/LLM)
+- **Microservice Scopes:**
+- **Services:** `web` (Next.js), `analysis-engine` (Python agent), `genkit` (Node.js/LLM)
 - **Packages:** `ui` (@aatb/ui), `lib` (@aatb/lib)
 - **Infrastructure:** `docker`, `railway`, `ci`, `deps`
 - **Project Areas:** `compliance`, `orchestration`, `api`, `components`, `docs`, `config`, `security`, `tests`, `seed`, `schemas`
@@ -75,7 +75,7 @@ AI-Agent: <model>                   ← If assisted by AI
 
 **Feature Addition (AI-Assisted):**
 ```bash
-git commit -s -m "feat(strands): add NSF PAPPG Section 2.B validation
+git commit -s -m "feat(analysis-engine): add NSF PAPPG Section 2.B validation
 
 Implements Section 2.B.2(f)(i) validation for biographical sketches.
 

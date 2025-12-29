@@ -19,6 +19,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import uvicorn
 
+from analysis_provider import AnalysisRouter
+import aws_bedrock
+import local_provider
+
+# Global Analysis Router
+router = AnalysisRouter()
+
 from config import get_settings
 from logging_config import setup_logging, get_logger
 from models import (
@@ -281,7 +288,6 @@ async def process_analysis(session_id: str) -> None:
         
         # Use Analysis Router to get the configured provider
         try:
-            router = AnalysisRouter()
             provider = router.get_provider()
             
             logger.info(f"Using analysis provider: {provider.__class__.__name__} for document {session_data['document_id'][:12]}...")
