@@ -1,71 +1,130 @@
-# Session 15 Handoff Prompt
+# Session 15: Authentication with Keycloak
 
 ## Current Context
 
-I'm working on the **Proposal Prepper** project, a microservice architecture for government compliance document checking. I just completed **Session 14** where we fixed all test problems and completed a major component refactor.
+I'm working on the **Proposal Prepper** project, a microservice architecture for government compliance document checking. Session 14 completed a major refactor with 341/341 tests passing and all commits pushed to `feature/far-ui-integration`.
 
 **IMPORTANT TERMINOLOGY**: We use "government compliance" NOT "NSF PAPPG" - the latter is too specific and doesn't convey the broader scope of the platform.
 
-## Session 14 Summary (Just Completed)
+## Session 15 Objective
 
-**7 commits created and pushed** to `feature/far-ui-integration`:
+**Implement self-hosted authentication using Keycloak** as a dedicated microservice with:
+- **Role-based access**: Bidder vs Government roles
+- **Demo mode security**: CAPTCHA-protected demo login (`demo:demo`)
+- **User-scoped ownership**: Documents associated with authenticated users
+- **Protected API routes**: Backend security before public deployment
 
-1. **Test fixes** (2a588ae) - Fixed integration tests, added 35 component tests
-2. **Delete old components** (2d9dedc) - Removed 2,221 lines of legacy code
-3. **Add new components** (e61dcfa) - Modular agent-interface components
-4. **Add hooks/utilities** (279984d) - useAnalysisFlow, useMockAnalysis
-5. **Update integration** (1181d0e) - Wired new architecture into app
-6. **Test cleanup** (d86ad0d) - Removed obsolete grant tests, aligned with FAR
-7. **Session docs** (535de0e) - Full documentation in `.agent/sessions/14-test-fixes/`
+## Why Auth First?
 
-**Current status**: 341/341 tests passing, all commits pushed to GitHub
+**Critical prerequisites for all future features**:
+1. **Security**: Backend routes are currently exposed and need protection
+2. **Data Ownership**: Document uploads (especially J&A + RFP pairs) require user association
+3. **Role Workflows**: Bidder/Government-specific features depend on authentication
 
-## Branch Status
+**Why Keycloak?**
+- ✅ Open source, self-hosted, no vendor lock-in
+- ✅ Runs in containerized stack (local-first)
+- ✅ Production-ready (Red Hat, industry standard)
+- ✅ Built-in role-based access control
+- ✅ OpenID Connect (easy Next.js integration)
 
-- **Current branch**: `feature/far-ui-integration`
-- **Ahead of origin**: 0 commits (all pushed)
-- **Behind develop**: Unknown (need to check)
-- **Ready for**: PR creation
+## Implementation Overview
 
-## Immediate Next Steps
+**New microservice**: `proposal-prepper-auth`
+- Keycloak container running on port 8180
+- Automated realm configuration via `realm-export.json`
+- CAPTCHA integration (Cloudflare Turnstile)
+- Demo credentials with 1-hour session expiry
 
-### 1. Create Pull Request
-- **Title**: `refactor(web,tests): complete agent-interface refactor with test coverage`
-- **Description**: Use artifacts from session 14 as reference
-- **Should include**: All 7 commits with clear story arc
-- **Labels**: `refactor`, `test`, `component-tests`
-- **Note**: Title includes scope `(web,tests)` per commit-standards.md conventions
+**7 Implementation Sections** (7 commit boundaries):
+1. **Auth Microservice Setup** - Docker + networking
+2. **Keycloak Realm Config** - Roles, clients, demo user
+3. **CAPTCHA Integration** - Cloudflare Turnstile for demo mode
+4. **NextAuth Integration** - Next.js authentication flows
+5. **Database Schema** - Users, document uploads, proposals tables
+6. **Protected Routes** - Middleware for API protection
+7. **Role-Based UI** - Bidder/Government view switching
 
-### 2. Address Remaining Issues
+## Task Breakdown
 
-**Pre-existing issues NOT in PR:**
-- Dependabot security alert on default branch (NOT feature branch)
-- ~6,000 pre-existing lint warnings in codebase
-- E2E tests may need comprehensive refactor (partially updated)
+### Section 1: Auth Microservice Setup
+**Scope**: `auth`
+- [ ] Create `proposal-prepper-auth/` directory
+- [ ] Add Keycloak Dockerfile
+- [ ] Create docker-compose.yml for auth service
+- [ ] Add to main docker-compose (external service)
+- [ ] Configure networking between services
 
-### 3. Follow-up Work (Separate PRs)
+### Section 2: Keycloak Realm Configuration
+**Scope**: `auth`
+- [ ] Create realm-export.json (automated config)
+- [ ] Define `proposal-prepper` realm
+- [ ] Configure client: `proposal-prepper-web`
+- [ ] Create roles: `bidder`, `government`, `anonymous`
+- [ ] Create demo user: `demo:demo`
+- [ ] Set up CAPTCHA requirement for demo login
 
-**FAR Mock Generators** - Create new mock data functions:
-- Replace commented-out grant imports in test utilities
-- See TODOs in `mock-data-provider.tsx` and `mock-analysis-engine-api-enhanced.ts`
+### Section 3: CAPTCHA Integration
+**Scope**: `auth,web`
+- [ ] Sign up for Cloudflare Turnstile
+- [ ] Add Turnstile to demo login page
+- [ ] Create CAPTCHA verification endpoint
+- [ ] Integrate with Keycloak login flow
+- [ ] Test bot protection
 
-**E2E Test Refactor** - Comprehensive update:
-- Use FAR sample PDFs from `proposal-prepper-seed--data/Proposals/` (Grant and J&A)
-- Update all E2E tests for FAR architecture
-- Remove hardcoded grant file paths
-- Note: Seed data was moved from `proposal-prepper-web/src/seed-data/` to the seed-data package
+### Section 4: NextAuth Integration
+**Scope**: `web`
+- [ ] Install next-auth
+- [ ] Create [...nextauth]/route.ts
+- [ ] Configure Keycloak provider (auth microservice)
+- [ ] Add demo mode auto-login
+- [ ] Add environment variables
+- [ ] Test login flows (normal + demo)
 
-**Default Branch Security** - Fix Dependabot alert:
-- Check what the vulnerability is (couldn't access via MCP)
-- Update vulnerable dependency
-- Separate PR to default branch
+### Section 5: Database Schema
+**Scope**: `db`
+- [ ] Create users table migration
+- [ ] Create document_uploads table
+- [ ] Create proposals table
+- [ ] Add anonymous user constraints
+- [ ] Run migrations
+- [ ] Test data isolation
+
+### Section 6: Protected Routes
+**Scope**: `web`
+- [ ] Create auth middleware
+- [ ] Protect /api/documents (require auth, allow anonymous)
+- [ ] Protect /api/analysis (require auth, allow anonymous)
+- [ ] Keep /api/health public
+- [ ] Test unauthorized access blocked
+- [ ] Test anonymous access works with limits
+
+### Section 7: Role-Based UI
+**Scope**: `web`
+- [ ] Create useUserRole hook
+- [ ] Create RoleGate component
+- [ ] Update UI for bidder view
+- [ ] Update UI for government view
+- [ ] Test role-specific features
+
+## Success Criteria
+
+✅ Auth microservice running at `localhost:8180`  
+✅ Realm configured via `realm-export.json` (automated)  
+✅ Demo mode with CAPTCHA (bot protection)  
+✅ Anonymous users limited (read-only, no uploads)  
+✅ Regular users can sign up with roles  
+✅ API routes protected but allow anonymous access  
+✅ Data isolated per user  
+✅ All tests passing
 
 ## Project Architecture
 
-**Microservices:**
+**Microservices**:
 - `proposal-prepper-web` - Next.js web app
-- `proposal-prepper-strands` - Python strands-agent service (not touched)
-- `proposal-prepper-seed--data` - Seed data package (Proposals/Grant and J&A subfolders)
+- `proposal-prepper-auth` - **NEW**: Keycloak authentication service
+- `proposal-prepper-strands` - Python strands-agent service
+- `proposal-prepper-seed--data` - Seed data package
 - `proposal-prepper-tests` - Test suite
 - `proposal-prepper-services` - Shared services
 - `proposal-prepper-middleware` - API middleware
@@ -75,32 +134,37 @@ I'm working on the **Proposal Prepper** project, a microservice architecture for
 - Include `Human-Involvement: reviewed` and `AI-Agent: <name>` trailers
 - Human signs commits with `-s` flag for DCO
 
-## Important Files
+## Important Planning Files
 
-**Session docs**: `.agent/sessions/14-test-fixes/`
+**Session 15 planning**: `proposal-prepper-docs/planning/session-15/`
+- `implementation_plan.md` - Full technical plan (this session)
+- `task.md` - Detailed checklist breakdown
+- `keycloak-implementation.md` - Keycloak-specific setup guide
+- `session-15-quickstart.md` - Quick reference
+
+**Previous session**: `proposal-prepper-docs/sessions/14-test-fixes/`
 - `session-record.md` - Full session documentation
 - `walkthrough.md` - Detailed walkthrough with screenshots
-- `task.md` - Completed task checklist
 
-**Workflows**: `.agent/workflows/`
+**Workflows**: `proposal-prepper-docs/.agent/workflows/`
 - `commit-standards.md` - Commit message format
 - `session-records.md` - How to document sessions
 - `design-first.md` - Design-first development workflow
 
-## What to Ask Me
-
-1. **For PR creation**: "Review the session 14 work and help me create a comprehensive PR"
-2. **For FAR mocks**: "Create FAR mock generators to replace the commented grant imports"
-3. **For E2E refactor**: "Comprehensively refactor E2E tests for FAR architecture"
-4. **For security fix**: "Investigate and fix the Dependabot security alert on the default branch"
-
 ## Repository
 
 - **GitHub**: `SeventeenSierra/proposal-prepper`
-- **Current branch**: `feature/far-ui-integration`
+- **Current branch**: `docs/session-15-planning`
+- **Feature branch**: `feature/far-ui-integration` (Session 14 work, ready for PR)
 - **Tests**: 341/341 passing
-- **Build**: Production build successful
+
+## Next Steps After Session 15
+
+**Session 16**: Dual Upload + Validation (J&A + RFP pairs, now user-scoped)  
+**Session 17**: Regulation Versioning (with user notifications)  
+**Session 18**: NooBaa Migration (document storage)  
+**Session 19**: LangChain Orchestration (compliance validation)
 
 ---
 
-**Start your next session with**: "I'm continuing work on Proposal Prepper from Session 14. [What you want to do next]"
+**Start Session 15 with**: "I'm starting Session 15 to implement Keycloak authentication. Let's begin with Section 1: Auth Microservice Setup."
