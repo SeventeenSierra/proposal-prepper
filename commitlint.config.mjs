@@ -35,6 +35,7 @@ export default {
         // Services
         "web", // Next.js web app
         "strands", // Python strands-agent service
+        "auth", // Keycloak authentication service
 
 
         // Packages
