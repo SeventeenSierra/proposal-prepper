@@ -28,6 +28,9 @@ vi.mock("@/services/analysis-service", () => ({
 	},
 }));
 
+// Mock scrollIntoView for jsdom
+Element.prototype.scrollIntoView = vi.fn();
+
 describe("AgentInterface Live Component", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -45,7 +48,7 @@ describe("AgentInterface Live Component", () => {
 		);
 
 		// Component should render without the badge, but we can check for other identifier
-		expect(screen.getByText("AI Regulatory Assistant")).toBeInTheDocument();
+		expect(screen.getByText("Compliance Officer")).toBeInTheDocument();
 	});
 
 	it("should handle localStorage use-mock-api preference", () => {
@@ -60,7 +63,7 @@ describe("AgentInterface Live Component", () => {
 			/>,
 		);
 
-		expect(screen.getByText("AI Regulatory Assistant")).toBeInTheDocument();
+		expect(screen.getByText("Compliance Officer")).toBeInTheDocument();
 	});
 
 	it("should handle localStorage changes during lifecycle", async () => {
@@ -73,7 +76,7 @@ describe("AgentInterface Live Component", () => {
 			/>,
 		);
 
-		expect(screen.getByText("AI Regulatory Assistant")).toBeInTheDocument();
+		expect(screen.getByText("Compliance Officer")).toBeInTheDocument();
 
 		// Simulate storage event
 		localStorage.setItem("use-mock-api", "false");
@@ -86,6 +89,6 @@ describe("AgentInterface Live Component", () => {
 
 		// No explicit UI change to check in AgentInterface now,
 		// but we verify it doesn't crash
-		expect(screen.getByText("AI Regulatory Assistant")).toBeInTheDocument();
+		expect(screen.getByText("Compliance Officer")).toBeInTheDocument();
 	});
 });

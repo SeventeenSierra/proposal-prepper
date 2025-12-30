@@ -171,10 +171,7 @@ const TopBar = ({
         <div className="w-px h-6 bg-gray-200 mx-1"></div>
 
         {/* Settings Button + Hierarchical Selectors */}
-        <div
-          className="relative"
-          onMouseLeave={() => setShowSettingsPane(false)}
-        >
+        <div className="relative" onMouseLeave={() => setShowSettingsPane(false)}>
           <LocalButton
             variant="ghost"
             size="icon"
@@ -187,9 +184,7 @@ const TopBar = ({
           </LocalButton>
 
           {showSettingsPane && (
-            <div
-              className="absolute top-full right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl p-3 z-50 min-w-[280px] animate-in fade-in slide-in-from-top-2 duration-200"
-            >
+            <div className="absolute top-full right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl p-3 z-50 min-w-[280px] animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 border-b border-gray-50 pb-2 flex items-center gap-2">
                 <Settings size={12} />
                 Connection Configuration
@@ -210,7 +205,11 @@ const TopBar = ({
                       className="w-full text-[11px] px-3 py-2 rounded-md border border-gray-200 bg-white text-slate-600 flex items-center justify-between hover:bg-gray-50 transition-colors cursor-pointer shadow-sm"
                     >
                       <span className="font-medium uppercase tracking-wide">
-                        {connectionMode === 'demo' ? 'Demo Mode (Presentation)' : connectionMode === 'mock' ? 'Test Mode (Mock)' : 'Live Mode (AI Router)'}
+                        {connectionMode === 'demo'
+                          ? 'Demo Mode (Presentation)'
+                          : connectionMode === 'mock'
+                            ? 'Test Mode (Mock)'
+                            : 'Live Mode (AI Router)'}
                       </span>
                       <ChevronDown
                         size={12}
@@ -305,13 +304,19 @@ const TopBar = ({
                                 }
                               }}
                               disabled={p.id === 'cloud'}
-                              className={`w-full text-left px-3 py-2 text-[10px] uppercase font-bold tracking-wider ${p.id === 'cloud'
-                                ? 'text-gray-400 cursor-not-allowed opacity-50 bg-gray-50'
-                                : status?.activeProvider === 'local-llama' && p.id === 'local-llama'
-                                  ? 'text-indigo-600 bg-indigo-50/50'
-                                  : 'text-slate-600 hover:bg-gray-50'
-                                }`}
-                              title={p.id === 'cloud' ? 'Cloud Router (Coming Soon - Disabled for Safety)' : ''}
+                              className={`w-full text-left px-3 py-2 text-[10px] uppercase font-bold tracking-wider ${
+                                p.id === 'cloud'
+                                  ? 'text-gray-400 cursor-not-allowed opacity-50 bg-gray-50'
+                                  : status?.activeProvider === 'local-llama' &&
+                                      p.id === 'local-llama'
+                                    ? 'text-indigo-600 bg-indigo-50/50'
+                                    : 'text-slate-600 hover:bg-gray-50'
+                              }`}
+                              title={
+                                p.id === 'cloud'
+                                  ? 'Cloud Router (Coming Soon - Disabled for Safety)'
+                                  : ''
+                              }
                             >
                               {p.label}
                             </button>
@@ -339,12 +344,13 @@ const TopBar = ({
                         ].map((p) => (
                           <button
                             key={p.id}
-                            onClick={() => { }}
+                            onClick={() => {}}
                             disabled={true}
-                            className={`text-[9px] px-1 py-2 rounded font-bold transition-all uppercase tracking-tight border ${status?.activeProvider === p.id
-                              ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                              : 'bg-white text-gray-400 border-gray-100 opacity-50 cursor-not-allowed'
-                              }`}
+                            className={`text-[9px] px-1 py-2 rounded font-bold transition-all uppercase tracking-tight border ${
+                              status?.activeProvider === p.id
+                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                                : 'bg-white text-gray-400 border-gray-100 opacity-50 cursor-not-allowed'
+                            }`}
                             title={`${p.label} (Disabled for Safety)`}
                           >
                             {p.label}
