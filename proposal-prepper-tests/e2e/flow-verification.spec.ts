@@ -23,8 +23,10 @@ test("Full Proposal Analysis Flow Verification", async ({ page }) => {
 	const fileChooser = await fileChooserPromise;
 
 	// Use a seed file from the project
+	// NOTE: Updated to use FAR documents instead of grant PDFs
+	// TODO: Add FAR sample PDFs to seed-data directory
 	const seedFilePath =
-		"/Users/afla/Documents/proposal-prepper/proposal-prepper-web/src/seed-data/barker_michelle_2020_1b5d2213-4c72-4da8-a7b8-bece5b27d280_PROPOSAL_1.pdf";
+		"/Users/afla/Documents/Code/proposal-prepper/proposal-prepper-web/src/seed-data/sample-far-justification.pdf";
 	await fileChooser.setFiles(seedFilePath);
 
 	// 4. Trigger the analysis automatically
