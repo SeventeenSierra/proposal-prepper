@@ -154,6 +154,7 @@ describe("AnalysisService", () => {
 		it("should handle analysis start failures", async () => {
 			const request: AnalysisRequest = {
 				proposalId: "proposal-123",
+				documentId: "doc-123",
 			};
 
 			const mockResponse = {
@@ -171,6 +172,7 @@ describe("AnalysisService", () => {
 
 		it("should handle analysis start exceptions", async () => {
 			const request: AnalysisRequest = {
+				documentId: "doc-123",
 				proposalId: "proposal-123",
 			};
 
@@ -188,6 +190,7 @@ describe("AnalysisService", () => {
 	describe("Session Management", () => {
 		it("should track active sessions", async () => {
 			const request: AnalysisRequest = {
+				documentId: "doc-123",
 				proposalId: "proposal-123",
 			};
 
@@ -248,7 +251,10 @@ describe("AnalysisService", () => {
 				},
 			});
 
-			await analysisService.startAnalysis({ proposalId: "proposal-123" });
+			await analysisService.startAnalysis({
+				proposalId: "proposal-123",
+				documentId: "doc-123",
+			});
 
 			// Then cancel it
 			mockAiRouterClient.cancelAnalysis.mockResolvedValueOnce({
@@ -391,12 +397,12 @@ describe("AnalysisService", () => {
 		it("should subscribe to WebSocket updates", async () => {
 			mockAiRouterClient.connectWebSocket.mockResolvedValueOnce(undefined);
 			mockAiRouterClient.subscribeToAnalysisProgress.mockImplementationOnce(
-				() => { },
+				() => {},
 			);
 			mockAiRouterClient.subscribeToAnalysisComplete.mockImplementationOnce(
-				() => { },
+				() => {},
 			);
-			mockAiRouterClient.subscribeToErrors.mockImplementationOnce(() => { });
+			mockAiRouterClient.subscribeToErrors.mockImplementationOnce(() => {});
 
 			await analysisService.subscribeToRealTimeUpdates();
 

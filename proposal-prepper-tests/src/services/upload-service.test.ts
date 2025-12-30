@@ -338,7 +338,7 @@ describe("UploadService", () => {
 		it("should subscribe to WebSocket updates", async () => {
 			mockAiRouterClient.connectWebSocket.mockResolvedValueOnce(undefined);
 			mockAiRouterClient.subscribeToUploadProgress.mockImplementationOnce(
-				() => { },
+				() => {},
 			);
 
 			await uploadService.subscribeToRealTimeUpdates();

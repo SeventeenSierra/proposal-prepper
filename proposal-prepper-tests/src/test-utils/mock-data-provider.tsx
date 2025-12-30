@@ -4,12 +4,14 @@
  */
 
 import React from "react";
-import {
-	generateMockAnalysisResults,
-	generateMockAnalysisSession,
-	generateMockFile,
-	generateMockUploadSession,
-} from "@/seed-data/grants";
+// NOTE: These imports are commented out because the grant data was migrated to FAR.
+// These mock generator functions need to be recreated for FAR documents.
+// import {
+// 	generateMockAnalysisResults,
+// 	generateMockAnalysisSession,
+// 	generateMockFile,
+// 	generateMockUploadSession,
+// } from "@/seed-data/grants";
 /**
  * Error scenarios for testing - re-export for convenience
  */

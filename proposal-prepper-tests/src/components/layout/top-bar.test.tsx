@@ -25,7 +25,7 @@ vi.mock("proposal-prepper-services", () => {
 		aiRouterIntegration: {
 			subscribeToStatus: vi.fn((cb) => {
 				statusCallback = cb;
-				return () => { };
+				return () => {};
 			}),
 			// Helper for the test to trigger status changes
 			_triggerStatusChange: (status: any) => {
@@ -42,7 +42,12 @@ describe("TopBar Status Component", () => {
 
 	it('should display "Test Mode (Mock)" badge when connectionMode is mock', () => {
 		render(
-			<TopBar toggleSidebar={() => { }} isSidebarOpen={true} connectionMode="mock" setConnectionMode={() => { }} />,
+			<TopBar
+				toggleSidebar={() => {}}
+				isSidebarOpen={true}
+				connectionMode="mock"
+				setConnectionMode={() => {}}
+			/>,
 		);
 
 		expect(screen.getByText("Test Mode (Mock)")).toBeInTheDocument();
@@ -50,12 +55,20 @@ describe("TopBar Status Component", () => {
 
 	it('should display "Router: Local" when healthy in router mode (local)', () => {
 		render(
-			<TopBar toggleSidebar={() => { }} isSidebarOpen={true} connectionMode="analysis-router" setConnectionMode={() => { }} />,
+			<TopBar
+				toggleSidebar={() => {}}
+				isSidebarOpen={true}
+				connectionMode="analysis-router"
+				setConnectionMode={() => {}}
+			/>,
 		);
 
 		// Manually trigger the healthy status
 		act(() => {
-			(aiRouterIntegration as any)._triggerStatusChange({ healthy: true, activeProvider: 'local-llama' });
+			(aiRouterIntegration as any)._triggerStatusChange({
+				healthy: true,
+				activeProvider: "local-llama",
+			});
 		});
 
 		expect(screen.getByText("Router: Local")).toBeInTheDocument();
@@ -63,14 +76,19 @@ describe("TopBar Status Component", () => {
 
 	it('should display "Live Mode (AI Router)" when unhealthy in cloud mode', () => {
 		render(
-			<TopBar toggleSidebar={() => { }} isSidebarOpen={true} connectionMode="analysis-router" setConnectionMode={() => { }} />,
+			<TopBar
+				toggleSidebar={() => {}}
+				isSidebarOpen={true}
+				connectionMode="analysis-router"
+				setConnectionMode={() => {}}
+			/>,
 		);
 
 		// Manually trigger unhealthy status
 		act(() => {
 			(aiRouterIntegration as any)._triggerStatusChange({
 				healthy: false,
-				activeProvider: 'aws-bedrock',
+				activeProvider: "aws-bedrock",
 				error: "Connection Refused",
 			});
 		});
