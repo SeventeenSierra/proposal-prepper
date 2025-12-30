@@ -7,6 +7,7 @@ import type { AnalysisResult, AnalysisSession } from '@/components/analysis/type
 import { AnalysisStatus } from '@/components/analysis/types';
 import {
   getRandomSeedGrant,
+  getSeedGrantByIdOrRandom,
   seedGrantToAnalysisResult,
   seedGrantToUploadSession,
 } from '@/seed-data';
@@ -148,23 +149,52 @@ export class MockStrandsAPIEnhanced {
   /**
    * Mock analysis results using seed data
    */
-  async getAnalysisResults(_sessionId: string): Promise<AnalysisResult> {
+  async getAnalysisResults(sessionId: string): Promise<AnalysisResult> {
     await this.simulateDelay();
 
-    // Use seed data for realistic analysis results
-    const seedGrant = getRandomSeedGrant();
-    return seedGrantToAnalysisResult(seedGrant);
+    if (this.errorScenario === ErrorScenario.NETWORK_ERROR) {
+      throw new Error('Network error');
+    }
+
+    if (this.errorScenario === ErrorScenario.VALIDATION_ERROR) {
+      throw new Error('Validation error: Invalid session ID');
+    }
+
+    if (this.errorScenario === ErrorScenario.ANALYSIS_FAILED) {
+      throw new Error('Analysis failed');
+    }
+
+    // Use sessionId to deterministically select a seed grant
+    // This ensures consistent results for the same sessionId
+    const seedGrant = getSeedGrantByIdOrRandom(sessionId);
+    const result = seedGrantToAnalysisResult(seedGrant);
+
+    // Override sessionId to match the requested one for consistency
+    return {
+      ...result,
+      sessionId,
+    };
   }
 
   /**
    * Get analysis results for a specific seed grant
    */
-  async getAnalysisResultsForGrant(_grantId: string): Promise<AnalysisResult> {
+  async getAnalysisResultsForGrant(grantId: string): Promise<AnalysisResult> {
     await this.simulateDelay();
 
-    // Find specific grant or use random if not found
-    const seedGrant = getRandomSeedGrant(); // In a real implementation, we'd look up by grantId
-    return seedGrantToAnalysisResult(seedGrant);
+    if (this.errorScenario === ErrorScenario.VALIDATION_ERROR) {
+      throw new Error('Validation error: Invalid grant ID');
+    }
+
+    // Use grantId to deterministically select a seed grant
+    const seedGrant = getRandomSeedGrant();
+    const result = seedGrantToAnalysisResult(seedGrant);
+
+    // Override to use the requested grantId
+    return {
+      ...result,
+      proposalId: grantId,
+    };
   }
 
   /**
@@ -215,3 +245,10 @@ export class MockStrandsAPIEnhanced {
  * Default enhanced mock API instance
  */
 export const mockStrandsAPIEnhanced = new MockStrandsAPIEnhanced();
+
+/**
+ * Backward compatibility alias
+ * @deprecated Use MockStrandsAPIEnhanced instead
+ */
+export const MockAnalysisEngineAPIEnhanced = MockStrandsAPIEnhanced;
+export const mockAnalysisEngineAPIEnhanced = mockStrandsAPIEnhanced;

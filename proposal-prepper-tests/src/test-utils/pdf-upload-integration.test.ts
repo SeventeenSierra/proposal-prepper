@@ -21,7 +21,7 @@ describe('PDF Upload Integration', () => {
 		const file = new File(['mock content'], 'test.pdf', { type: 'application/pdf' });
 
 		// 1. Upload
-		const uploadResult = await uploadService.uploadFile(file, TEST_PROPOSAL_ID);
+		const uploadResult = await uploadService.uploadDocument(file);
 		expect(uploadResult.success).toBe(true);
 
 		// 2. Start Analysis

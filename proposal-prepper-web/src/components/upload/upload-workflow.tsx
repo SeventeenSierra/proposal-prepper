@@ -23,6 +23,7 @@ import { aiRouterClient } from 'proposal-prepper-services/ai-router-client';
 import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import type { UploadSession } from '@/types/app';
+import { type ConnectionMode } from '@/services/config/app';
 import { SimulationControls } from './simulation-controls';
 import { UploadManager } from './upload-manager';
 import { useRealTimeUpdates } from './use-real-time-updates';
@@ -36,6 +37,8 @@ export interface UploadWorkflowProps {
   disabled?: boolean;
   /** Additional CSS classes */
   className?: string;
+  /** Current connection mode (mock, real, etc) */
+  connectionMode?: ConnectionMode;
 }
 
 interface AnalysisState {
@@ -58,6 +61,7 @@ export function UploadWorkflow({
   onWorkflowError,
   disabled = false,
   className = '',
+  connectionMode = 'mock',
 }: UploadWorkflowProps): React.JSX.Element {
   const [uploadSession, setUploadSession] = useState<UploadSession | null>(null);
   const [analysisState, setAnalysisState] = useState<AnalysisState>({
@@ -331,6 +335,7 @@ export function UploadWorkflow({
           onUploadComplete={handleUploadComplete}
           onUploadError={handleUploadError}
           disabled={disabled}
+          connectionMode={connectionMode}
         />
 
         {!uploadSession && (
@@ -369,9 +374,8 @@ export function UploadWorkflow({
             {/* WebSocket Connection Status */}
             <div className="flex items-center gap-2 text-sm text-gray-500">
               <div
-                className={`w-2 h-2 rounded-full ${
-                  realTimeUpdates.connected ? 'bg-green-500' : 'bg-gray-300'
-                }`}
+                className={`w-2 h-2 rounded-full ${realTimeUpdates.connected ? 'bg-green-500' : 'bg-gray-300'
+                  }`}
               />
               {realTimeUpdates.connected ? 'Live updates' : 'Polling for updates'}
             </div>
@@ -473,10 +477,10 @@ export function UploadWorkflow({
                 workflowStatus,
                 uploadSession: uploadSession
                   ? {
-                      id: uploadSession.id,
-                      status: uploadSession.status,
-                      analysisSessionId: uploadSession.analysisSessionId,
-                    }
+                    id: uploadSession.id,
+                    status: uploadSession.status,
+                    analysisSessionId: uploadSession.analysisSessionId,
+                  }
                   : null,
                 analysisState,
                 realTimeUpdates: {

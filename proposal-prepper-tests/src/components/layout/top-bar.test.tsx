@@ -40,12 +40,12 @@ describe("TopBar Status Component", () => {
 		vi.clearAllMocks();
 	});
 
-	it('should display "Demo: Manual" badge when connectionMode is mock', () => {
+	it('should display "Test Mode (Mock)" badge when connectionMode is mock', () => {
 		render(
 			<TopBar toggleSidebar={() => { }} isSidebarOpen={true} connectionMode="mock" setConnectionMode={() => { }} />,
 		);
 
-		expect(screen.getByText("Demo: Manual")).toBeInTheDocument();
+		expect(screen.getByText("Test Mode (Mock)")).toBeInTheDocument();
 	});
 
 	it('should display "Router: Local" when healthy in router mode (local)', () => {
@@ -61,7 +61,7 @@ describe("TopBar Status Component", () => {
 		expect(screen.getByText("Router: Local")).toBeInTheDocument();
 	});
 
-	it('should display "Router Offline" when unhealthy in cloud mode', () => {
+	it('should display "Live Mode (AI Router)" when unhealthy in cloud mode', () => {
 		render(
 			<TopBar toggleSidebar={() => { }} isSidebarOpen={true} connectionMode="analysis-router" setConnectionMode={() => { }} />,
 		);
@@ -75,6 +75,6 @@ describe("TopBar Status Component", () => {
 			});
 		});
 
-		expect(screen.getByText("Router Offline")).toBeInTheDocument();
+		expect(screen.getByText("Live Mode (AI Router)")).toBeInTheDocument();
 	});
 });

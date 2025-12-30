@@ -70,15 +70,23 @@ const TopBar = ({
 
   const getStatusDisplay = () => {
     // Determine high-level mode
-    const isDemo = connectionMode === 'mock';
+    const isDemo = connectionMode === 'demo';
+    const isMock = connectionMode === 'mock';
     const provider = status?.activeProvider || 'local-llama';
 
     if (isDemo) {
-      const isSimulated = provider === 'simulation';
       return {
-        label: isSimulated ? 'Demo: Simulated' : 'Demo: Manual',
+        label: 'Demo Mode (Presentation)',
         classes: 'bg-amber-100 text-amber-700 border-amber-200',
         dotClass: 'bg-amber-500 animate-pulse',
+      };
+    }
+
+    if (isMock) {
+      return {
+        label: 'Test Mode (Mock)',
+        classes: 'bg-blue-100 text-blue-700 border-blue-200',
+        dotClass: 'bg-blue-500 animate-pulse',
       };
     }
 
@@ -94,7 +102,7 @@ const TopBar = ({
 
     const providerName = provider === 'aws-bedrock' ? 'Strands' : provider.toUpperCase();
     return {
-      label: status?.healthy ? `Router: ${providerName}` : 'Router Offline',
+      label: status?.healthy ? `Live Mode: ${providerName}` : 'Live Mode (AI Router)',
       classes: status?.healthy
         ? 'bg-indigo-100 text-indigo-700 border-indigo-200'
         : 'bg-red-100 text-red-700 border-red-200',
@@ -163,19 +171,25 @@ const TopBar = ({
         <div className="w-px h-6 bg-gray-200 mx-1"></div>
 
         {/* Settings Button + Hierarchical Selectors */}
-        <div className="relative">
+        <div
+          className="relative"
+          onMouseLeave={() => setShowSettingsPane(false)}
+        >
           <LocalButton
             variant="ghost"
             size="icon"
             className={`h-9 w-9 transition-colors ${showSettingsPane ? 'text-indigo-600 bg-indigo-50' : 'text-slate-400 hover:text-slate-600'}`}
             onClick={() => setShowSettingsPane(!showSettingsPane)}
+            onMouseEnter={() => setShowSettingsPane(true)}
             title="Connection Settings"
           >
             <Settings size={18} />
           </LocalButton>
 
           {showSettingsPane && (
-            <div className="absolute top-full right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl p-3 z-50 min-w-[280px] animate-in fade-in slide-in-from-top-2 duration-200">
+            <div
+              className="absolute top-full right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl p-3 z-50 min-w-[280px] animate-in fade-in slide-in-from-top-2 duration-200"
+            >
               <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 border-b border-gray-50 pb-2 flex items-center gap-2">
                 <Settings size={12} />
                 Connection Configuration
@@ -196,7 +210,7 @@ const TopBar = ({
                       className="w-full text-[11px] px-3 py-2 rounded-md border border-gray-200 bg-white text-slate-600 flex items-center justify-between hover:bg-gray-50 transition-colors cursor-pointer shadow-sm"
                     >
                       <span className="font-medium uppercase tracking-wide">
-                        {connectionMode === 'mock' ? 'Front-end (Demo)' : 'AI Router (Live)'}
+                        {connectionMode === 'demo' ? 'Demo Mode (Presentation)' : connectionMode === 'mock' ? 'Test Mode (Mock)' : 'Live Mode (AI Router)'}
                       </span>
                       <ChevronDown
                         size={12}
@@ -207,8 +221,9 @@ const TopBar = ({
                     {showTier1Selector && (
                       <div className="absolute top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg py-1 z-[60]">
                         {[
-                          { id: 'mock', label: 'Front-end (Demo)' },
-                          { id: 'analysis-router', label: 'AI Router (Live)' },
+                          { id: 'demo', label: 'Demo Mode (Presentation)' },
+                          { id: 'mock', label: 'Test Mode (Mock)' },
+                          { id: 'analysis-router', label: 'Live Mode (AI Router)' },
                         ].map((m) => (
                           <button
                             key={m.id}
@@ -218,9 +233,9 @@ const TopBar = ({
                               aiRouterIntegration.setMode(newMode);
 
                               setInfraLoading(true);
-                              if (newMode === 'mock') {
+                              if (newMode === 'demo' || newMode === 'mock') {
                                 aiRouterIntegration.setProvider('manual');
-                                // Trigger container shutdown bridge
+                                // Trigger container shutdown bridge for non-live modes
                                 try {
                                   await fetch('/api/infra/stop', { method: 'POST' });
                                 } catch (e) {
@@ -228,7 +243,7 @@ const TopBar = ({
                                 }
                               } else {
                                 aiRouterIntegration.setProvider('local-llama');
-                                // Trigger container startup bridge
+                                // Trigger container startup bridge for live mode
                                 try {
                                   await fetch('/api/infra/start', { method: 'POST' });
                                 } catch (e) {

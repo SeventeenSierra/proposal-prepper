@@ -22,8 +22,16 @@ export default function App() {
 
     // Check localStorage on mount
     const storedMode = localStorage.getItem('connection-mode') as ConnectionMode | null;
+
+    // Environment-based defaults
+    const isTestEnv = process.env.NODE_ENV === 'test' || (typeof window !== 'undefined' && window.location.search.includes('test=true'));
+    const envDefault = isTestEnv ? 'mock' : 'demo';
+
     if (storedMode) {
       setConnectionMode(storedMode);
+    } else {
+      setConnectionMode(envDefault);
+      localStorage.setItem('connection-mode', envDefault);
     }
 
     // Listen for storage events

@@ -1,150 +1,289 @@
-# Architecture: Pipeline Duality (Local vs. Cloud)
+<!--
+SPDX-License-Identifier: PolyForm-Strict-1.0.0
+SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
+-->
 
-The `proposal-prepper-backend` service is the "Analysis Engine" of the application. It is designed with a **Unified Codebase** that adapts its behavior based on the environment it's running in.
+# Architecture: Hierarchical Connection Modes
+
+The Proposal Prepper application uses a **Hierarchical Connection Mode** system that allows developers to work at different levels of infrastructure complexity—from a pure UI demo to full AI-powered analysis.
+
+## Prerequisites
+
+> [!IMPORTANT]
+> This project requires **Nix** for reproducible development environments.
+> ```bash
+> # Enter the development environment before running ANY commands
+> nix develop
+> 
+> # Then install dependencies
+> pnpm install
+> ```
 
 ## High-Level Architecture
 
 ```mermaid
 graph TD
     subgraph "Application Layer"
-        WEB["proposal-prepper-web<br/>(Dashboard & Chat UI)"]
-        BADGE_LOCAL["[LOCAL MODE] Badge"]
-        BADGE_MOCK["[MOCK] Badge"]
-        WEB --- BADGE_LOCAL
-        WEB --- BADGE_MOCK
+        WEB["proposal-prepper-web"]
+        MODE{"Connection Mode"}
+        WEB --> MODE
+        MODE -->|Demo| MOCK["Mock Responses"]
+        MODE -->|Router| SVC
     end
 
-    subgraph "Service Layer (The Orchestrator)"
-        SVC["proposal-prepper-services<br/>(AI Router Client)"]
-        HEALTH["/api/health<br/>Handshake"]
-        SVC --> HEALTH
+    subgraph "Service Layer (Orchestrator)"
+        SVC["proposal-prepper-services (AI Router)"]
     end
 
-    subgraph "Engine Layer (The Processor)"
-        ROUTER["Analysis Router"]
-        LOGS["Terminal Logs<br/>'AIR SPEC ACTIVATED'"]
+    subgraph "Engine Layer (Pluggable Providers)"
+        LOCAL["Local (LiteLLM/Ollama)"]
+        AWS["Bedrock/Strands (Future)"]
+        GCP["Vertex/Genkit (Future)"]
+        MSFT["Semantic Kernel/Autogen (Future)"]
         
-        subgraph "Pluggable Providers"
-            LOCAL_PROV["LocalAnalysisProvider<br/>(LiteLLM/Ollama)"]
-            AWS_PROV["AWSAnalysisProvider<br/>(Bedrock/Strands)"]
-        end
-        
-        ROUTER --> LOCAL_PROV
-        ROUTER -.-> AWS_PROV
-        LOCAL_PROV --- LOGS
+        SVC --> LOCAL
+        SVC -.-> AWS
+        SVC -.-> GCP
+        SVC -.-> MSFT
     end
 
-    subgraph "Agents Layer (Specialized Logic)"
-        FAR_AGENT["FAR Agent"]
-        EO_AGENT["EO Agent"]
-        TECH_AGENT["Technical Agent"]
+    subgraph "Agents Layer"
+        FAR["FAR Agent"]
+        EO["EO Agent"]
+        TECH["Technical Agent"]
         
-        LOCAL_PROV --> FAR_AGENT
-        LOCAL_PROV --> EO_AGENT
-        LOCAL_PROV --> TECH_AGENT
+        LOCAL --> FAR
+        LOCAL --> EO
+        LOCAL --> TECH
     end
 
-    subgraph "Infra Layer"
+    subgraph "Infrastructure Layer"
+        CRAWLER["EO Crawler"]
         STORAGE[("MinIO / S3")]
         DB[("PostgreSQL")]
+        VECTOR[("OpenSearch")]
+        CACHE[("Redis")]
+        
+        CRAWLER --> STORAGE
+        FAR --> DB
+        EO --> STORAGE
+        TECH --> VECTOR
     end
 
-    WEB --> SVC
-    SVC --> ROUTER
-    FAR_AGENT --> STORAGE
-    EO_AGENT --> DB
+    style MOCK fill:#f96,stroke:#c63
+    style AWS fill:#666,stroke:#999,color:#ccc
+    style GCP fill:#666,stroke:#999,color:#ccc
+    style MSFT fill:#666,stroke:#999,color:#ccc
 ```
 
-## The 8-Step Analysis Flow (Local Mode Demo)
+| Mode | TopBar Badge | start.sh | Backend |
+|------|--------------|----------|---------|
+| Demo | `DEMO: MANUAL` | `--mode demo-manual` | Mock only |
+| Router | `ROUTER: LOCAL` | `--mode router-local` | Full stack |
 
-This flow illustrates how a document moves from the Web UI through the local AI pipeline.
 
-### Step 0: Environment & Entry (The Demo Setup)
-| Substep | Action | Acceptance Criteria |
-| :--- | :--- | :--- |
-| **0.1** | Web UI Access | `http://localhost:3000` loads the dashboard. |
-| **0.2** | Mode Validation | UI confirms `Local Mode` via configuration check. |
-| **0.3** | Backend Handshake | `GET /api/health` returns `healthy` with `air_spec_mode: true`. |
-| **0.4** | Terminal Monitor | Logs show: `AIR SPEC ACTIVATED: Using llama3.2...` |
-| **0.5** | UI Branding | TopBar displays a green **LOCAL MODE** status badge. |
+## Hierarchical Connection Modes
 
-### Step 1: Document Upload (Entry Point)
-| Substep | Action | Acceptance Criteria |
-| :--- | :--- | :--- |
-| **1.1** | File Validation | `proposal-prepper-web` confirms PDF type and < 50MB. |
-| **1.2** | API Upload Call | `POST /api/documents/upload` returns `200 OK` with `sessionId`. |
-| **1.3** | MinIO Storage | File exists at `uploads/{sessionId}/{filename}` in MinIO. |
-| **1.4** | DB Indexing | Record created in PostgreSQL `documents` table. |
+The application's mode is controlled by **two tiers** in the Connection Settings UI:
 
-### Step 2: Extraction (Data Preparation)
-| Substep | Action | Acceptance Criteria |
-| :--- | :--- | :--- |
-| **2.1** | S3 Retrieval | `proposal-prepper-backend` fetches bytes from MinIO. |
-| **2.2** | `pypdf` Parsing | PDF text and metadata extracted into memory. |
-| **2.3** | Text Cleaning | Whitespace normalized; page markers injected. |
-| **2.4** | Status Update | WebSocket broadcasts `status: extracting` (30%). |
+### Tier 1: Connection Mode
 
-### Step 3: FAR Scan (Initial AI Analysis)
-| Substep | Action | Acceptance Criteria |
-| :--- | :--- | :--- |
-| **3.1** | Thermal Guard | Logs show CPU check (and pause if > threshold). |
-| **3.2** | Prompt Build | Specialized FAR context generated for the LLM. |
-| **3.3** | LiteLLM Call | Local AI (Ollama) receives prompt and starts generation. |
-| **3.4** | Status Update | WebSocket broadcasts `status: analyzing` (45%). |
+| Mode | UI Badge | Description |
+|------|----------|-------------|
+| **Front-end (Demo)** | `DEMO: MANUAL` | UI-only mode, no backend required |
+| **AI Router (Live)** | `ROUTER: LOCAL` | Full stack with AI analysis engine |
 
-### Step 4: DFARS Audit (Regulatory Depth)
-| Substep | Action | Acceptance Criteria |
-| :--- | :--- | :--- |
-| **4.1** | Reference Lookup | Logic cross-references text against DFARS specific sections. |
-| **4.2** | Finding Pairing | AI identifies specific DFARS conflicts. |
-| **4.3** | Progress Update | WebSocket broadcasts `status: analyzing` (55%). |
+### Tier 2: Context (Only for AI Router)
 
-### Step 5: Security Review (Integrity Check)
-| Substep | Action | Acceptance Criteria |
-| :--- | :--- | :--- |
-| **5.1** | Internal Audit | Backend validates AI findings for consistency. |
-| **5.2** | Severity Score | Critical/Warning/Info badges assigned to findings. |
-| **5.3** | Progress Update | WebSocket broadcasts `status: validating` (65%). |
+| Context | Status | Description |
+|---------|--------|-------------|
+| **Local** | ✅ Active | Uses LiteLLM + Ollama (Llama 3.2) |
+| **Cloud: Strands (AWS)** | 🚫 Disabled | AWS Bedrock integration |
+| **Cloud: GenKit (Google)** | 🚫 Disabled | Google GenKit integration |
+| **Cloud: Autogen (Microsoft)** | 🚫 Disabled | Microsoft Autogen integration |
 
-### Step 6: Policy Check (Final Verification)
-| Substep | Action | Acceptance Criteria |
-| :--- | :--- | :--- |
-| **6.1** | Citation Check | Final verification of FAR/DFARS links and URLs. |
-| **6.2** | Confidence Score | Confidence percentage calculated for each issue. |
-| **6.3** | Progress Update | WebSocket broadcasts `status: validating` (75%). |
+> [!WARNING]
+> Cloud providers are intentionally disabled in `start.sh` to prevent accidental cloud costs during development.
 
-### Step 7: Report Generation (Delivery)
-| Substep | Action | Acceptance Criteria |
-| :--- | :--- | :--- |
-| **7.1** | Report Synthesis | Final JSON object aggregated with summary and counts. |
-| **7.2** | Results DB Store | Compliance results written to PostgreSQL `results` table. |
-| **7.3** | WS Broadcast | WebSocket sends `type: analysis_complete`. |
-| **7.4** | UI Rendering | Web UI renders the results panel and chat interface. |
+---
 
-## CLI Flag & UI Badge Catalog
+## AWS Cloud Architecture (Future)
 
-The startup behavior is controlled by `proposal-prepper-infra/containers/start.sh`.
+> [!NOTE]
+> This architecture is **not yet connected** to the application. It represents the target cloud deployment using AWS Strands Agents SDK.
 
-| Command Flag | Mode | Expected UI Badge | Backend Status | Persistence |
-| :--- | :--- | :--- | :--- | :--- |
-| (None) | **Local Mode** | `[LOCAL MODE]` (Green) | Running (8080) | Enabled |
-| `-m`, `--mock` | **Mock Mode** | `[MOCK]` (Amber) | **Offline** | Disabled (UI Only) |
-| `-d`, `--detach` | **Background** | Same as above | Detached | Enabled |
+![AWS Strands Architecture](./architecture/aws_strands_architecture.png)
 
-### Foreground vs. Background
-- **Foreground (Default)**: `docker-compose up`. Logs stream directly to your terminal. Useful for monitoring Step 0 (Health Checks) and Step 3 (LiteLLM calls) in real-time. Terminating the terminal process (Ctrl+C) stops the services.
-- **Background (`-d`)**: `docker-compose up -d`. Services run in the "background" (detached). Control is returned to your terminal immediately. You must use `docker logs -f` or `docker-compose logs -f` to see activity.
+### Components
 
-## Environment Breakdown
+| Component | Service | Purpose |
+|-----------|---------|---------|
+| **FAR Agent** | Strands Agents SDK | FAR/DFARS compliance analysis |
+| **EO Agent** | Strands Agents SDK | Executive Order validation |
+| **Tech Agent** | Strands Agents SDK | Technical requirements check |
+| **FAR Document** | S3 | Federal Acquisition Regulation storage |
+| **Executive Orders** | S3 | EO document storage |
+| **Vector Storage** | OpenSearch | Semantic search embeddings |
+| **LLM** | Amazon Bedrock (Nova Pro) | AI inference |
+| **EO Crawler** | Lambda | National Archives sync |
 
-| Component | Local / Demo Environment | Production (AWS) Environment |
-| :--- | :--- | :--- |
-| **Web UI** | `proposal-prepper-web` (Dev) | `proposal-prepper-web` (Amplify/S3) |
-| **Orchestrator** | `proposal-prepper-services` | `proposal-prepper-services` (Lambda) |
-| **Analysis Engine**| `proposal-prepper-backend` | `proposal-prepper-backend` (ECS) |
-| **AI Provider** | **LiteLLM** (Ollama: Llama 3.2) | **AWS Bedrock** (Claude 3.5 Sonnet) |
-| **Storage (S3)** | MinIO Container | AWS S3 Bucket |
-| **Database** | PostgreSQL Container | AWS RDS (PostgreSQL) |
+### Region
+- **us-east-1** (primary deployment region)
+
+---
+
+## Development Modes
+
+### Mode 1: Demo (UI Only)
+
+**Use when**: Testing UI components, no backend needed.
+
+```bash
+# Option A: Local dev server (recommended for development)
+nix develop
+cd proposal-prepper-web
+pnpm dev
+# Open http://localhost:3000
+
+# Option B: Containerized demo
+cd proposal-prepper-infra/containers
+./start.sh --mode demo-manual -d
+```
+
+**What's running**:
+- Web UI on port 3000
+- Mock API responses (simulated)
+- No backend services
+
+---
+
+### Mode 2: Router Local (Full Stack)
+
+**Use when**: Testing end-to-end AI analysis flow.
+
+```bash
+# Ensure Podman machine is running
+podman machine start
+
+# Start full infrastructure (detached)
+cd proposal-prepper-infra/containers
+./start.sh --mode router-local -d
+
+# View logs
+podman-compose -p proposal-prepper logs -f
+```
+
+**What's running**:
+| Service | Port | Purpose |
+|---------|------|---------|
+| web | 3000 | Next.js frontend |
+| analysis-engine | 8080 | Python AI backend |
+| postgres | 5432 | Document & results storage |
+| minio | 9000-9001 | Object storage (S3-compatible) |
+| redis | 6379 | Cache & session storage |
+| opensearch | 9200 | Vector search |
+
+---
+
+## The 8-Step Analysis Flow
+
+When using **Router: Local** mode, documents flow through this pipeline:
+
+### Step 0: Environment Entry
+| Check | Acceptance Criteria |
+|-------|---------------------|
+| Web UI Access | `http://localhost:3000` loads |
+| Mode Badge | TopBar shows `ROUTER: LOCAL` |
+| Health Check | `GET /api/health` → `{"status":"healthy"}` |
+
+### Step 1: Document Upload
+| Action | Result |
+|--------|--------|
+| PDF Validation | Confirms file type, < 50MB |
+| API Call | `POST /api/documents/upload` → `sessionId` |
+| Storage | File saved to MinIO bucket |
+
+### Steps 2-6: Analysis Pipeline
+| Step | Phase | Status |
+|------|-------|--------|
+| 2 | Extraction | PDF text extraction via pypdf |
+| 3 | FAR Scan | Initial compliance check |
+| 4 | DFARS Audit | Regulatory depth analysis |
+| 5 | Security Review | Findings validation |
+| 6 | Policy Check | Citation verification |
+
+### Step 7: Report Generation
+| Action | Result |
+|--------|--------|
+| Synthesis | Final compliance report JSON |
+| Storage | Results saved to PostgreSQL |
+| UI Update | Results panel rendered |
+
+---
+
+## CLI Reference
+
+```bash
+./start.sh [OPTIONS]
+```
+
+| Option | Description |
+|--------|-------------|
+| `--mode demo-manual` | UI-only demo mode (default) |
+| `--mode demo-simulated` | UI with simulated responses |
+| `--mode router-local` | Full stack with local AI |
+| `--no-web` | Skip web container (use with `pnpm dev`) |
+| `-d, --detach` | Run in background |
+| `-b, --build` | Rebuild containers |
+
+**Examples**:
+```bash
+# Development: local dev server + backend containers
+./start.sh --mode router-local --no-web -d
+cd ../proposal-prepper-web && pnpm dev
+
+# Demo: just the UI
+./start.sh --mode demo-manual -d
+
+# Full rebuild
+./start.sh --mode router-local -b -d
+```
+
+---
+
+## Environment Comparison
+
+| Component | Local (Podman) | Production (AWS) |
+|-----------|----------------|------------------|
+| **Web UI** | Next.js dev server | Amplify / S3 |
+| **Analysis Engine** | Python container | ECS Fargate |
+| **AI Provider** | LiteLLM + Ollama | AWS Bedrock (Claude 3.5) |
+| **Storage** | MinIO container | S3 |
+| **Database** | PostgreSQL container | RDS PostgreSQL |
+| **Vector DB** | OpenSearch container | OpenSearch Service |
 
 > [!IMPORTANT]
-> This "Environment Duality" ensures that 100% of the core agent logic tested locally is the same that runs in production. The only shift is the **Analysis Provider** adapter.
+> The **Environment Duality** design ensures 100% of core agent logic tested locally is identical to production. Only the **Analysis Provider** adapter changes.
+
+---
+
+## Troubleshooting
+
+### Podman Machine Not Running
+```
+Error: Cannot connect to Podman... connection refused
+```
+**Fix**: `podman machine start`
+
+### Container Dependency Errors
+```
+Error: "proposal-prepper_analysis-engine_1" is not a valid container
+```
+**Cause**: Demo mode tries to resolve analysis-engine dependency  
+**Fix**: Use `--mode demo-manual` which only starts the web container
+
+### Nix Environment Missing
+```
+sh: pnpm: command not found
+```
+**Fix**: Run `nix develop` before any pnpm commands

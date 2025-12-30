@@ -63,7 +63,7 @@ describe("UploadService", () => {
 
 			expect(result.isValid).toBe(false);
 			expect(result.error).toContain("Only PDF files are accepted");
-			expect(result.errorCode).toBe("VALIDATION_001");
+			expect(result.errorCode).toBe("VALIDATION_FAILED");
 		});
 
 		it("should reject files that are too large", () => {
@@ -338,7 +338,7 @@ describe("UploadService", () => {
 		it("should subscribe to WebSocket updates", async () => {
 			mockAiRouterClient.connectWebSocket.mockResolvedValueOnce(undefined);
 			mockAiRouterClient.subscribeToUploadProgress.mockImplementationOnce(
-				() => {},
+				() => { },
 			);
 
 			await uploadService.subscribeToRealTimeUpdates();

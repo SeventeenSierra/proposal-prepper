@@ -12,13 +12,15 @@
 'use client';
 
 import { Button } from '@17sierra/ui';
-import { AlertCircle, CheckCircle, FileText, Upload as UploadIcon, X } from 'lucide-react';
+import { AlertCircle, CheckCircle, ChevronDown, FileText, Upload as UploadIcon, X } from 'lucide-react';
 import { aiRouterClient } from 'proposal-prepper-services/ai-router-client';
 import type React from 'react';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiConfig, errorConfig, uploadConfig, validationConfig } from '@/config/app';
+import { seedGrants, seedGrantToUploadSession } from '@/seed-data';
 import { type UploadSession, UploadStatus } from '@/types/app';
 import { generateUUID } from '@/utils/crypto';
+import { type ConnectionMode } from '@/services/config/app';
 
 /**
  * Upload Manager Props
@@ -34,6 +36,8 @@ export interface UploadManagerProps {
   disabled?: boolean;
   /** Additional CSS classes */
   className?: string;
+  /** Current connection mode (mock, real, etc) */
+  connectionMode?: ConnectionMode;
 }
 
 /**
@@ -57,11 +61,78 @@ export function UploadManager({
   onUploadProgress,
   disabled = false,
   className = '',
+  connectionMode = 'mock',
 }: UploadManagerProps): React.JSX.Element {
   const [currentUpload, setCurrentUpload] = useState<UploadSession | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [selectedSeedFile, setSelectedSeedFile] = useState<string>('');
+
+  // Derive demo mode from connection mode prop (presentation focused)
+  const isDemoModeActive = connectionMode === 'demo';
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadInProgressRef = useRef<boolean>(false);
+
+  // List of seed PDF files in seed-data directory
+  const SEED_PDF_FILES = [
+    { filename: 'baecher_joseph_2023_d1f8a239-27c0-4a38-a333-ea4e82533d1b_PROPOSAL_1.pdf', label: 'Baecher, Joseph (2023)' },
+    { filename: 'baecher_joseph_2024_c6f0ae22-48ba-4044-a44c-d860f9b8d17f_PROPOSAL_1.pdf', label: 'Baecher, Joseph (2024)' },
+    { filename: 'barker_michelle_2020_1b5d2213-4c72-4da8-a7b8-bece5b27d280_PROPOSAL_1.pdf', label: 'Barker, Michelle (2020)' },
+    { filename: 'bertolet_brittnil_2021_9d34d838-4fd8-4fbd-b94e-766d1dd82d23_PROPOSAL_1.pdf', label: 'Bertolet, Brittnil (2021)' },
+    { filename: 'brown_ctitus_2014_afd7eaff-7bea-45d0-be3e-33188b448cd1_PROPOSAL_1.pdf', label: 'Brown, Ctitus (2014)' },
+    { filename: 'frazer_ryane_2019_74f22e94-b364-482e-a2c1-0892b705f0c6_PROPOSAL_1.pdf', label: 'Frazer, Ryane (2019)' },
+    { filename: 'gregory_samantha_2018_7f2475c4-2fad-498f-beac-e3044183b996_PROPOSAL_1.pdf', label: 'Gregory, Samantha (2018)' },
+    { filename: 'jensen_jan_2015_02ecd4f0-ac84-4cf4-8d10-1aed8faa6767_PROPOSAL_1.pdf', label: 'Jensen, Jan (2015)' },
+    { filename: 'nell_lucas_2022_6306262d-9317-4f58-aadc-caf26325862d_PROPOSAL_1.pdf', label: 'Nell, Lucas (2022)' },
+    { filename: 'polino_alexander_2017_f990c0ee-e9e0-4f31-b050-9ed3a0b4c2e5_PROPOSAL_1.pdf', label: 'Polino, Alexander (2017)' },
+  ];
+
+  /**
+   * Handle seed file selection - uses simulate-upload API
+   */
+  const handleSeedFileSelect = useCallback(async (filename: string) => {
+    if (!filename || uploadInProgressRef.current) return;
+
+    uploadInProgressRef.current = true;
+    setSelectedSeedFile(filename);
+
+    const session: UploadSession = {
+      id: `seed_${Date.now()}_${generateUUID().substring(0, 8)}`,
+      filename,
+      fileSize: 1024000, // Mock size
+      mimeType: 'application/pdf',
+      status: UploadStatus.UPLOADING,
+      progress: 0,
+      startedAt: new Date(),
+    };
+    setCurrentUpload(session);
+
+    try {
+      // Use simulate-upload API for seed files
+      const response = await aiRouterClient.simulateUpload(filename);
+
+      if (response.success && response.data) {
+        const completedSession: UploadSession = {
+          ...session,
+          id: response.data.id,
+          status: UploadStatus.COMPLETED,
+          progress: 100,
+          completedAt: new Date(),
+        };
+        setCurrentUpload(completedSession);
+        onUploadComplete?.(completedSession);
+      } else {
+        throw new Error(response.error || 'Seed file upload failed');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Upload failed';
+      const failedSession = { ...session, status: UploadStatus.FAILED, errorMessage };
+      setCurrentUpload(failedSession);
+      onUploadError?.(errorMessage, failedSession);
+    } finally {
+      setTimeout(() => { uploadInProgressRef.current = false; }, 1000);
+    }
+  }, [onUploadComplete, onUploadError]);
 
   /**
    * Validates uploaded file against requirements
@@ -479,21 +550,21 @@ export function UploadManager({
         onClick={
           !isUploading
             ? (e) => {
-                // Only handle click if it's not from a button or other interactive element
-                if (e.target === e.currentTarget || (e.target as HTMLElement).tagName === 'DIV') {
-                  handleClick(e);
-                }
+              // Only handle click if it's not from a button or other interactive element
+              if (e.target === e.currentTarget || (e.target as HTMLElement).tagName === 'DIV') {
+                handleClick(e);
               }
+            }
             : undefined
         }
         onKeyDown={
           !isUploading
             ? (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  handleClick();
-                }
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleClick();
               }
+            }
             : undefined
         }
         tabIndex={!isUploading && !disabled ? 0 : -1}
@@ -538,28 +609,55 @@ export function UploadManager({
                 ? `Successfully uploaded ${currentUpload?.filename}`
                 : hasFailed
                   ? currentUpload?.errorMessage
-                  : 'Drag and drop your PDF file here, or click to browse'}
+                  : isDemoModeActive
+                    ? 'Select a seeded proposal PDF to analyze'
+                    : 'Drag and drop your PDF file here, or click to browse'}
           </p>
 
           {!isUploading && (
-            <button
-              type="button"
-              disabled={disabled}
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('Button clicked!');
-                handleClick(e);
-              }}
-            >
-              {hasCompleted || hasFailed ? 'Select Another PDF' : 'Select PDF File'}
-            </button>
+            isDemoModeActive ? (
+              /* Demo Mode: Show seed PDF selector dropdown */
+              <div className="flex flex-col items-center gap-2">
+                <select
+                  value={selectedSeedFile}
+                  onChange={(e) => handleSeedFileSelect(e.target.value)}
+                  disabled={disabled}
+                  className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                >
+                  <option value="">-- Select a proposal --</option>
+                  {SEED_PDF_FILES.map((file) => (
+                    <option key={file.filename} value={file.filename}>
+                      {file.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500">
+                  These are real grant proposals from the AATB dataset
+                </p>
+              </div>
+            ) : (
+              /* Normal Mode: Show file picker button */
+              <button
+                type="button"
+                disabled={disabled}
+                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Button clicked!');
+                  handleClick(e);
+                }}
+              >
+                {hasCompleted || hasFailed ? 'Select Another PDF' : 'Select PDF File'}
+              </button>
+            )
           )}
 
-          <p className="text-xs text-gray-500 mt-2">
-            Maximum file size: {Math.round(uploadConfig.maxFileSize / (1024 * 1024))}MB
-          </p>
+          {!isDemoModeActive && (
+            <p className="text-xs text-gray-500 mt-2">
+              Maximum file size: {Math.round(uploadConfig.maxFileSize / (1024 * 1024))}MB
+            </p>
+          )}
         </div>
       </section>
 
