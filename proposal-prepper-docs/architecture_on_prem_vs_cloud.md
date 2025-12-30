@@ -35,16 +35,29 @@ graph TD
         SVC["proposal-prepper-services (AI Router)"]
     end
 
-    subgraph "Engine Layer (Pluggable Providers)"
-        LOCAL["Local (LiteLLM/Ollama)"]
-        AWS["Bedrock/Strands (Future)"]
-        GCP["Vertex/Genkit (Future)"]
-        MSFT["Semantic Kernel/Autogen (Future)"]
+    subgraph "Orchestration Layer (Active)"
+        LANGCHAIN["LangChain/LangGraph"]
+        LITELLM["LiteLLM (Provider Abstraction)"]
         
-        SVC --> LOCAL
-        SVC -.-> AWS
-        SVC -.-> GCP
-        SVC -.-> MSFT
+        SVC --> LANGCHAIN
+        LANGCHAIN --> LITELLM
+    end
+
+    subgraph "Engine Layer (Pluggable Providers)"
+        LOCAL["Local (Ollama/Llama)"]
+        BEDROCK["AWS Bedrock"]
+        OPENAI["OpenAI"]
+        ANTHROPIC["Anthropic"]
+        
+        LITELLM --> LOCAL
+        LITELLM -.-> BEDROCK
+        LITELLM -.-> OPENAI
+        LITELLM -.-> ANTHROPIC
+    end
+    
+    subgraph "Future Consideration"
+        STRANDS["AWS Strands SDK"]
+        style STRANDS fill:#666,stroke:#999,color:#ccc,stroke-dasharray: 5 5
     end
 
     subgraph "Agents Layer"
@@ -52,9 +65,9 @@ graph TD
         EO["EO Agent"]
         TECH["Technical Agent"]
         
-        LOCAL --> FAR
-        LOCAL --> EO
-        LOCAL --> TECH
+        LANGCHAIN --> FAR
+        LANGCHAIN --> EO
+        LANGCHAIN --> TECH
     end
 
     subgraph "Infrastructure Layer"
@@ -71,9 +84,8 @@ graph TD
     end
 
     style MOCK fill:#f96,stroke:#c63
-    style AWS fill:#666,stroke:#999,color:#ccc
-    style GCP fill:#666,stroke:#999,color:#ccc
-    style MSFT fill:#666,stroke:#999,color:#ccc
+    style LANGCHAIN fill:#90EE90,stroke:#228B22
+    style LITELLM fill:#90EE90,stroke:#228B22
 ```
 
 | Mode | TopBar Badge | start.sh | Backend |
@@ -93,24 +105,69 @@ The application's mode is controlled by **two tiers** in the Connection Settings
 | **Front-end (Demo)** | `DEMO: MANUAL` | UI-only mode, no backend required |
 | **AI Router (Live)** | `ROUTER: LOCAL` | Full stack with AI analysis engine |
 
-### Tier 2: Context (Only for AI Router)
+### Tier 2: Orchestration & Providers
 
-| Context | Status | Description |
-|---------|--------|-------------|
-| **Local** | ✅ Active | Uses LiteLLM + Ollama (Llama 3.2) |
-| **Cloud: Strands (AWS)** | 🚫 Disabled | AWS Bedrock integration |
-| **Cloud: GenKit (Google)** | 🚫 Disabled | Google GenKit integration |
-| **Cloud: Autogen (Microsoft)** | 🚫 Disabled | Microsoft Autogen integration |
+**Current Architecture** (Active):
+| Component | Technology | Status | Description |
+|-----------|-----------|--------|-------------|
+| **Orchestration** | LangChain/LangGraph | ✅ Active | Multi-agent workflow coordination |
+| **Provider Abstraction** | LiteLLM | ✅ Active | Unified interface for all LLM providers |
+| **Local Model** | Ollama (Llama 3.2) | ✅ Active | Privacy-first local inference |
+| **Cloud Providers** | Bedrock/OpenAI/Anthropic | ⚠️ Available | Via LiteLLM, opt-in only |
+
+**Historical Context**:
+| Component | Technology | Status | Notes |
+|-----------|-----------|--------|-------|
+| **AWS Strands SDK** | Python orchestration | 🚫 Not Adopted | Considered but opted for provider-agnostic approach |
+
+> [!NOTE]
+> We chose **LangChain + LiteLLM** over AWS Strands to maintain provider independence and support fully local development with Llama models.
 
 > [!WARNING]
 > Cloud providers are intentionally disabled in `start.sh` to prevent accidental cloud costs during development.
 
 ---
 
-## AWS Cloud Architecture (Future)
+## Orchestration Architecture (Current)
+
+> [!IMPORTANT]
+> The application uses **LangChain + LiteLLM** for agent orchestration, providing provider independence and local-first development.
+
+### Architecture Layers
+
+```python
+# LangChain handles multi-agent workflows
+from langchain.agents import AgentExecutor
+from langchain.tools import tool
+
+# LiteLLM provides provider abstraction  
+from litellm import completion
+
+# Same code works with ANY provider
+def analyze_document(text, provider="ollama"):
+    response = completion(
+        model=f"{provider}/llama3.2",  # or "bedrock/claude", "gpt-4", etc.
+        messages=[{"role": "user", "content": text}]
+    )
+    return response
+```
+
+### Benefits
+
+1. **Provider Independence**: Switch between Ollama, Bedrock, OpenAI, Anthropic with 1 line change
+2. **Local-First**: Full functionality with local Llama models (no cloud required)
+3. **Cost Control**: Choose provider based on cost/performance needs
+4. **Privacy**: Sensitive documents can stay 100% local
+5. **Production-Ready**: LangChain is battle-tested for multi-agent systems
+
+---
+
+## AWS Cloud Architecture (Historical Reference)
 
 > [!NOTE]
-> This architecture is **not yet connected** to the application. It represents the target cloud deployment using AWS Strands Agents SDK.
+> This architecture represents the **original AWS Strands SDK plan** that is **not currently implemented**. We opted for LangChain + LiteLLM instead for provider independence.
+>
+> Strands remains a **future consideration** if AWS-specific optimizations become necessary.
 
 ![AWS Strands Architecture](./architecture/aws_strands_architecture.png)
 
