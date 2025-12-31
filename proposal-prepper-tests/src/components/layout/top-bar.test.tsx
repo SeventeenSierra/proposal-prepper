@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: PolyForm-Strict-1.0.0
 // SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
-import { render, screen, act } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
+import { aiRouterIntegration } from "proposal-prepper-services";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TopBar from "@/components/layout/top-bar";
-import { aiRouterIntegration } from "proposal-prepper-services";
 
 // Mock @17sierra/ui to avoid issues with missing dist
 vi.mock("@17sierra/ui", () => ({

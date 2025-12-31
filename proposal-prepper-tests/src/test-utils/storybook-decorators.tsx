@@ -5,8 +5,8 @@
 
 import type { Decorator, StoryContext } from "@storybook/react";
 import React from "react";
-import { ErrorScenario } from "./mock-data-provider";
 import { MockAnalysisEngineAPIEnhanced } from "./mock-analysis-engine-api-enhanced";
+import { ErrorScenario } from "./mock-data-provider";
 
 /**
  * Story decorators and context providers for Storybook
