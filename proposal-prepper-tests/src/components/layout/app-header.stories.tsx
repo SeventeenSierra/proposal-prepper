@@ -136,9 +136,8 @@ export const Sticky: Story = {
 					<div key={i} className="p-4 bg-gray-100 rounded">
 						<h3 className="font-semibold">Content Block {i + 1}</h3>
 						<p className="text-gray-600">
-							This is some sample content to demonstrate the sticky header
-							behavior. Scroll down to see the header stick to the top of the
-							viewport.
+							This is some sample content to demonstrate the sticky header behavior. Scroll down to
+							see the header stick to the top of the viewport.
 						</p>
 					</div>
 				))}
@@ -157,7 +156,6 @@ export const LongTitle: Story = {
 	args: {
 		mode: "proposals",
 		title: "Very Long Application Title That Might Overflow",
-		subtitle:
-			"This is also a very long subtitle that demonstrates text truncation behavior",
+		subtitle: "This is also a very long subtitle that demonstrates text truncation behavior",
 	},
 };

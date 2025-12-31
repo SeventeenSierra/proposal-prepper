@@ -1,6 +1,10 @@
 {
 	"compilerOptions": {
-		"lib": ["dom", "dom.iterable", "esnext"],
+		"lib": [
+			"dom",
+			"dom.iterable",
+			"esnext"
+		],
 		"allowJs": true,
 		"skipLibCheck": true,
 		"strict": true,
@@ -13,16 +17,36 @@
 		"jsx": "react-jsx",
 		"baseUrl": ".",
 		"paths": {
-			"@/test-utils/*": ["src/test-utils/*"],
-			"@/*": ["../proposal-prepper-web/src/*"],
-			"proposal-prepper-services/*": ["../proposal-prepper-services/src/*"]
+			"@/test-utils/*": [
+				"src/test-utils/*"
+			],
+			"@/services/*": [
+				"../proposal-prepper-services/src/*"
+			],
+			"@/*": [
+				"../proposal-prepper-web/src/*"
+			],
+			"proposal-prepper-services": [
+				"../proposal-prepper-services/src/index.ts"
+			],
+			"proposal-prepper-services/*": [
+				"../proposal-prepper-services/src/*"
+			]
 		},
 		"target": "ES2017"
 	},
-	"include": ["vitest-env.d.ts", "src/**/*.ts", "src/**/*.tsx"],
+	"include": [
+		"vitest-env.d.ts",
+		"src/**/*.ts",
+		"src/**/*.tsx"
+	],
 	"exclude": [
 		"node_modules",
 		"**/*.stories.tsx",
-		"src/test-utils/storybook-decorators.tsx"
+		"src/test-utils/storybook-decorators.tsx",
+		"src/test-utils/mock-analysis-engine-api-enhanced.ts",
+		"src/test-utils/mock-data-provider.tsx",
+		"src/test-utils/pdf-upload-integration.test.ts",
+		"src/test-utils/real-pdf-integration.test.ts"
 	]
 }

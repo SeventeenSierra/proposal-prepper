@@ -3,11 +3,7 @@
 
 import { describe, expect, it } from "vitest";
 import { AnalysisStatus, UploadStatus, ViewType } from "@/types/app";
-import {
-	createMockAnalysisSession,
-	createMockUIState,
-	createMockUploadSession,
-} from "./index";
+import { createMockAnalysisSession, createMockUIState, createMockUploadSession } from "./index";
 
 describe("Test Utilities", () => {
 	describe("createMockUploadSession", () => {

@@ -47,7 +47,7 @@ describe("SeedService", () => {
 			});
 
 			await expect(seedService.getSeedingStatus()).rejects.toThrow(
-				"Failed to get seeding status: Internal Server Error",
+				"Failed to get seeding status: Internal Server Error"
 			);
 		});
 	});

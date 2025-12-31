@@ -3,10 +3,10 @@
  * SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { uploadService } from "@/services/upload-service";
-import { analysisService, AnalysisStatus } from "@/services/analysis-service";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { AnalysisStatus, analysisService } from "@/services/analysis-service";
 import { resultsService } from "@/services/results-service";
+import { uploadService } from "@/services/upload-service";
 import { generateUUID } from "@/utils/crypto";
 
 // Mock fetch globally for integration tests

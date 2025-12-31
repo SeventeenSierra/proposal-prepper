@@ -8,7 +8,7 @@ import type { FARDocument } from '@/seed-data';
 /**
  * Generate mock analysis result for FAR documents
  */
-export function generateMockResult(farDoc: FARDocument) {
+export function generateMockResult(_farDoc: FARDocument) {
   return {
     overallScore: 85,
     status: 'pass' as const,

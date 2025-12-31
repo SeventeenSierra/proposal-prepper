@@ -45,9 +45,7 @@ describe("AgentInterface (index.tsx)", () => {
 
 	it("should render initial bot message", () => {
 		render(<AgentInterface {...defaultProps} />);
-		expect(
-			screen.getByText(/Hello! I am your AI compliance officer/i),
-		).toBeInTheDocument();
+		expect(screen.getByText(/Hello! I am your AI compliance officer/i)).toBeInTheDocument();
 	});
 
 	it("should render Intelligence Feed and Analysis Steps tabs", () => {
@@ -87,16 +85,14 @@ describe("AgentInterface (index.tsx)", () => {
 	});
 
 	it("should render in live mode", () => {
-		render(
-			<AgentInterface {...defaultProps} connectionMode="analysis-router" />,
-		);
+		render(<AgentInterface {...defaultProps} connectionMode="analysis-router" />);
 		// In live mode, should show file selector
 		expect(screen.getByText("Select PDF")).toBeInTheDocument();
 	});
 
 	it("should update messages when file is selected", async () => {
 		const { container } = render(
-			<AgentInterface {...defaultProps} connectionMode="analysis-router" />,
+			<AgentInterface {...defaultProps} connectionMode="analysis-router" />
 		);
 
 		const fileInput = container.querySelector('input[type="file"]');

@@ -78,9 +78,7 @@ describe("ResultsService", () => {
 			expect(result.results?.proposalId).toBe("proposal-456");
 			expect(result.results?.status).toBe(ComplianceStatus.WARNING);
 			expect(result.results?.issues).toHaveLength(1);
-			expect(mockAiRouterClient.getResults).toHaveBeenCalledWith(
-				"proposal-456",
-			);
+			expect(mockAiRouterClient.getResults).toHaveBeenCalledWith("proposal-456");
 		});
 
 		it("should handle results retrieval failures", async () => {
@@ -98,9 +96,7 @@ describe("ResultsService", () => {
 		});
 
 		it("should handle results retrieval exceptions", async () => {
-			mockAiRouterClient.getResults.mockRejectedValueOnce(
-				new Error("Network error"),
-			);
+			mockAiRouterClient.getResults.mockRejectedValueOnce(new Error("Network error"));
 
 			const result = await resultsService.getResults("proposal-456");
 
@@ -191,16 +187,11 @@ describe("ResultsService", () => {
 				data: mockIssue,
 			});
 
-			const result = await resultsService.getIssueDetails(
-				"session-123",
-				"issue-1",
-			);
+			const result = await resultsService.getIssueDetails("session-123", "issue-1");
 
 			expect(result.success).toBe(true);
 			expect(result.issue).toEqual(mockIssue);
-			expect(mockAiRouterClient.getIssueDetails).toHaveBeenCalledWith(
-				"issue-1",
-			);
+			expect(mockAiRouterClient.getIssueDetails).toHaveBeenCalledWith("issue-1");
 		});
 
 		it("should handle issue details retrieval failures", async () => {
@@ -209,10 +200,7 @@ describe("ResultsService", () => {
 				error: "Issue not found",
 			});
 
-			const result = await resultsService.getIssueDetails(
-				"session-123",
-				"issue-1",
-			);
+			const result = await resultsService.getIssueDetails("session-123", "issue-1");
 
 			expect(result.success).toBe(false);
 			expect(result.error).toBe("Issue not found");
@@ -381,22 +369,19 @@ describe("ResultsService", () => {
 
 			const criticalIssues = resultsService.filterIssuesBySeverity(
 				mockResults,
-				IssueSeverity.CRITICAL,
+				IssueSeverity.CRITICAL
 			);
 			expect(criticalIssues).toHaveLength(1);
 			expect(criticalIssues[0].id).toBe("issue-1");
 
 			const warningIssues = resultsService.filterIssuesBySeverity(
 				mockResults,
-				IssueSeverity.WARNING,
+				IssueSeverity.WARNING
 			);
 			expect(warningIssues).toHaveLength(1);
 			expect(warningIssues[0].id).toBe("issue-2");
 
-			const infoIssues = resultsService.filterIssuesBySeverity(
-				mockResults,
-				IssueSeverity.INFO,
-			);
+			const infoIssues = resultsService.filterIssuesBySeverity(mockResults, IssueSeverity.INFO);
 			expect(infoIssues).toHaveLength(1);
 			expect(infoIssues[0].id).toBe("issue-3");
 		});
@@ -577,10 +562,7 @@ describe("ResultsService", () => {
 
 			await resultsService.getResults("proposal-456");
 
-			expect(onResultsUpdate).toHaveBeenCalledWith(
-				"proposal-456",
-				expect.any(Object),
-			);
+			expect(onResultsUpdate).toHaveBeenCalledWith("proposal-456", expect.any(Object));
 			expect(onError).not.toHaveBeenCalled();
 		});
 	});

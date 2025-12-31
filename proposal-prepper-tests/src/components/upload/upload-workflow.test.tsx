@@ -86,7 +86,7 @@ describe("UploadWorkflow", () => {
 			<UploadWorkflow
 				onWorkflowComplete={mockOnWorkflowComplete}
 				onWorkflowError={mockOnWorkflowError}
-			/>,
+			/>
 		);
 
 		expect(screen.getByTestId("upload-manager")).toBeInTheDocument();
@@ -97,7 +97,7 @@ describe("UploadWorkflow", () => {
 			<UploadWorkflow
 				onWorkflowComplete={mockOnWorkflowComplete}
 				onWorkflowError={mockOnWorkflowError}
-			/>,
+			/>
 		);
 
 		// Trigger upload completion via the mock button
@@ -105,9 +105,7 @@ describe("UploadWorkflow", () => {
 
 		await waitFor(() => {
 			// Should show analysis section with status text (may match multiple elements)
-			const elements = screen.getAllByText(
-				/Analyzing Document|Analysis queued|Ready for Analysis/,
-			);
+			const elements = screen.getAllByText(/Analyzing Document|Analysis queued|Ready for Analysis/);
 			expect(elements.length).toBeGreaterThan(0);
 		});
 
@@ -116,9 +114,7 @@ describe("UploadWorkflow", () => {
 	});
 
 	it("handles workflow completion correctly", async () => {
-		const { aiRouterClient } = await import(
-			"proposal-prepper-services/ai-router-client"
-		);
+		const { aiRouterClient } = await import("proposal-prepper-services/ai-router-client");
 
 		// Mock successful analysis results
 		vi.mocked(aiRouterClient.getResults).mockResolvedValue({
@@ -141,16 +137,14 @@ describe("UploadWorkflow", () => {
 			<UploadWorkflow
 				onWorkflowComplete={mockOnWorkflowComplete}
 				onWorkflowError={mockOnWorkflowError}
-			/>,
+			/>
 		);
 
 		// Trigger upload completion via the mock button
 		fireEvent.click(screen.getByTestId("mock-upload-trigger"));
 
 		await waitFor(() => {
-			const elements = screen.getAllByText(
-				/Analyzing Document|Analysis queued|Ready for Analysis/,
-			);
+			const elements = screen.getAllByText(/Analyzing Document|Analysis queued|Ready for Analysis/);
 			expect(elements.length).toBeGreaterThan(0);
 		});
 
@@ -163,7 +157,7 @@ describe("UploadWorkflow", () => {
 			<UploadWorkflow
 				onWorkflowComplete={mockOnWorkflowComplete}
 				onWorkflowError={mockOnWorkflowError}
-			/>,
+			/>
 		);
 
 		// Trigger upload completion to show analysis section
@@ -180,7 +174,7 @@ describe("UploadWorkflow", () => {
 				onWorkflowComplete={mockOnWorkflowComplete}
 				onWorkflowError={mockOnWorkflowError}
 				disabled={true}
-			/>,
+			/>
 		);
 
 		expect(screen.getByTestId("upload-manager")).toBeInTheDocument();
@@ -193,7 +187,7 @@ describe("UploadWorkflow", () => {
 			<UploadWorkflow
 				onWorkflowComplete={mockOnWorkflowComplete}
 				onWorkflowError={mockOnWorkflowError}
-			/>,
+			/>
 		);
 
 		expect(screen.getByText("Debug Information")).toBeInTheDocument();

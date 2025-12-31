@@ -14,7 +14,5 @@ test("sidebar navigation works", async ({ page }) => {
 
 	// Click a recent project (SaaS Proposal - DOE)
 	// Use a more specific selector to avoid ambiguity if multiple elements match
-	await page
-		.locator('div[role="button"]:has-text("SaaS Proposal - DOE")')
-		.click();
+	await page.locator('div[role="button"]:has-text("SaaS Proposal - DOE")').click();
 });

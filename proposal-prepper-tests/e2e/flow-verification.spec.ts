@@ -66,9 +66,7 @@ test("Full Proposal Analysis Flow Verification", async ({ page }) => {
 		// Poll for status change
 		await expect(async () => {
 			if (await errorIcon.isVisible()) {
-				throw new Error(
-					`Flow interrupted: Error (RED) detected in step "${stepName}"`,
-				);
+				throw new Error(`Flow interrupted: Error (RED) detected in step "${stepName}"`);
 			}
 			expect(await greenIcon.isVisible()).toBeTruthy();
 		}).toPass({ timeout: 60000, intervals: [1000] });

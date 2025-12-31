@@ -119,7 +119,7 @@ describe("AIRouterClient", () => {
 					expect.objectContaining({
 						method: "POST",
 						body: expect.any(FormData),
-					}),
+					})
 				);
 			});
 
@@ -167,7 +167,7 @@ describe("AIRouterClient", () => {
 				expect(result.data).toEqual(mockResponse);
 				expect(mockFetch).toHaveBeenCalledWith(
 					"http://localhost:8080/api/documents/upload/upload-123",
-					expect.objectContaining({ method: "GET" }),
+					expect.objectContaining({ method: "GET" })
 				);
 			});
 
@@ -227,7 +227,7 @@ describe("AIRouterClient", () => {
 							s3_key: "uploads/proposal-456/document.pdf",
 							frameworks: ["FAR", "DFARS"],
 						}),
-					}),
+					})
 				);
 			});
 		});
@@ -270,7 +270,7 @@ describe("AIRouterClient", () => {
 				expect(result.data).toEqual(mockResponse);
 				expect(mockFetch).toHaveBeenCalledWith(
 					"http://localhost:8080/api/analysis/proposal-456/results",
-					expect.objectContaining({ method: "GET" }),
+					expect.objectContaining({ method: "GET" })
 				);
 			});
 		});
@@ -293,7 +293,7 @@ describe("AIRouterClient", () => {
 				expect(result.data).toEqual(mockResponse);
 				expect(mockFetch).toHaveBeenCalledWith(
 					"http://localhost:8080/api/health",
-					expect.objectContaining({ method: "GET" }),
+					expect.objectContaining({ method: "GET" })
 				);
 			});
 		});
@@ -350,8 +350,7 @@ describe("AIRouterClient", () => {
 			};
 
 			// Access the WebSocket instance and trigger onmessage
-			const wsInstance = (client as { wsClient: { ws: WebSocket } }).wsClient
-				.ws;
+			const wsInstance = (client as { wsClient: { ws: WebSocket } }).wsClient.ws;
 			if (wsInstance?.onmessage) {
 				wsInstance.onmessage({
 					data: JSON.stringify(mockMessage),
@@ -388,8 +387,7 @@ describe("AIRouterClient", () => {
 				data: { progress: 75 },
 			};
 
-			const wsInstance = (client as { wsClient: { ws: WebSocket } }).wsClient
-				.ws;
+			const wsInstance = (client as { wsClient: { ws: WebSocket } }).wsClient.ws;
 			if (wsInstance?.onmessage) {
 				wsInstance.onmessage({
 					data: JSON.stringify(mockMessage),
@@ -404,10 +402,7 @@ describe("AIRouterClient", () => {
 	describe("Error Handling", () => {
 		it("should handle network timeouts", async () => {
 			// Create a proper AbortError that matches what AbortController.abort() creates
-			const abortError = new DOMException(
-				"The operation was aborted.",
-				"AbortError",
-			);
+			const abortError = new DOMException("The operation was aborted.", "AbortError");
 			// Persistently reject to ensure all retries fail with the same error
 			mockFetch.mockRejectedValue(abortError);
 

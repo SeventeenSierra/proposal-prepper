@@ -21,9 +21,7 @@ test.describe("UI Mode Indicators (Demo/Real)", () => {
 		await expect(demoBadge).toContainText("Demo");
 	});
 
-	test("should show Real badge when use-mock-api is false", async ({
-		page,
-	}) => {
+	test("should show Real badge when use-mock-api is false", async ({ page }) => {
 		// Set localStorage
 		await page.evaluate(() => {
 			localStorage.setItem("use-mock-api", "false");
@@ -44,9 +42,7 @@ test.describe("UI Mode Indicators (Demo/Real)", () => {
 		await expect(realBadge).toContainText("Real");
 	});
 
-	test("should switch back to Demo badge when use-mock-api is true", async ({
-		page,
-	}) => {
+	test("should switch back to Demo badge when use-mock-api is true", async ({ page }) => {
 		// Set to real first
 		await page.evaluate(() => {
 			localStorage.setItem("use-mock-api", "false");

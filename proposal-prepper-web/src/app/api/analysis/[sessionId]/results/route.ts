@@ -15,5 +15,5 @@ import type { NextRequest } from 'next/server';
 import { AIRouterHandlers } from 'proposal-prepper-middleware/ai-router-adapter';
 
 export async function GET(req: NextRequest, ctx: { params: Promise<{ sessionId: string }> }) {
-  return AIRouterHandlers.handleAnalysisResults(req as any, ctx);
+  return AIRouterHandlers.handleAnalysisResults(req, ctx);
 }

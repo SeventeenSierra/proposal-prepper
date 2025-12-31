@@ -1,7 +1,7 @@
 'use client';
 
 import { Badge, Button } from '@17sierra/ui';
-import { Play, Play as PlayIcon } from 'lucide-react'; // Fallback if missing in @17sierra/ui dist
+import { Play } from 'lucide-react'; // Fallback if missing in @17sierra/ui dist
 import { useState } from 'react';
 import type { UploadSession } from '@/types/app';
 

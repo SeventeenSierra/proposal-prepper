@@ -17,32 +17,24 @@ describe("End-to-End Integration Tests", () => {
 	describe("Complete Workflow Testing", () => {
 		it("should complete the full workflow for compliant proposals", async () => {
 			const scenarios = IntegrationTestHelper.getTestScenarios();
-			const compliantScenario = scenarios.find(
-				(s) => s.expectedOutcome === "pass",
-			)!;
+			const compliantScenario = scenarios.find((s) => s.expectedOutcome === "pass")!;
 
-			const result =
-				await IntegrationTestHelper.runEndToEndTest(compliantScenario);
+			const result = await IntegrationTestHelper.runEndToEndTest(compliantScenario);
 
 			expect(result.success).toBe(true);
 			expect(result.steps.upload.success).toBe(true);
 			expect(result.steps.analysis.success).toBe(true);
 			expect(result.steps.analysis.results?.overallStatus).toBe("pass");
-			expect(result.steps.analysis.results?.complianceScore).toBeGreaterThan(
-				90,
-			);
+			expect(result.steps.analysis.results?.complianceScore).toBeGreaterThan(90);
 
 			console.log(result.summary);
 		});
 
 		it("should complete the full workflow for non-compliant proposals", async () => {
 			const scenarios = IntegrationTestHelper.getTestScenarios();
-			const nonCompliantScenario = scenarios.find(
-				(s) => s.expectedOutcome === "fail",
-			)!;
+			const nonCompliantScenario = scenarios.find((s) => s.expectedOutcome === "fail")!;
 
-			const result =
-				await IntegrationTestHelper.runEndToEndTest(nonCompliantScenario);
+			const result = await IntegrationTestHelper.runEndToEndTest(nonCompliantScenario);
 
 			expect(result.success).toBe(true);
 			expect(result.steps.upload.success).toBe(true);
@@ -56,20 +48,15 @@ describe("End-to-End Integration Tests", () => {
 
 		it("should complete the full workflow for proposals with warnings", async () => {
 			const scenarios = IntegrationTestHelper.getTestScenarios();
-			const warningScenario = scenarios.find(
-				(s) => s.expectedOutcome === "warning",
-			)!;
+			const warningScenario = scenarios.find((s) => s.expectedOutcome === "warning")!;
 
-			const result =
-				await IntegrationTestHelper.runEndToEndTest(warningScenario);
+			const result = await IntegrationTestHelper.runEndToEndTest(warningScenario);
 
 			expect(result.success).toBe(true);
 			expect(result.steps.upload.success).toBe(true);
 			expect(result.steps.analysis.success).toBe(true);
 			expect(result.steps.analysis.results?.overallStatus).toBe("warning");
-			expect(result.steps.analysis.results?.complianceScore).toBeGreaterThan(
-				50,
-			);
+			expect(result.steps.analysis.results?.complianceScore).toBeGreaterThan(50);
 			expect(result.steps.analysis.results?.complianceScore).toBeLessThan(90);
 
 			console.log(result.summary);
@@ -81,8 +68,7 @@ describe("End-to-End Integration Tests", () => {
 			const invalidFile = new File(["content"], "document.txt", {
 				type: "text/plain",
 			});
-			const uploadResult =
-				await IntegrationTestHelper.simulateUpload(invalidFile);
+			const uploadResult = await IntegrationTestHelper.simulateUpload(invalidFile);
 
 			expect(uploadResult.success).toBe(false);
 			expect(uploadResult.error).toContain("Invalid file format");
@@ -94,8 +80,7 @@ describe("End-to-End Integration Tests", () => {
 			const largeFile = new File([largeContent], "large.pdf", {
 				type: "application/pdf",
 			});
-			const uploadResult =
-				await IntegrationTestHelper.simulateUpload(largeFile);
+			const uploadResult = await IntegrationTestHelper.simulateUpload(largeFile);
 
 			expect(uploadResult.success).toBe(false);
 			expect(uploadResult.error).toContain("File size exceeds");
@@ -125,15 +110,13 @@ describe("End-to-End Integration Tests", () => {
 			const scenarios = IntegrationTestHelper.getTestScenarios();
 			const testScenario = scenarios[0];
 
-			const uploadResult = await IntegrationTestHelper.simulateUpload(
-				testScenario.testFile,
-			);
+			const uploadResult = await IntegrationTestHelper.simulateUpload(testScenario.testFile);
 			expect(uploadResult.success).toBe(true);
 			expect(uploadResult.sessionId).toBeDefined();
 
 			const analysisResult = await IntegrationTestHelper.simulateAnalysis(
 				uploadResult.sessionId!,
-				testScenario,
+				testScenario
 			);
 			expect(analysisResult.success).toBe(true);
 			expect(analysisResult.results).toBeDefined();

@@ -5,11 +5,7 @@
 
 import { mockApiServer } from "proposal-prepper-services/mock-api-server";
 import { beforeEach, describe, expect, it } from "vitest";
-import {
-	ApiConfigUtils,
-	apiConfigManager,
-	apiConfiguration,
-} from "@/config/api-config";
+import { ApiConfigUtils, apiConfigManager, apiConfiguration } from "@/config/api-config";
 
 /**
  * Framework Independence Tests
@@ -304,13 +300,11 @@ describe("Framework Independence Integration", () => {
 			expect(uploadResult.success).toBe(true);
 
 			// Test analysis
-			const analysisResult =
-				await mockApiServer.handleAnalysisStart("test-proposal");
+			const analysisResult = await mockApiServer.handleAnalysisStart("test-proposal");
 			expect(analysisResult.success).toBe(true);
 
 			// Test results
-			const resultsResult =
-				await mockApiServer.handleAnalysisResults("test-session");
+			const resultsResult = await mockApiServer.handleAnalysisResults("test-session");
 			expect(resultsResult.success).toBe(true);
 		}
 	}, 30000); // 30 second timeout

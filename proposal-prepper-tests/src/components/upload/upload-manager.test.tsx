@@ -106,9 +106,7 @@ describe("UploadManager", () => {
 		vi.clearAllMocks();
 
 		// Setup successful upload mocks by default
-		(
-			aiRouterClient.uploadDocument as unknown as ReturnType<typeof vi.fn>
-		).mockResolvedValue({
+		(aiRouterClient.uploadDocument as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
 			success: true,
 			data: {
 				id: "upload-123",
@@ -121,9 +119,7 @@ describe("UploadManager", () => {
 			},
 		});
 
-		(
-			aiRouterClient.getUploadStatus as unknown as ReturnType<typeof vi.fn>
-		).mockResolvedValue({
+		(aiRouterClient.getUploadStatus as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
 			success: true,
 			data: {
 				id: "upload-123",
@@ -141,13 +137,9 @@ describe("UploadManager", () => {
 		it("should render upload area with instructions", () => {
 			render(<UploadManager />);
 
+			expect(screen.getByText("Upload your proposal document")).toBeInTheDocument();
 			expect(
-				screen.getByText("Upload your proposal document"),
-			).toBeInTheDocument();
-			expect(
-				screen.getByText(
-					"Drag and drop your PDF file here, or click to browse",
-				),
+				screen.getByText("Drag and drop your PDF file here, or click to browse")
 			).toBeInTheDocument();
 			expect(screen.getByText("Select PDF File")).toBeInTheDocument();
 			expect(screen.getByTestId("upload-icon")).toBeInTheDocument();
@@ -173,7 +165,7 @@ describe("UploadManager", () => {
 				<UploadManager
 					onUploadComplete={mockOnUploadComplete}
 					onUploadProgress={mockOnUploadProgress}
-				/>,
+				/>
 			);
 
 			const fileInput = screen.getByTestId("file-input");
@@ -189,9 +181,7 @@ describe("UploadManager", () => {
 
 			// Should show uploading state with filename
 			await waitFor(() => {
-				expect(
-					screen.getByText("Uploading test-document.pdf"),
-				).toBeInTheDocument();
+				expect(screen.getByText("Uploading test-document.pdf")).toBeInTheDocument();
 			});
 		});
 
@@ -210,9 +200,7 @@ describe("UploadManager", () => {
 			// Should show error state
 			await waitFor(() => {
 				expect(screen.getByText("Upload Failed")).toBeInTheDocument();
-				expect(
-					screen.getByText(/Only PDF files are accepted/),
-				).toBeInTheDocument();
+				expect(screen.getByText(/Only PDF files are accepted/)).toBeInTheDocument();
 			});
 
 			expect(mockOnUploadError).toHaveBeenCalledWith(
@@ -220,7 +208,7 @@ describe("UploadManager", () => {
 				expect.objectContaining({
 					filename: "document.txt",
 					status: UploadStatus.FAILED,
-				}),
+				})
 			);
 		});
 
@@ -247,9 +235,7 @@ describe("UploadManager", () => {
 			// Should show error
 			await waitFor(() => {
 				expect(screen.getByText("Upload Failed")).toBeInTheDocument();
-				expect(
-					screen.getByText(/exceeds the maximum limit/),
-				).toBeInTheDocument();
+				expect(screen.getByText(/exceeds the maximum limit/)).toBeInTheDocument();
 			});
 			// Validation fails before upload is attempted, so uploadDocument should NOT be called
 			expect(aiRouterClient.uploadDocument).not.toHaveBeenCalled();
@@ -259,9 +245,7 @@ describe("UploadManager", () => {
 	describe("Upload Progress", () => {
 		it("should show progress during upload", async () => {
 			// Mock a slower upload with progress callbacks
-			(
-				aiRouterClient.uploadDocument as unknown as ReturnType<typeof vi.fn>
-			).mockImplementation(
+			(aiRouterClient.uploadDocument as unknown as ReturnType<typeof vi.fn>).mockImplementation(
 				(_file: File, progressCallback?: (progress: number) => void) => {
 					return new Promise((resolve) => {
 						// Simulate progress updates
@@ -284,14 +268,14 @@ describe("UploadManager", () => {
 							});
 						}, 40);
 					});
-				},
+				}
 			);
 
 			render(
 				<UploadManager
 					onUploadProgress={mockOnUploadProgress}
 					onUploadComplete={mockOnUploadComplete}
-				/>,
+				/>
 			);
 
 			const fileInput = screen.getByTestId("file-input");
@@ -339,7 +323,7 @@ describe("UploadManager", () => {
 				() => {
 					expect(screen.getByText("Upload Complete")).toBeInTheDocument();
 				},
-				{ timeout: 3000 },
+				{ timeout: 3000 }
 			);
 
 			expect(screen.getByTestId("upload-icon")).toBeInTheDocument();
@@ -349,7 +333,7 @@ describe("UploadManager", () => {
 					filename: "test.pdf",
 					status: UploadStatus.COMPLETED,
 					progress: 100,
-				}),
+				})
 			);
 		});
 	});
@@ -400,9 +384,7 @@ describe("UploadManager", () => {
 			fireEvent.click(screen.getByText("Clear"));
 
 			// Should return to initial state
-			expect(
-				screen.getByText("Upload your proposal document"),
-			).toBeInTheDocument();
+			expect(screen.getByText("Upload your proposal document")).toBeInTheDocument();
 			expect(screen.queryByText("Upload Failed")).not.toBeInTheDocument();
 		});
 	});
@@ -411,16 +393,16 @@ describe("UploadManager", () => {
 		it("should handle drag events", () => {
 			render(<UploadManager />);
 
-			const dropZone = screen
-				.getByText("Upload your proposal document")
-				.closest("div");
+			const dropZone = screen.getByText("Upload your proposal document").closest("div");
 
 			// Simulate drag enter
-			fireEvent.dragEnter(dropZone!, {
-				dataTransfer: {
-					files: [],
-				},
-			});
+			if (dropZone) {
+				fireEvent.dragEnter(dropZone, {
+					dataTransfer: {
+						files: [],
+					},
+				});
+			}
 
 			// Should add active drag styling (this would be tested via class changes)
 			expect(dropZone).toBeInTheDocument();
@@ -429,9 +411,7 @@ describe("UploadManager", () => {
 		it("should handle file drop", async () => {
 			render(<UploadManager onUploadComplete={mockOnUploadComplete} />);
 
-			const dropZone = screen
-				.getByText("Upload your proposal document")
-				.closest("div");
+			const dropZone = screen.getByText("Upload your proposal document").closest("div");
 
 			// Create a file with sufficient size
 			const content = "x".repeat(2048); // 2KB content
@@ -440,11 +420,13 @@ describe("UploadManager", () => {
 			});
 
 			// Simulate file drop
-			fireEvent.drop(dropZone!, {
-				dataTransfer: {
-					files: [validFile],
-				},
-			});
+			if (dropZone) {
+				fireEvent.drop(dropZone, {
+					dataTransfer: {
+						files: [validFile],
+					},
+				});
+			}
 
 			// Should show file info
 			await waitFor(() => {

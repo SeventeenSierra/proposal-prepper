@@ -12,22 +12,15 @@
 'use client';
 
 import { Button } from '@17sierra/ui';
-import {
-  AlertCircle,
-  CheckCircle,
-  ChevronDown,
-  FileText,
-  Upload as UploadIcon,
-  X,
-} from 'lucide-react';
+import { AlertCircle, CheckCircle, FileText, Upload as UploadIcon, X } from 'lucide-react';
 import { aiRouterClient } from 'proposal-prepper-services/ai-router-client';
 import type React from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { apiConfig, errorConfig, uploadConfig, validationConfig } from '@/config/app';
+import { useCallback, useRef, useState } from 'react';
+import { errorConfig, uploadConfig, validationConfig } from '@/config/app';
 import { farDemoDocuments } from '@/seed-data';
+import type { ConnectionMode } from '@/services/config/app';
 import { type UploadSession, UploadStatus } from '@/types/app';
 import { generateUUID } from '@/utils/crypto';
-import { type ConnectionMode } from '@/services/config/app';
 
 /**
  * Upload Manager Props

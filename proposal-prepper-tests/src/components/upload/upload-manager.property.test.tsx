@@ -124,24 +124,22 @@ describe("UploadManager Property-Based Tests", () => {
 							<UploadManager
 								onUploadComplete={mockOnUploadComplete}
 								onUploadError={mockOnUploadError}
-							/>,
+							/>
 						);
 
 						const fileInput = screen.getByTestId("file-input");
 						fireEvent.change(fileInput, { target: { files: [file] } });
 
 						// Should show file info (indicating acceptance)
-						expect(
-							screen.getByText(`Uploading ${filename}`),
-						).toBeInTheDocument();
+						expect(screen.getByText(`Uploading ${filename}`)).toBeInTheDocument();
 
 						// Should not call error callback immediately
 						expect(mockOnUploadError).not.toHaveBeenCalled();
 
 						cleanup(); // Clean up after each property test run
-					},
+					}
 				),
-				{ numRuns: 5 },
+				{ numRuns: 5 }
 			);
 		});
 	});
@@ -193,9 +191,9 @@ describe("UploadManager Property-Based Tests", () => {
 
 						// Results should be consistent
 						expect(firstHasError).toBe(secondHasError);
-					},
+					}
 				),
-				{ numRuns: 5 },
+				{ numRuns: 5 }
 			);
 		});
 	});
@@ -230,14 +228,12 @@ describe("UploadManager Property-Based Tests", () => {
 						fireEvent.change(fileInput, { target: { files: [file] } });
 
 						// Should show file info (indicating upload started)
-						expect(
-							screen.getByText(`Uploading ${filename}`),
-						).toBeInTheDocument();
+						expect(screen.getByText(`Uploading ${filename}`)).toBeInTheDocument();
 
 						cleanup(); // Clean up after each property test run
-					},
+					}
 				),
-				{ numRuns: 5 },
+				{ numRuns: 5 }
 			);
 		});
 	});
@@ -256,20 +252,16 @@ describe("UploadManager Property-Based Tests", () => {
 					fc.oneof(
 						// Invalid file type
 						fc.record({
-							filename: fc
-								.string({ minLength: 1, maxLength: 10 })
-								.map((s) => `${s}.txt`),
+							filename: fc.string({ minLength: 1, maxLength: 10 }).map((s) => `${s}.txt`),
 							mimeType: fc.constant("text/plain"),
 							size: fc.constant(2048),
 						}),
 						// File too small
 						fc.record({
-							filename: fc
-								.string({ minLength: 1, maxLength: 10 })
-								.map((s) => `${s}.pdf`),
+							filename: fc.string({ minLength: 1, maxLength: 10 }).map((s) => `${s}.pdf`),
 							mimeType: fc.constant("application/pdf"),
 							size: fc.constant(500), // Below 1KB minimum
-						}),
+						})
 					),
 					({ filename, mimeType, size }) => {
 						cleanup(); // Clean up before each property test run
@@ -293,9 +285,9 @@ describe("UploadManager Property-Based Tests", () => {
 						expect(screen.getByText("Clear")).toBeInTheDocument();
 
 						cleanup(); // Clean up after each property test run
-					},
+					}
 				),
-				{ numRuns: 5 },
+				{ numRuns: 5 }
 			);
 		});
 	});
@@ -333,14 +325,12 @@ describe("UploadManager Property-Based Tests", () => {
 						expect(screen.getAllByTestId("upload-icon")[0]).toBeInTheDocument();
 
 						// Should show filename in upload message
-						expect(
-							screen.getByText(`Uploading ${filename}`),
-						).toBeInTheDocument();
+						expect(screen.getByText(`Uploading ${filename}`)).toBeInTheDocument();
 
 						cleanup(); // Clean up after each property test run
-					},
+					}
 				),
-				{ numRuns: 5 },
+				{ numRuns: 5 }
 			);
 		});
 	});

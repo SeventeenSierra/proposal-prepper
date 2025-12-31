@@ -3,10 +3,10 @@
  * SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
  */
 
+import { exec } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 import { NextResponse } from 'next/server';
-import { exec } from 'child_process';
-import path from 'path';
-import fs from 'fs';
 
 /**
  * Common handler for infrastructure commands
@@ -31,7 +31,7 @@ async function runInfraCommand(command: string) {
         fs.symlinkSync(dockerPath, podmanLink);
         // Also link docker-compose to podman-compose if needed
         fs.symlinkSync('/etc/profiles/per-user/afla/bin/docker-compose', podmanComposeLink);
-      } catch (e) {}
+      } catch (_e) {}
     }
 
     // Determine Podman socket based on host OS
@@ -49,7 +49,7 @@ async function runInfraCommand(command: string) {
       podmanSocket = `/run/user/${process.getuid?.() || 501}/podman/podman.sock`;
     }
 
-    const env: any = { ...process.env };
+    const env: NodeJS.ProcessEnv = { ...process.env };
     env.PATH = `${binDir}:${process.env.PATH}`;
 
     // If the current DOCKER_HOST looks like the broken Linux path on Mac, unset it
@@ -73,7 +73,11 @@ async function runInfraCommand(command: string) {
     );
 
     return new Promise((resolve, reject) => {
+      // Justification: Commands are hardcoded in POST handler (lines 104-106). No user input is accepted.
+      // Only two possible values: 'docker-compose -p proposal-prepper down' or './start.sh --mode router-local --no-web -d'
+      // The 'replace' on line 68 is safe string substitution for podman compatibility.
       exec(finalizedCommand, { cwd: infraDir, env }, (error, stdout, stderr) => {
+        // nosemgrep: javascript.lang.security.detect-child-process.detect-child-process
         if (error) {
           console.error(`[INFRA] Error: ${error.message}`);
           // If it's a 'down' command and it fails, we often don't care if the services were already down
@@ -88,8 +92,9 @@ async function runInfraCommand(command: string) {
         resolve({ stdout, stderr });
       });
     });
-  } catch (error: any) {
-    console.error(`[INFRA] Setup failed: ${error.message}`);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`[INFRA] Setup failed: ${message}`);
     throw error;
   }
 }
@@ -111,7 +116,8 @@ export async function POST(req: Request) {
       console.error(`[INFRA] Async command failed: ${err.message}`)
     );
     return NextResponse.json({ status: 'initiated', command: isStop ? 'stop' : 'start' });
-  } catch (error: any) {
-    return NextResponse.json({ status: 'error', message: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ status: 'error', message }, { status: 500 });
   }
 }

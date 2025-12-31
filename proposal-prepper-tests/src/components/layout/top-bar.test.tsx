@@ -1,34 +1,51 @@
 // SPDX-License-Identifier: PolyForm-Strict-1.0.0
 // SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
-import { render, screen, act } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
+import { aiRouterIntegration } from "proposal-prepper-services";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TopBar from "@/components/layout/top-bar";
-import { aiRouterIntegration } from "proposal-prepper-services";
 
 // Mock @17sierra/ui to avoid issues with missing dist
+type MockButtonProps = {
+	children?: React.ReactNode;
+	onClick?: () => void;
+	title?: string;
+	className?: string;
+};
+
+type MockChildrenProps = {
+	children?: React.ReactNode;
+};
+
 vi.mock("@17sierra/ui", () => ({
-	Button: ({ children, onClick, title, className }: any) => (
-		<button onClick={onClick} title={title} className={className}>
+	Button: ({ children, onClick, title, className }: MockButtonProps) => (
+		<button type="button" onClick={onClick} title={title} className={className}>
 			{children}
 		</button>
 	),
-	Avatar: ({ children }: any) => <div>{children}</div>,
-	AvatarFallback: ({ children }: any) => <div>{children}</div>,
+	Avatar: ({ children }: MockChildrenProps) => <div>{children}</div>,
+	AvatarFallback: ({ children }: MockChildrenProps) => <div>{children}</div>,
 	Bot: () => <div data-testid="bot-icon" />,
 }));
 
 // Mock proposal-prepper-services
+type AIRouterStatus = {
+	healthy: boolean;
+	activeProvider?: string;
+	error?: string;
+};
+
 vi.mock("proposal-prepper-services", () => {
-	let statusCallback: (status: any) => void;
+	let statusCallback: (status: AIRouterStatus) => void;
 	return {
 		aiRouterIntegration: {
-			subscribeToStatus: vi.fn((cb) => {
+			subscribeToStatus: vi.fn((cb: (status: AIRouterStatus) => void) => {
 				statusCallback = cb;
 				return () => {};
 			}),
 			// Helper for the test to trigger status changes
-			_triggerStatusChange: (status: any) => {
+			_triggerStatusChange: (status: AIRouterStatus) => {
 				if (statusCallback) statusCallback(status);
 			},
 		},
@@ -47,7 +64,7 @@ describe("TopBar Status Component", () => {
 				isSidebarOpen={true}
 				connectionMode="mock"
 				setConnectionMode={() => {}}
-			/>,
+			/>
 		);
 
 		expect(screen.getByText("Test Mode (Mock)")).toBeInTheDocument();
@@ -60,12 +77,16 @@ describe("TopBar Status Component", () => {
 				isSidebarOpen={true}
 				connectionMode="analysis-router"
 				setConnectionMode={() => {}}
-			/>,
+			/>
 		);
 
 		// Manually trigger the healthy status
 		act(() => {
-			(aiRouterIntegration as any)._triggerStatusChange({
+			(
+				aiRouterIntegration as unknown as {
+					_triggerStatusChange: (status: AIRouterStatus) => void;
+				}
+			)._triggerStatusChange({
 				healthy: true,
 				activeProvider: "local-llama",
 			});
@@ -81,12 +102,16 @@ describe("TopBar Status Component", () => {
 				isSidebarOpen={true}
 				connectionMode="analysis-router"
 				setConnectionMode={() => {}}
-			/>,
+			/>
 		);
 
 		// Manually trigger unhealthy status
 		act(() => {
-			(aiRouterIntegration as any)._triggerStatusChange({
+			(
+				aiRouterIntegration as unknown as {
+					_triggerStatusChange: (status: AIRouterStatus) => void;
+				}
+			)._triggerStatusChange({
 				healthy: false,
 				activeProvider: "aws-bedrock",
 				error: "Connection Refused",

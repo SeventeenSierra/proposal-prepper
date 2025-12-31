@@ -15,5 +15,5 @@ import { AIRouterHandlers } from 'proposal-prepper-middleware/ai-router-adapter'
 
 export async function POST(req: NextRequest) {
   // Export the handler from the AI Router integration adapter
-  return AIRouterHandlers.handleAnalysisStart(req as any);
+  return AIRouterHandlers.handleAnalysisStart(req);
 }

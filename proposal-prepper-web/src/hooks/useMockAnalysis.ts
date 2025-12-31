@@ -7,12 +7,12 @@
 
 import { useState } from 'react';
 import type { FARDocument } from '@/seed-data';
-import type { Step } from '@/types/agent-interface';
-import type { AnalysisResults, ComplianceStatus } from '@/services/results-service';
-import { generateUUID } from '@/utils/crypto';
-import { analysisSteps } from '@/utils/stepMapping';
-import { generateMockResult } from '@/utils/mockResults';
+import type { AnalysisResults } from '@/services/results-service';
 import { ComplianceStatus as ComplianceStatusEnum } from '@/services/results-service';
+import type { Step } from '@/types/agent-interface';
+import { generateUUID } from '@/utils/crypto';
+import { generateMockResult } from '@/utils/mockResults';
+import { analysisSteps } from '@/utils/stepMapping';
 
 interface UseMockAnalysisReturn {
   simulateAnalysis: (farDoc: FARDocument) => Promise<void>;

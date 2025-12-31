@@ -3,19 +3,19 @@
 import { Avatar, AvatarFallback } from '@17sierra/ui';
 import {
   Bell,
-  PanelLeftClose,
-  PanelLeftOpen,
-  HelpCircle,
-  Settings,
   Bot,
   ChevronDown,
+  HelpCircle,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Settings,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import {
   aiRouterIntegration,
-  type ServiceIntegrationStatus,
   type ConnectionMode,
+  type ServiceIntegrationStatus,
 } from 'proposal-prepper-services';
+import { useEffect, useState } from 'react';
 
 type TopBarProps = {
   toggleSidebar: () => void;
@@ -25,22 +25,43 @@ type TopBarProps = {
 };
 
 // Local fallback for Button to avoid potential library resolution issues in dev
-const LocalButton = ({ children, onClick, className, variant, size, title }: any) => {
+type LocalButtonProps = {
+  children?: React.ReactNode;
+  onClick?: () => void;
+  className?: string;
+  variant?: 'ghost' | 'default';
+  size?: 'sm' | 'icon' | 'default';
+  title?: string;
+  onMouseEnter?: () => void;
+};
+
+const LocalButton = ({
+  children,
+  onClick,
+  className,
+  variant,
+  size,
+  title,
+  onMouseEnter,
+}: LocalButtonProps) => {
   const baseStyles =
     'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50';
-  const variants: any = {
+  const variants: Record<'ghost' | 'default', string> = {
     ghost: 'hover:bg-slate-100 hover:text-slate-900',
     default: 'bg-slate-900 text-slate-50 shadow hover:bg-slate-900/90',
   };
-  const sizes: any = {
+  const sizes: Record<'sm' | 'icon' | 'default', string> = {
     sm: 'h-8 rounded-md px-3 text-xs',
     icon: 'h-9 w-9',
+    default: '',
   };
 
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`${baseStyles} ${variants[variant || 'default']} ${sizes[size || 'default']} ${className}`}
+      onMouseEnter={onMouseEnter}
+      className={`${baseStyles} ${variants[variant || 'default']} ${sizes[size || 'default']} ${className || ''}`}
       title={title}
     >
       {children}
@@ -171,6 +192,7 @@ const TopBar = ({
         <div className="w-px h-6 bg-gray-200 mx-1"></div>
 
         {/* Settings Button + Hierarchical Selectors */}
+        {/* biome-ignore lint/a11y/noStaticElementInteractions: Hover menu container - mouse interaction is intentional for UX */}
         <div className="relative" onMouseLeave={() => setShowSettingsPane(false)}>
           <LocalButton
             variant="ghost"
@@ -193,11 +215,12 @@ const TopBar = ({
               <div className="space-y-4">
                 {/* Tier 1: Application Mode */}
                 <div className="space-y-1.5">
-                  <label className="text-[9px] font-bold text-slate-500 uppercase tracking-tight">
+                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tight">
                     Tier 1: Connection Mode
-                  </label>
+                  </span>
                   <div className="relative">
                     <button
+                      type="button"
                       onClick={() => {
                         setShowTier1Selector(!showTier1Selector);
                         setShowTier2Selector(false);
@@ -225,6 +248,7 @@ const TopBar = ({
                           { id: 'analysis-router', label: 'Live Mode (AI Router)' },
                         ].map((m) => (
                           <button
+                            type="button"
                             key={m.id}
                             onClick={async () => {
                               const newMode = m.id as ConnectionMode;
@@ -265,11 +289,12 @@ const TopBar = ({
                 {/* Tier 2: Workflow/Context - Only visible in AI Router mode */}
                 {mounted && connectionMode === 'analysis-router' && (
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold text-slate-500 uppercase tracking-tight">
+                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tight">
                       Tier 2: Context
-                    </label>
+                    </span>
                     <div className="relative">
                       <button
+                        type="button"
                         onClick={() => {
                           setShowTier2Selector(!showTier2Selector);
                           setShowTier1Selector(false);
@@ -296,6 +321,7 @@ const TopBar = ({
                             { id: 'cloud', label: 'Cloud' },
                           ].map((p) => (
                             <button
+                              type="button"
                               key={p.id}
                               onClick={() => {
                                 if (p.id === 'local-llama') {
@@ -333,9 +359,9 @@ const TopBar = ({
                     status?.activeProvider || ''
                   ) && (
                     <div className="space-y-1.5 pt-2 border-t border-gray-50">
-                      <label className="text-[9px] font-bold text-slate-500 uppercase tracking-tight">
+                      <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tight">
                         Tier 3: Cloud Platform
-                      </label>
+                      </span>
                       <div className="grid grid-cols-3 gap-1">
                         {[
                           { id: 'genkit', label: 'GenKit' },
@@ -343,6 +369,7 @@ const TopBar = ({
                           { id: 'autogen', label: 'AutoGen' },
                         ].map((p) => (
                           <button
+                            type="button"
                             key={p.id}
                             onClick={() => {}}
                             disabled={true}

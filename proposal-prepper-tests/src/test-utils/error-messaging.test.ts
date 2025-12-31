@@ -90,9 +90,7 @@ describe("Error Messaging System", () => {
 
 			// Progress should be in ascending order
 			for (let i = 1; i < progressUpdates.length; i++) {
-				expect(progressUpdates[i]).toBeGreaterThanOrEqual(
-					progressUpdates[i - 1],
-				);
+				expect(progressUpdates[i]).toBeGreaterThanOrEqual(progressUpdates[i - 1]);
 			}
 		});
 	});
@@ -137,12 +135,10 @@ describe("Error Messaging System", () => {
 				// Verify summary matches actual issues
 				expect(summary.totalIssues).toBe(issues.length);
 				expect(summary.criticalIssues).toBe(
-					issues.filter((i: ComplianceIssue) => i.severity === "critical")
-						.length,
+					issues.filter((i: ComplianceIssue) => i.severity === "critical").length
 				);
 				expect(summary.warningIssues).toBe(
-					issues.filter((i: ComplianceIssue) => i.severity === "warning")
-						.length,
+					issues.filter((i: ComplianceIssue) => i.severity === "warning").length
 				);
 			}
 		});
