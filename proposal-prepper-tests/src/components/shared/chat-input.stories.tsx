@@ -59,7 +59,7 @@ export default meta;
 type Story = StoryObj<typeof ChatInput>;
 
 // Wrapper component to handle state
-const ChatInputWrapper = (args: any) => {
+const ChatInputWrapper = (args: React.ComponentProps<typeof ChatInput>) => {
 	const [value, setValue] = useState(args.value || "");
 
 	return (

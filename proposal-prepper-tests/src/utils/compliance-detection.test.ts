@@ -84,7 +84,7 @@ describe("Compliance Detection Utilities", () => {
 
 			violations.forEach((violation) => {
 				expect(violation.remediation).toBeDefined();
-				expect(violation.remediation!.length).toBeGreaterThan(0);
+				expect(violation.remediation?.length).toBeGreaterThan(0);
 				expect(violation.regulation).toBeDefined();
 			});
 		});

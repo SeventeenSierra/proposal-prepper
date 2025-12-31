@@ -416,11 +416,13 @@ describe("UploadManager", () => {
 				.closest("div");
 
 			// Simulate drag enter
-			fireEvent.dragEnter(dropZone!, {
-				dataTransfer: {
-					files: [],
-				},
-			});
+			if (dropZone) {
+				fireEvent.dragEnter(dropZone, {
+					dataTransfer: {
+						files: [],
+					},
+				});
+			}
 
 			// Should add active drag styling (this would be tested via class changes)
 			expect(dropZone).toBeInTheDocument();
@@ -440,11 +442,13 @@ describe("UploadManager", () => {
 			});
 
 			// Simulate file drop
-			fireEvent.drop(dropZone!, {
-				dataTransfer: {
-					files: [validFile],
-				},
-			});
+			if (dropZone) {
+				fireEvent.drop(dropZone, {
+					dataTransfer: {
+						files: [validFile],
+					},
+				});
+			}
 
 			// Should show file info
 			await waitFor(() => {
