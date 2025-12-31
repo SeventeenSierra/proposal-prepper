@@ -3,7 +3,7 @@
 # SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 #
 # Pre-commit hook for Proposal Prepper
-# Runs lint and typecheck before allowing commits
+# Runs security scanning, lint and typecheck before allowing commits
 #
 # AI agents (Jules, Renovate, etc.) should set HUSKY=0 to skip hooks
 # See .agent/config.yaml and AI_CONTRIBUTOR_POLICY.md
@@ -27,6 +27,32 @@ fi
 
 echo "🔍 Running pre-commit checks..."
 
+# Security scanning with Trivy (if available)
+if command -v trivy >/dev/null 2>&1; then
+  echo "🔒 Scanning for secrets with Trivy..."
+  trivy fs --scanners secret --exit-code 1 --quiet .
+  if [ $? -ne 0 ]; then
+    echo "❌ Trivy found hardcoded secrets. Remove them before committing."
+    exit 1
+  fi
+  echo "✓ Trivy: No secrets found"
+else
+  echo "⚠️  Trivy not installed, skipping secret scan (install: brew install trivy)"
+fi
+
+# Security scanning with Gitleaks (if available)
+if command -v gitleaks >/dev/null 2>&1; then
+  echo "🔐 Scanning for secrets with Gitleaks..."
+  gitleaks detect --source . --no-banner --redact -v 2>/dev/null
+  if [ $? -ne 0 ]; then
+    echo "❌ Gitleaks found secrets. Remove them before committing."
+    exit 1
+  fi
+  echo "✓ Gitleaks: No secrets found"
+else
+  echo "⚠️  Gitleaks not installed, skipping (install: brew install gitleaks)"
+fi
+
 # Run lint
 echo "📝 Linting..."
 $PNPM run lint
@@ -44,4 +70,5 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "✅ Pre-commit checks passed!"
+
 

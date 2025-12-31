@@ -3,7 +3,7 @@
 # SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 #
 # Pre-push hook for Proposal Prepper
-# Runs tests before allowing pushes
+# Runs security audit and tests before allowing pushes
 #
 # AI agents (Jules, Renovate, etc.) should set HUSKY=0 to skip hooks
 # See .agent/config.yaml and AI_CONTRIBUTOR_POLICY.md
@@ -27,6 +27,19 @@ fi
 
 echo "🧪 Running pre-push checks..."
 
+# Security audit with Semgrep (if available)
+if command -v semgrep >/dev/null 2>&1; then
+  echo "🛡️  Running Semgrep security audit..."
+  semgrep scan --config auto --quiet --error 2>/dev/null
+  if [ $? -ne 0 ]; then
+    echo "❌ Semgrep found security issues. Fix them before pushing."
+    exit 1
+  fi
+  echo "✓ Semgrep: Security audit passed"
+else
+  echo "⚠️  Semgrep not installed, skipping security audit (install: pip install semgrep)"
+fi
+
 # Run tests
 echo "🔬 Running tests..."
 $PNPM run test
@@ -36,4 +49,5 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "✅ Pre-push checks passed!"
+
 
