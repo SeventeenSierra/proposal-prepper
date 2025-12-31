@@ -3,8 +3,8 @@
  * SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
  */
 
-import type { AnalysisResults } from '@/services/results-service';
 import type { ConnectionMode } from '@/services/config/app';
+import type { AnalysisResults } from '@/services/results-service';
 
 export interface Message {
   role: 'user' | 'bot';

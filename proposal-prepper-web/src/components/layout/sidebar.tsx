@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@17sierra/ui';
-import { ChevronRight, Clock, FileText, History, MoreHorizontal, Plus, Star } from 'lucide-react';
+import { Clock, History, Plus, Star } from 'lucide-react';
 import { useState } from 'react';
 
 type SidebarProps = {

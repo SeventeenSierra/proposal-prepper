@@ -5,12 +5,12 @@
 
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { analysisService } from '@/services/analysis-service';
-import { resultsService } from '@/services/results-service';
-import { generateUUID } from '@/utils/crypto';
 import type { AnalysisResults } from '@/services/results-service';
-import type { Step, SeedPdfInfo } from '@/types/agent-interface';
+import { resultsService } from '@/services/results-service';
+import type { SeedPdfInfo, Step } from '@/types/agent-interface';
+import { generateUUID } from '@/utils/crypto';
 import { getStepIndexFromStatus } from '@/utils/stepMapping';
 
 interface UseAnalysisFlowReturn {

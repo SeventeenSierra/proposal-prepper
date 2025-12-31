@@ -20,7 +20,7 @@ export function ChatMessages({ messages }: ChatMessagesProps): React.JSX.Element
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages.length]);
+  }, []);
 
   return (
     <div className="space-y-4 h-full flex flex-col justify-end">
