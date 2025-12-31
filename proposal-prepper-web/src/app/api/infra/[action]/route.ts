@@ -92,8 +92,9 @@ async function runInfraCommand(command: string) {
         resolve({ stdout, stderr });
       });
     });
-  } catch (error: any) {
-    console.error(`[INFRA] Setup failed: ${error.message}`);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`[INFRA] Setup failed: ${message}`);
     throw error;
   }
 }
@@ -115,7 +116,8 @@ export async function POST(req: Request) {
       console.error(`[INFRA] Async command failed: ${err.message}`)
     );
     return NextResponse.json({ status: 'initiated', command: isStop ? 'stop' : 'start' });
-  } catch (error: any) {
-    return NextResponse.json({ status: 'error', message: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ status: 'error', message }, { status: 500 });
   }
 }

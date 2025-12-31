@@ -192,6 +192,7 @@ const TopBar = ({
         <div className="w-px h-6 bg-gray-200 mx-1"></div>
 
         {/* Settings Button + Hierarchical Selectors */}
+        {/* biome-ignore lint/a11y/noStaticElementInteractions: Hover menu container - mouse interaction is intentional for UX */}
         <div className="relative" onMouseLeave={() => setShowSettingsPane(false)}>
           <LocalButton
             variant="ghost"
@@ -214,11 +215,12 @@ const TopBar = ({
               <div className="space-y-4">
                 {/* Tier 1: Application Mode */}
                 <div className="space-y-1.5">
-                  <label className="text-[9px] font-bold text-slate-500 uppercase tracking-tight">
+                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tight">
                     Tier 1: Connection Mode
-                  </label>
+                  </span>
                   <div className="relative">
                     <button
+                      type="button"
                       onClick={() => {
                         setShowTier1Selector(!showTier1Selector);
                         setShowTier2Selector(false);
@@ -246,6 +248,7 @@ const TopBar = ({
                           { id: 'analysis-router', label: 'Live Mode (AI Router)' },
                         ].map((m) => (
                           <button
+                            type="button"
                             key={m.id}
                             onClick={async () => {
                               const newMode = m.id as ConnectionMode;
@@ -286,11 +289,12 @@ const TopBar = ({
                 {/* Tier 2: Workflow/Context - Only visible in AI Router mode */}
                 {mounted && connectionMode === 'analysis-router' && (
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold text-slate-500 uppercase tracking-tight">
+                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tight">
                       Tier 2: Context
-                    </label>
+                    </span>
                     <div className="relative">
                       <button
+                        type="button"
                         onClick={() => {
                           setShowTier2Selector(!showTier2Selector);
                           setShowTier1Selector(false);
@@ -317,6 +321,7 @@ const TopBar = ({
                             { id: 'cloud', label: 'Cloud' },
                           ].map((p) => (
                             <button
+                              type="button"
                               key={p.id}
                               onClick={() => {
                                 if (p.id === 'local-llama') {
@@ -354,9 +359,9 @@ const TopBar = ({
                     status?.activeProvider || ''
                   ) && (
                     <div className="space-y-1.5 pt-2 border-t border-gray-50">
-                      <label className="text-[9px] font-bold text-slate-500 uppercase tracking-tight">
+                      <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tight">
                         Tier 3: Cloud Platform
-                      </label>
+                      </span>
                       <div className="grid grid-cols-3 gap-1">
                         {[
                           { id: 'genkit', label: 'GenKit' },
@@ -364,6 +369,7 @@ const TopBar = ({
                           { id: 'autogen', label: 'AutoGen' },
                         ].map((p) => (
                           <button
+                            type="button"
                             key={p.id}
                             onClick={() => {}}
                             disabled={true}
