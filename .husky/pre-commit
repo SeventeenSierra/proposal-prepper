@@ -14,6 +14,15 @@ if [ "$HUSKY" = "0" ]; then
   exit 0
 fi
 
+# Helper to run commands in nix environment if available
+run_in_nix() {
+  if [ -f "flake.nix" ] && command -v nix >/dev/null 2>&1; then
+    nix develop --command "$@" 2>/dev/null
+  else
+    "$@"
+  fi
+}
+
 # Detect pnpm - try multiple locations
 if command -v pnpm >/dev/null 2>&1; then
   PNPM="pnpm"
@@ -27,31 +36,41 @@ fi
 
 echo "🔍 Running pre-commit checks..."
 
-# Security scanning with Trivy (if available)
+# Security scanning with Trivy (via nix if needed)
+echo "🔒 Scanning for secrets with Trivy..."
 if command -v trivy >/dev/null 2>&1; then
-  echo "🔒 Scanning for secrets with Trivy..."
   trivy fs --scanners secret --exit-code 1 --quiet .
-  if [ $? -ne 0 ]; then
-    echo "❌ Trivy found hardcoded secrets. Remove them before committing."
-    exit 1
-  fi
-  echo "✓ Trivy: No secrets found"
+  TRIVY_RESULT=$?
+elif [ -f "flake.nix" ] && command -v nix >/dev/null 2>&1; then
+  nix develop --command trivy fs --scanners secret --exit-code 1 --quiet . 2>/dev/null
+  TRIVY_RESULT=$?
 else
-  echo "⚠️  Trivy not installed, skipping secret scan (install: brew install trivy)"
+  echo "⚠️  Trivy not available, skipping"
+  TRIVY_RESULT=0
 fi
+if [ $TRIVY_RESULT -ne 0 ]; then
+  echo "❌ Trivy found hardcoded secrets. Remove them before committing."
+  exit 1
+fi
+echo "✓ Trivy: No secrets found"
 
-# Security scanning with Gitleaks (if available)
+# Security scanning with Gitleaks (via nix if needed)
+echo "🔐 Scanning for secrets with Gitleaks..."
 if command -v gitleaks >/dev/null 2>&1; then
-  echo "🔐 Scanning for secrets with Gitleaks..."
   gitleaks detect --source . --no-banner --redact -v 2>/dev/null
-  if [ $? -ne 0 ]; then
-    echo "❌ Gitleaks found secrets. Remove them before committing."
-    exit 1
-  fi
-  echo "✓ Gitleaks: No secrets found"
+  GITLEAKS_RESULT=$?
+elif [ -f "flake.nix" ] && command -v nix >/dev/null 2>&1; then
+  nix develop --command gitleaks detect --source . --no-banner --redact -v 2>/dev/null
+  GITLEAKS_RESULT=$?
 else
-  echo "⚠️  Gitleaks not installed, skipping (install: brew install gitleaks)"
+  echo "⚠️  Gitleaks not available, skipping"
+  GITLEAKS_RESULT=0
 fi
+if [ $GITLEAKS_RESULT -ne 0 ]; then
+  echo "❌ Gitleaks found secrets. Remove them before committing."
+  exit 1
+fi
+echo "✓ Gitleaks: No secrets found"
 
 # Run lint
 echo "📝 Linting..."
@@ -70,5 +89,6 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "✅ Pre-commit checks passed!"
+
 
 

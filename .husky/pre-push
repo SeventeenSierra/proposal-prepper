@@ -27,18 +27,23 @@ fi
 
 echo "🧪 Running pre-push checks..."
 
-# Security audit with Semgrep (if available)
+# Security audit with Semgrep (via nix if needed)
+echo "🛡️  Running Semgrep security audit..."
 if command -v semgrep >/dev/null 2>&1; then
-  echo "🛡️  Running Semgrep security audit..."
   semgrep scan --config auto --quiet --error 2>/dev/null
-  if [ $? -ne 0 ]; then
-    echo "❌ Semgrep found security issues. Fix them before pushing."
-    exit 1
-  fi
-  echo "✓ Semgrep: Security audit passed"
+  SEMGREP_RESULT=$?
+elif [ -f "flake.nix" ] && command -v nix >/dev/null 2>&1; then
+  nix develop --command semgrep scan --config auto --quiet --error 2>/dev/null
+  SEMGREP_RESULT=$?
 else
-  echo "⚠️  Semgrep not installed, skipping security audit (install: pip install semgrep)"
+  echo "⚠️  Semgrep not available, skipping"
+  SEMGREP_RESULT=0
 fi
+if [ $SEMGREP_RESULT -ne 0 ]; then
+  echo "❌ Semgrep found security issues. Fix them before pushing."
+  exit 1
+fi
+echo "✓ Semgrep: Security audit passed"
 
 # Run tests
 echo "🔬 Running tests..."
@@ -49,5 +54,6 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "✅ Pre-push checks passed!"
+
 
 
