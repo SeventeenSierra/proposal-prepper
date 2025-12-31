@@ -294,6 +294,8 @@ export function createExpressServer(port = 8080) {
   const cors = require('cors');
   const multer = require('multer');
 
+  // nosemgrep: javascript.express.security.audit.express-check-csurf-middleware-usage.express-check-csurf-middleware-usage
+  // CSRF middleware not required - this is a MOCK server for testing only (see @WARNING above)
   const app = express();
 
   // Middleware

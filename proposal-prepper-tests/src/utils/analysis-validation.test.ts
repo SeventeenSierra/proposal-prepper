@@ -272,6 +272,8 @@ describe("Analysis Validation Utilities", () => {
 		it("should have working regex patterns", () => {
 			CORE_VALIDATION_RULES.forEach((rule) => {
 				// Pattern should be a valid regex
+				// nosemgrep: javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
+				// Intentionally testing that hardcoded rule patterns are valid
 				expect(() => new RegExp(rule.pattern)).not.toThrow();
 
 				// Pattern should be case insensitive
