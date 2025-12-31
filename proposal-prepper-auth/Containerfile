@@ -34,6 +34,13 @@ ENV KC_HOSTNAME_STRICT_HTTPS=false
 ENV KC_HTTP_ENABLED=true
 ENV KC_PROXY=edge
 
+# Run as non-root user (Keycloak's default user is UID 1000)
+USER 1000
+
+# Add healthcheck using Keycloak's built-in health endpoint
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8080/health/ready || exit 1
+
 # Import realm on startup
 ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
 CMD ["start", "--import-realm"]

@@ -27,6 +27,25 @@ fi
 
 echo "🧪 Running pre-push checks..."
 
+# Security scan with Trivy (via nix if needed)
+# Matches CI: vuln,misconfig scanning
+echo "🔍 Running Trivy vulnerability scan..."
+if command -v trivy >/dev/null 2>&1; then
+  trivy fs --scanners vuln,misconfig --exit-code 1 --severity CRITICAL,HIGH --quiet .
+  TRIVY_RESULT=$?
+elif [ -f "flake.nix" ] && command -v nix >/dev/null 2>&1; then
+  nix develop --command trivy fs --scanners vuln,misconfig --exit-code 1 --severity CRITICAL,HIGH --quiet .
+  TRIVY_RESULT=$?
+else
+  echo "⚠️  Trivy not available, skipping"
+  TRIVY_RESULT=0
+fi
+if [ $TRIVY_RESULT -ne 0 ]; then
+  echo "❌ Trivy found vulnerabilities. Fix them before pushing."
+  exit 1
+fi
+echo "✓ Trivy: No critical/high vulnerabilities found"
+
 # Security audit with Semgrep (via nix if needed)
 # Note: Some findings are acceptable (see .semgrepignore for documentation)
 echo "🛡️  Running Semgrep security audit..."
