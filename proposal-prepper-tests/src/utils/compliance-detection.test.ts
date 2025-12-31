@@ -18,13 +18,10 @@ import {
 describe("Compliance Detection Utilities", () => {
 	describe("detectCriticalViolations", () => {
 		it("should detect missing cybersecurity requirements", () => {
-			const textWithoutCybersecurity =
-				"This is a basic proposal without security measures";
+			const textWithoutCybersecurity = "This is a basic proposal without security measures";
 			const violations = detectCriticalViolations(textWithoutCybersecurity);
 
-			const cybersecurityViolation = violations.find((v) =>
-				v.title.includes("Cybersecurity"),
-			);
+			const cybersecurityViolation = violations.find((v) => v.title.includes("Cybersecurity"));
 			expect(cybersecurityViolation).toBeDefined();
 			expect(cybersecurityViolation?.severity).toBe(IssueSeverity.CRITICAL);
 		});
@@ -48,9 +45,7 @@ describe("Compliance Detection Utilities", () => {
       `;
 
 			const violations = detectCriticalViolations(textWithoutEthics);
-			const ethicsViolation = violations.find((v) =>
-				v.title.includes("Business Ethics"),
-			);
+			const ethicsViolation = violations.find((v) => v.title.includes("Business Ethics"));
 			expect(ethicsViolation).toBeDefined();
 		});
 
@@ -61,9 +56,7 @@ describe("Compliance Detection Utilities", () => {
       `;
 
 			const violations = detectCriticalViolations(textWithoutTrafficking);
-			const traffickingViolation = violations.find((v) =>
-				v.title.includes("Anti-Trafficking"),
-			);
+			const traffickingViolation = violations.find((v) => v.title.includes("Anti-Trafficking"));
 			expect(traffickingViolation).toBeDefined();
 		});
 
@@ -92,13 +85,10 @@ describe("Compliance Detection Utilities", () => {
 
 	describe("detectWarningIssues", () => {
 		it("should detect incomplete small business requirements", () => {
-			const textWithIncompleteSmallBiz =
-				"We will work with small business partners";
+			const textWithIncompleteSmallBiz = "We will work with small business partners";
 			const warnings = detectWarningIssues(textWithIncompleteSmallBiz);
 
-			const smallBizWarning = warnings.find((w) =>
-				w.title.includes("Small Business"),
-			);
+			const smallBizWarning = warnings.find((w) => w.title.includes("Small Business"));
 			expect(smallBizWarning).toBeDefined();
 			expect(smallBizWarning?.severity).toBe(IssueSeverity.WARNING);
 		});
@@ -110,9 +100,7 @@ describe("Compliance Detection Utilities", () => {
       `;
 
 			const warnings = detectWarningIssues(completeSmallBizText);
-			const smallBizWarning = warnings.find((w) =>
-				w.title.includes("Small Business"),
-			);
+			const smallBizWarning = warnings.find((w) => w.title.includes("Small Business"));
 			expect(smallBizWarning).toBeUndefined();
 		});
 
@@ -121,9 +109,7 @@ describe("Compliance Detection Utilities", () => {
 				"We will comply with all requirements and plan to implement security measures";
 			const warnings = detectWarningIssues(vagueText);
 
-			const vagueWarning = warnings.find((w) =>
-				w.title.includes("Vague Compliance"),
-			);
+			const vagueWarning = warnings.find((w) => w.title.includes("Vague Compliance"));
 			expect(vagueWarning).toBeDefined();
 		});
 
@@ -134,9 +120,7 @@ describe("Compliance Detection Utilities", () => {
       `;
 
 			const warnings = detectWarningIssues(presentTenseText);
-			const vagueWarning = warnings.find((w) =>
-				w.title.includes("Vague Compliance"),
-			);
+			const vagueWarning = warnings.find((w) => w.title.includes("Vague Compliance"));
 			expect(vagueWarning).toBeUndefined();
 		});
 	});
@@ -249,16 +233,14 @@ describe("Compliance Detection Utilities", () => {
 		});
 
 		it("should detect executive summary", () => {
-			const textWithSummary =
-				"Executive Summary\nThis proposal outlines our approach";
+			const textWithSummary = "Executive Summary\nThis proposal outlines our approach";
 			const structure = analyzeDocumentStructure(textWithSummary);
 
 			expect(structure.hasExecutiveSummary).toBe(true);
 		});
 
 		it("should detect compliance section", () => {
-			const textWithCompliance =
-				"Compliance Section\nWe meet all regulatory requirements";
+			const textWithCompliance = "Compliance Section\nWe meet all regulatory requirements";
 			const structure = analyzeDocumentStructure(textWithCompliance);
 
 			expect(structure.hasComplianceSection).toBe(true);
@@ -278,8 +260,7 @@ describe("Compliance Detection Utilities", () => {
 		});
 
 		it("should handle documents without structure", () => {
-			const unstructuredText =
-				"This is just plain text without any structure or sections";
+			const unstructuredText = "This is just plain text without any structure or sections";
 			const structure = analyzeDocumentStructure(unstructuredText);
 
 			expect(structure.hasTableOfContents).toBe(false);

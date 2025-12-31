@@ -3,10 +3,7 @@
  * SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
  */
 
-import type {
-	AnalysisResult,
-	AnalysisSession,
-} from "@/components/analysis/types";
+import type { AnalysisResult, AnalysisSession } from "@/components/analysis/types";
 import { AnalysisStatus } from "@/components/analysis/types";
 // NOTE: These imports are commented out because the grant data was migrated to FAR.
 // These grant functions need to be recreated for FAR documents.
@@ -38,10 +35,7 @@ export class MockStrandsAPIEnhanced {
 	/**
 	 * Create an instance tailored for a specific error scenario
 	 */
-	static createErrorScenario(
-		scenario: ErrorScenario,
-		delay = 1000,
-	): MockStrandsAPIEnhanced {
+	static createErrorScenario(scenario: ErrorScenario, delay = 1000): MockStrandsAPIEnhanced {
 		const api = new MockStrandsAPIEnhanced("http://localhost:8080", delay);
 		api.errorScenario = scenario;
 		return api;
@@ -73,17 +67,11 @@ export class MockStrandsAPIEnhanced {
 		}
 
 		// Simulate upload validation
-		if (
-			!file.type.includes("pdf") ||
-			this.errorScenario === ErrorScenario.INVALID_FILE
-		) {
+		if (!file.type.includes("pdf") || this.errorScenario === ErrorScenario.INVALID_FILE) {
 			throw new Error("Only PDF files are supported");
 		}
 
-		if (
-			file.size > 10 * 1024 * 1024 ||
-			this.errorScenario === ErrorScenario.FILE_TOO_LARGE
-		) {
+		if (file.size > 10 * 1024 * 1024 || this.errorScenario === ErrorScenario.FILE_TOO_LARGE) {
 			// 10MB limit
 			throw new Error("File size exceeds 10MB limit");
 		}
@@ -157,8 +145,7 @@ export class MockStrandsAPIEnhanced {
 		return {
 			id: sessionId,
 			proposalId: "mock-proposal",
-			status:
-				progress === 100 ? AnalysisStatus.COMPLETED : AnalysisStatus.ANALYZING,
+			status: progress === 100 ? AnalysisStatus.COMPLETED : AnalysisStatus.ANALYZING,
 			progress,
 			startedAt: new Date(Date.now() - 30000), // 30 seconds ago
 			estimatedCompletion: new Date(Date.now() + 10000), // 10 seconds from now

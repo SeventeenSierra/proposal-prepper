@@ -10,9 +10,7 @@ describe("AnalysisHeader", () => {
 		render(<AnalysisHeader apiStatus={{ isConnected: true, isMock: false }} />);
 
 		expect(screen.getByText("Compliance Officer")).toBeInTheDocument();
-		expect(
-			screen.getByText(/NSF PAPPG & FAR\/DFARS Expert/),
-		).toBeInTheDocument();
+		expect(screen.getByText(/NSF PAPPG & FAR\/DFARS Expert/)).toBeInTheDocument();
 	});
 
 	it('should show "DEMO MODE" badge when in mock mode', () => {
@@ -29,7 +27,7 @@ describe("AnalysisHeader", () => {
 
 	it("should render Shield icon", () => {
 		const { container } = render(
-			<AnalysisHeader apiStatus={{ isConnected: true, isMock: false }} />,
+			<AnalysisHeader apiStatus={{ isConnected: true, isMock: false }} />
 		);
 
 		// Shield icon should be present in the header

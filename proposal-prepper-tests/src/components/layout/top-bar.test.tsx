@@ -64,7 +64,7 @@ describe("TopBar Status Component", () => {
 				isSidebarOpen={true}
 				connectionMode="mock"
 				setConnectionMode={() => {}}
-			/>,
+			/>
 		);
 
 		expect(screen.getByText("Test Mode (Mock)")).toBeInTheDocument();
@@ -77,7 +77,7 @@ describe("TopBar Status Component", () => {
 				isSidebarOpen={true}
 				connectionMode="analysis-router"
 				setConnectionMode={() => {}}
-			/>,
+			/>
 		);
 
 		// Manually trigger the healthy status
@@ -102,7 +102,7 @@ describe("TopBar Status Component", () => {
 				isSidebarOpen={true}
 				connectionMode="analysis-router"
 				setConnectionMode={() => {}}
-			/>,
+			/>
 		);
 
 		// Manually trigger unhealthy status

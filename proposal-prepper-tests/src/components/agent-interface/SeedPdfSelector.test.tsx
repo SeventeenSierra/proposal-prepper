@@ -31,13 +31,11 @@ describe("SeedPdfSelector", () => {
 				selectedSeedPdf={null}
 				isDemoMode={true}
 				onSelect={vi.fn()}
-			/>,
+			/>
 		);
 
 		expect(screen.getByRole("combobox")).toBeInTheDocument();
-		expect(
-			screen.getByText(/Select a presentation scenario/i),
-		).toBeInTheDocument();
+		expect(screen.getByText(/Select a presentation scenario/i)).toBeInTheDocument();
 	});
 
 	it("should render all seed options", () => {
@@ -47,7 +45,7 @@ describe("SeedPdfSelector", () => {
 				selectedSeedPdf={null}
 				isDemoMode={false}
 				onSelect={vi.fn()}
-			/>,
+			/>
 		);
 
 		expect(screen.getByText("Test Document 1")).toBeInTheDocument();
@@ -62,7 +60,7 @@ describe("SeedPdfSelector", () => {
 				selectedSeedPdf={null}
 				isDemoMode={true}
 				onSelect={onSelect}
-			/>,
+			/>
 		);
 
 		const select = screen.getByRole("combobox");
@@ -86,7 +84,7 @@ describe("SeedPdfSelector", () => {
 				}}
 				isDemoMode={true}
 				onSelect={vi.fn()}
-			/>,
+			/>
 		);
 
 		const select = screen.getByRole("combobox") as HTMLSelectElement;

@@ -102,9 +102,7 @@ describe("Upload Confirmation and Error Handling", () => {
 		vi.clearAllMocks();
 
 		// Setup successful upload mocks by default
-		(
-			aiRouterClient.uploadDocument as unknown as ReturnType<typeof vi.fn>
-		).mockResolvedValue({
+		(aiRouterClient.uploadDocument as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
 			success: true,
 			data: {
 				id: "upload-123",
@@ -117,9 +115,7 @@ describe("Upload Confirmation and Error Handling", () => {
 			},
 		});
 
-		(
-			aiRouterClient.getUploadStatus as unknown as ReturnType<typeof vi.fn>
-		).mockResolvedValue({
+		(aiRouterClient.getUploadStatus as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
 			success: true,
 			data: {
 				id: "upload-123",
@@ -153,7 +149,7 @@ describe("Upload Confirmation and Error Handling", () => {
 				() => {
 					expect(screen.getByText("Upload Complete")).toBeInTheDocument();
 				},
-				{ timeout: 3000 },
+				{ timeout: 3000 }
 			);
 
 			// Verify success confirmation elements - component uses a wrapper div with upload-icon testId
@@ -166,7 +162,7 @@ describe("Upload Confirmation and Error Handling", () => {
 					filename: "success-test.pdf",
 					status: UploadStatus.COMPLETED,
 					progress: 100,
-				}),
+				})
 			);
 		});
 
@@ -188,16 +184,14 @@ describe("Upload Confirmation and Error Handling", () => {
 				() => {
 					expect(screen.getByText("Upload Another")).toBeInTheDocument();
 				},
-				{ timeout: 3000 },
+				{ timeout: 3000 }
 			);
 
 			// Click "Upload Another"
 			fireEvent.click(screen.getByText("Upload Another"));
 
 			// Should return to initial upload state
-			expect(
-				screen.getByText("Upload your proposal document"),
-			).toBeInTheDocument();
+			expect(screen.getByText("Upload your proposal document")).toBeInTheDocument();
 			expect(screen.getByText("Select PDF File")).toBeInTheDocument();
 		});
 	});
@@ -223,9 +217,7 @@ describe("Upload Confirmation and Error Handling", () => {
 
 			// Verify error message elements - component uses a wrapper div with upload-icon testId
 			expect(screen.getByTestId("upload-icon")).toBeInTheDocument();
-			expect(
-				screen.getByText(/Only PDF files are accepted/),
-			).toBeInTheDocument();
+			expect(screen.getByText(/Only PDF files are accepted/)).toBeInTheDocument();
 
 			// Verify error callback was called
 			expect(mockOnUploadError).toHaveBeenCalledWith(
@@ -233,7 +225,7 @@ describe("Upload Confirmation and Error Handling", () => {
 				expect.objectContaining({
 					filename: "document.txt",
 					status: UploadStatus.FAILED,
-				}),
+				})
 			);
 		});
 
@@ -335,9 +327,7 @@ describe("Upload Confirmation and Error Handling", () => {
 			fireEvent.click(screen.getByText("Clear"));
 
 			// Should return to initial state
-			expect(
-				screen.getByText("Upload your proposal document"),
-			).toBeInTheDocument();
+			expect(screen.getByText("Upload your proposal document")).toBeInTheDocument();
 			expect(screen.queryByText("Upload Failed")).not.toBeInTheDocument();
 		});
 

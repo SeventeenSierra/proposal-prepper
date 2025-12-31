@@ -17,8 +17,7 @@ import type { TestingLibraryMatchers } from "@testing-library/jest-dom/matchers"
 // Extend Vitest's Assertion interface
 declare module "vitest" {
 	interface Assertion<T = any> extends TestingLibraryMatchers<T, void> {}
-	interface AsymmetricMatchersContaining
-		extends TestingLibraryMatchers<any, void> {}
+	interface AsymmetricMatchersContaining extends TestingLibraryMatchers<any, void> {}
 }
 
 // Global namespace extensions for broader compatibility
@@ -28,13 +27,12 @@ declare global {
 	}
 
 	namespace jest {
-		interface Matchers<R>
-			extends TestingLibraryMatchers<typeof expect.stringContaining, R> {}
+		interface Matchers<R> extends TestingLibraryMatchers<typeof expect.stringContaining, R> {}
 	}
 
 	// Direct expect interface extension as fallback
 	type Expect = <T = any>(
-		actual: T,
+		actual: T
 	) => TestingLibraryMatchers<T, void> & import("vitest").Assertion<T>;
 }
 

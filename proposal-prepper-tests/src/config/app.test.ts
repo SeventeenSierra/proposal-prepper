@@ -46,18 +46,12 @@ describe("Application Configuration", () => {
 
 		it("should validate valid filenames", () => {
 			expect(validationConfig.filenamePattern.test("proposal.pdf")).toBe(true);
-			expect(validationConfig.filenamePattern.test("test-file_v1.pdf")).toBe(
-				true,
-			);
+			expect(validationConfig.filenamePattern.test("test-file_v1.pdf")).toBe(true);
 		});
 
 		it("should reject invalid filenames", () => {
-			expect(validationConfig.filenamePattern.test("file/with/slash.pdf")).toBe(
-				false,
-			);
-			expect(
-				validationConfig.filenamePattern.test("file with spaces.pdf"),
-			).toBe(false);
+			expect(validationConfig.filenamePattern.test("file/with/slash.pdf")).toBe(false);
+			expect(validationConfig.filenamePattern.test("file with spaces.pdf")).toBe(false);
 		});
 	});
 

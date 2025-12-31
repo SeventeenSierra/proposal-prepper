@@ -130,10 +130,7 @@ describe("UploadService", () => {
 
 			expect(result.success).toBe(true);
 			expect(result.sessionId).toBe("upload-123");
-			expect(mockAiRouterClient.uploadDocument).toHaveBeenCalledWith(
-				file,
-				expect.any(Function),
-			);
+			expect(mockAiRouterClient.uploadDocument).toHaveBeenCalledWith(file, expect.any(Function));
 		});
 
 		it("should handle upload failures", async () => {
@@ -185,7 +182,7 @@ describe("UploadService", () => {
 							startedAt: new Date().toISOString(),
 						},
 					});
-				},
+				}
 			);
 
 			await uploadService.uploadDocument(file);
@@ -202,9 +199,7 @@ describe("UploadService", () => {
 				type: "application/pdf",
 			});
 
-			mockAiRouterClient.uploadDocument.mockRejectedValueOnce(
-				new Error("Network error"),
-			);
+			mockAiRouterClient.uploadDocument.mockRejectedValueOnce(new Error("Network error"));
 
 			const result = await uploadService.uploadDocument(file);
 
@@ -337,9 +332,7 @@ describe("UploadService", () => {
 	describe("Real-time Updates", () => {
 		it("should subscribe to WebSocket updates", async () => {
 			mockAiRouterClient.connectWebSocket.mockResolvedValueOnce(undefined);
-			mockAiRouterClient.subscribeToUploadProgress.mockImplementationOnce(
-				() => {},
-			);
+			mockAiRouterClient.subscribeToUploadProgress.mockImplementationOnce(() => {});
 
 			await uploadService.subscribeToRealTimeUpdates();
 
@@ -348,14 +341,10 @@ describe("UploadService", () => {
 		});
 
 		it("should handle WebSocket connection errors", async () => {
-			mockAiRouterClient.connectWebSocket.mockRejectedValueOnce(
-				new Error("Connection failed"),
-			);
+			mockAiRouterClient.connectWebSocket.mockRejectedValueOnce(new Error("Connection failed"));
 
 			// Should not throw
-			await expect(
-				uploadService.subscribeToRealTimeUpdates(),
-			).resolves.toBeUndefined();
+			await expect(uploadService.subscribeToRealTimeUpdates()).resolves.toBeUndefined();
 		});
 
 		it("should unsubscribe from WebSocket updates", () => {
@@ -396,7 +385,7 @@ describe("UploadService", () => {
 							startedAt: new Date().toISOString(),
 						},
 					});
-				},
+				}
 			);
 
 			await uploadService.uploadDocument(file);

@@ -28,13 +28,7 @@ import { UploadStatus } from "@/types/app";
 
 export interface MockDataConfig {
 	uploadStatus?: UploadStatus;
-	analysisStatus?:
-		| "queued"
-		| "extracting"
-		| "analyzing"
-		| "validating"
-		| "completed"
-		| "failed";
+	analysisStatus?: "queued" | "extracting" | "analyzing" | "validating" | "completed" | "failed";
 	complianceStatus?: "pass" | "fail" | "warning";
 	errorScenario?: ErrorScenario;
 	delay?: number;
@@ -73,10 +67,7 @@ export const MockDataProvider: React.FC<MockDataProviderProps> = ({
 
 	// Create mock API instance based on config
 	const mockAPI = React.useMemo(() => {
-		return new MockAnalysisEngineAPIEnhanced(
-			"http://localhost:8080",
-			config.delay || 500,
-		);
+		return new MockAnalysisEngineAPIEnhanced("http://localhost:8080", config.delay || 500);
 	}, [config.delay]);
 
 	// Generate mock data based on config
@@ -87,15 +78,12 @@ export const MockDataProvider: React.FC<MockDataProviderProps> = ({
 			analysisResults: generateMockAnalysisResults(config.complianceStatus),
 			mockFile: generateMockFile(),
 		}),
-		[config.uploadStatus, config.analysisStatus, config.complianceStatus],
+		[config.uploadStatus, config.analysisStatus, config.complianceStatus]
 	);
 
-	const updateConfig = React.useCallback(
-		(newConfig: Partial<MockDataConfig>) => {
-			setConfig((prev) => ({ ...prev, ...newConfig }));
-		},
-		[],
-	);
+	const updateConfig = React.useCallback((newConfig: Partial<MockDataConfig>) => {
+		setConfig((prev) => ({ ...prev, ...newConfig }));
+	}, []);
 
 	const contextValue: MockDataContextValue = {
 		mockAPI,
@@ -104,11 +92,7 @@ export const MockDataProvider: React.FC<MockDataProviderProps> = ({
 		updateConfig,
 	};
 
-	return (
-		<MockDataContext.Provider value={contextValue}>
-			{children}
-		</MockDataContext.Provider>
-	);
+	return <MockDataContext.Provider value={contextValue}>{children}</MockDataContext.Provider>;
 };
 
 /**
@@ -232,14 +216,8 @@ export const createMockScenario = {
 	 * Create analysis scenario with specific state
 	 */
 	analysis: (
-		status:
-			| "queued"
-			| "extracting"
-			| "analyzing"
-			| "validating"
-			| "completed"
-			| "failed",
-		withError = false,
+		status: "queued" | "extracting" | "analyzing" | "validating" | "completed" | "failed",
+		withError = false
 	) => ({
 		analysisStatus: status,
 		...(withError && { errorScenario: ErrorScenario.ANALYSIS_FAILED }),

@@ -67,8 +67,7 @@ const ChatInputWrapper = (args: React.ComponentProps<typeof ChatInput>) => {
 			<div className="p-4">
 				<h3 className="text-lg font-semibold mb-2">Chat Interface</h3>
 				<p className="text-gray-600 mb-4">
-					This is a demo of the chat input component. Try typing a message
-					below.
+					This is a demo of the chat input component. Try typing a message below.
 				</p>
 			</div>
 			<ChatInput

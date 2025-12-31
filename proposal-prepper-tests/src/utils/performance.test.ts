@@ -154,9 +154,7 @@ describe("Performance Utilities", () => {
 	describe("memoize", () => {
 		it("should cache function results", () => {
 			const expensiveFn = vi.fn((x: number) => x * 2);
-			const memoizedFn = memoize(
-				expensiveFn as (...args: unknown[]) => unknown,
-			);
+			const memoizedFn = memoize(expensiveFn as (...args: unknown[]) => unknown);
 
 			const result1 = memoizedFn(5);
 			const result2 = memoizedFn(5);
@@ -170,7 +168,7 @@ describe("Performance Utilities", () => {
 			const fn = vi.fn((obj: { id: number }) => obj.id * 2);
 			const memoizedFn = memoize(
 				fn as (...args: unknown[]) => unknown,
-				(obj: unknown) => `id:${(obj as { id: number }).id}`,
+				(obj: unknown) => `id:${(obj as { id: number }).id}`
 			);
 
 			memoizedFn({ id: 1 });
@@ -206,16 +204,8 @@ describe("Performance Utilities", () => {
 		});
 
 		it("should measure performance between marks", () => {
-			const duration = PerformanceMonitor.measure(
-				"test-measure",
-				"start",
-				"end",
-			);
-			expect(window.performance.measure).toHaveBeenCalledWith(
-				"test-measure",
-				"start",
-				"end",
-			);
+			const duration = PerformanceMonitor.measure("test-measure", "start", "end");
+			expect(window.performance.measure).toHaveBeenCalledWith("test-measure", "start", "end");
 			expect(duration).toBe(100);
 		});
 
