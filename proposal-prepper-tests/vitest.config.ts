@@ -14,13 +14,7 @@ export default defineConfig({
 		globals: true,
 		environment: "jsdom",
 		setupFiles: ["./vitest.setup.ts"],
-		exclude: [
-			"**/node_modules/**",
-			"**/dist/**",
-			"**/e2e/**",
-			"**/.next/**",
-			"**/.direnv/**",
-		],
+		exclude: ["**/node_modules/**", "**/dist/**", "**/e2e/**", "**/.next/**", "**/.direnv/**"],
 		// Ensure TypeScript declarations are properly loaded
 		typecheck: {
 			tsconfig: "./tsconfig.json",
@@ -30,10 +24,7 @@ export default defineConfig({
 		alias: {
 			"@/services": path.resolve(__dirname, "../proposal-prepper-services/src"),
 			"@": path.resolve(__dirname, "../proposal-prepper-web/src"),
-			"proposal-prepper-services": path.resolve(
-				__dirname,
-				"../proposal-prepper-services/src",
-			),
+			"proposal-prepper-services": path.resolve(__dirname, "../proposal-prepper-services/src"),
 		},
 		dedupe: ["react", "react-dom"],
 	},

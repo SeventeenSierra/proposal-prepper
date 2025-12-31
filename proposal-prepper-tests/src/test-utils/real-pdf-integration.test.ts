@@ -3,7 +3,7 @@
  * SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { analysisService } from "@/services/analysis-service";
 import { resultsService } from "@/services/results-service";
 import { generateUUID } from "@/utils/crypto";

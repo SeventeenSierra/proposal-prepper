@@ -14,6 +14,7 @@ const config: TestRunnerConfig = {
 	},
 	async postRender(page, context) {
 		// Run accessibility tests on each story
+		// biome-ignore lint/suspicious/noExplicitAny: Storybook internal context type requires cast
 		const storyContext = (context as any).storyContext;
 
 		// Skip accessibility tests for stories that are explicitly marked to skip
@@ -38,7 +39,7 @@ const config: TestRunnerConfig = {
 			// Log accessibility violations but don't fail the test
 			console.warn(
 				`Accessibility violations found in story: ${storyContext.title}/${storyContext.name}`,
-				error,
+				error
 			);
 		}
 	},

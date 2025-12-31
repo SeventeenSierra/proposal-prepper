@@ -4,10 +4,7 @@
  */
 
 import type { Meta, StoryObj } from "@storybook/react";
-import {
-	type AnalysisStep,
-	AnalysisSteps,
-} from "@/components/shared/analysis-steps";
+import { type AnalysisStep, AnalysisSteps } from "@/components/shared/analysis-steps";
 
 const meta: Meta<typeof AnalysisSteps> = {
 	title: "Shared/AnalysisSteps",
@@ -101,9 +98,7 @@ export const AllComplete: Story = {
 export const WithErrors: Story = {
 	args: {
 		steps: [
-			...sampleSteps
-				.slice(0, 2)
-				.map((step) => ({ ...step, status: "complete" as const })),
+			...sampleSteps.slice(0, 2).map((step) => ({ ...step, status: "complete" as const })),
 			{
 				...sampleSteps[2],
 				status: "error" as const,

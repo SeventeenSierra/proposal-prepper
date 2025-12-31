@@ -16,5 +16,5 @@ import type { NextRequest } from 'next/server';
 import { AIRouterHandlers } from 'proposal-prepper-middleware/ai-router-adapter';
 
 export async function POST(req: NextRequest) {
-  return AIRouterHandlers.handleDocumentUpload(req as any);
+  return AIRouterHandlers.handleDocumentUpload(req);
 }

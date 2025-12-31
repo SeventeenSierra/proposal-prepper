@@ -76,3 +76,4 @@ proposal-prepper-homelab.code-workspace
 .kiro/specs obi/
 local_eo_crawler.py
 agent_personas.py
+.sbom/

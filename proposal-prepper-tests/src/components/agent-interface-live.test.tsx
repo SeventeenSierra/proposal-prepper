@@ -4,7 +4,6 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import AgentInterface from "@/components/agent-interface";
-import { apiConfig } from "@/services/config/app";
 
 // Mock services/config
 vi.mock("@/services/config/app", () => ({
@@ -44,7 +43,7 @@ describe("AgentInterface Live Component", () => {
 				onAnalysisStart={() => {}}
 				onAnalysisComplete={() => {}}
 				onAnalysisError={() => {}}
-			/>,
+			/>
 		);
 
 		// Component should render without the badge, but we can check for other identifier
@@ -60,7 +59,7 @@ describe("AgentInterface Live Component", () => {
 				onAnalysisStart={() => {}}
 				onAnalysisComplete={() => {}}
 				onAnalysisError={() => {}}
-			/>,
+			/>
 		);
 
 		expect(screen.getByText("Compliance Officer")).toBeInTheDocument();
@@ -73,7 +72,7 @@ describe("AgentInterface Live Component", () => {
 				onAnalysisStart={() => {}}
 				onAnalysisComplete={() => {}}
 				onAnalysisError={() => {}}
-			/>,
+			/>
 		);
 
 		expect(screen.getByText("Compliance Officer")).toBeInTheDocument();
@@ -84,7 +83,7 @@ describe("AgentInterface Live Component", () => {
 			new StorageEvent("storage", {
 				key: "use-mock-api",
 				newValue: "false",
-			}),
+			})
 		);
 
 		// No explicit UI change to check in AgentInterface now,

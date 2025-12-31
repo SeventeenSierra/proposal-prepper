@@ -23,10 +23,7 @@ export class IntegrationTestHelper {
 	/**
 	 * Create a mock PDF file for testing
 	 */
-	static createMockPDF(
-		filename: string,
-		content: string = "Mock PDF content",
-	): File {
+	static createMockPDF(filename: string, content: string = "Mock PDF content"): File {
 		const blob = new Blob([content], { type: "application/pdf" });
 		return new File([blob], filename, { type: "application/pdf" });
 	}
@@ -41,7 +38,7 @@ export class IntegrationTestHelper {
 				description: "A proposal that should pass all FAR/DFARS requirements",
 				testFile: IntegrationTestHelper.createMockPDF(
 					"compliant-proposal.pdf",
-					"This proposal meets all FAR requirements including cost accounting standards and technical specifications.",
+					"This proposal meets all FAR requirements including cost accounting standards and technical specifications."
 				),
 				expectedOutcome: "pass",
 				expectedIssues: [],
@@ -51,7 +48,7 @@ export class IntegrationTestHelper {
 				description: "A proposal with clear FAR violations",
 				testFile: IntegrationTestHelper.createMockPDF(
 					"non-compliant-proposal.pdf",
-					"This proposal lacks required cost accounting disclosures and technical specifications.",
+					"This proposal lacks required cost accounting disclosures and technical specifications."
 				),
 				expectedOutcome: "fail",
 				expectedIssues: [
@@ -64,7 +61,7 @@ export class IntegrationTestHelper {
 				description: "A proposal with minor compliance issues",
 				testFile: IntegrationTestHelper.createMockPDF(
 					"warning-proposal.pdf",
-					"This proposal meets most requirements but has some formatting issues.",
+					"This proposal meets most requirements but has some formatting issues."
 				),
 				expectedOutcome: "warning",
 				expectedIssues: ["Formatting inconsistencies"],
@@ -76,7 +73,7 @@ export class IntegrationTestHelper {
 	 * Simulate the upload process
 	 */
 	static async simulateUpload(
-		file: File,
+		file: File
 	): Promise<{ success: boolean; sessionId?: string; error?: string }> {
 		try {
 			// Simulate file validation
@@ -108,7 +105,7 @@ export class IntegrationTestHelper {
 	 */
 	static async simulateAnalysis(
 		_sessionId: string,
-		scenario: IntegrationTestScenario,
+		scenario: IntegrationTestScenario
 	): Promise<{
 		success: boolean;
 		results?: {
@@ -135,10 +132,7 @@ export class IntegrationTestHelper {
 					scenario.expectedIssues?.map((issue, index) => ({
 						id: `issue-${index + 1}`,
 						type: "FAR Compliance",
-						severity:
-							scenario.expectedOutcome === "fail"
-								? ("high" as const)
-								: ("medium" as const),
+						severity: scenario.expectedOutcome === "fail" ? ("high" as const) : ("medium" as const),
 						description: issue,
 						recommendation: `Address ${issue.toLowerCase()} to ensure compliance.`,
 					})) || [],
@@ -173,9 +167,7 @@ export class IntegrationTestHelper {
 		console.log(`Running E2E test: ${scenario.name}`);
 
 		// Step 1: Upload
-		const uploadResult = await IntegrationTestHelper.simulateUpload(
-			scenario.testFile,
-		);
+		const uploadResult = await IntegrationTestHelper.simulateUpload(scenario.testFile);
 
 		if (!uploadResult.success) {
 			return {
@@ -191,7 +183,7 @@ export class IntegrationTestHelper {
 		// Step 2: Analysis
 		const analysisResult = await IntegrationTestHelper.simulateAnalysis(
 			uploadResult.sessionId!,
-			scenario,
+			scenario
 		);
 
 		if (!analysisResult.success) {

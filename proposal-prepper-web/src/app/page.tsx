@@ -1,5 +1,6 @@
 'use client';
 
+import { AIRouterIntegrationUtils } from 'proposal-prepper-services';
 import { useCallback, useEffect, useState } from 'react';
 import AgentInterface from '@/components/agent-interface';
 import Sidebar from '@/components/layout/sidebar';
@@ -7,7 +8,6 @@ import TopBar from '@/components/layout/top-bar';
 import ReportPreview from '@/components/report-preview';
 import type { AnalysisResults } from '@/components/results/types';
 import { apiConfig, type ConnectionMode } from '@/services/config/app';
-import { AIRouterIntegrationUtils } from 'proposal-prepper-services';
 
 export default function App() {
   const [activeProject, setActiveProject] = useState<string | null>(null);

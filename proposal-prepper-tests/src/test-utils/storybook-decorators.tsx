@@ -5,8 +5,8 @@
 
 import type { Decorator, StoryContext } from "@storybook/react";
 import React from "react";
-import { ErrorScenario } from "./mock-data-provider";
 import { MockAnalysisEngineAPIEnhanced } from "./mock-analysis-engine-api-enhanced";
+import { ErrorScenario } from "./mock-data-provider";
 
 /**
  * Story decorators and context providers for Storybook
@@ -16,8 +16,7 @@ import { MockAnalysisEngineAPIEnhanced } from "./mock-analysis-engine-api-enhanc
 /**
  * Mock API Context for providing mock API instances to stories
  */
-export const MockAPIContext =
-	React.createContext<MockAnalysisEngineAPIEnhanced | null>(null);
+export const MockAPIContext = React.createContext<MockAnalysisEngineAPIEnhanced | null>(null);
 
 /**
  * Mock API Provider component
@@ -43,9 +42,7 @@ export const MockAPIProvider: React.FC<MockAPIProviderProps> = ({
 		return new MockAnalysisEngineAPIEnhanced("http://localhost:8080", delay);
 	}, [mockAPI, delay]);
 
-	return (
-		<MockAPIContext.Provider value={api}>{children}</MockAPIContext.Provider>
-	);
+	return <MockAPIContext.Provider value={api}>{children}</MockAPIContext.Provider>;
 };
 
 /**
@@ -62,14 +59,10 @@ export const useMockAPI = (): MockAnalysisEngineAPIEnhanced => {
 /**
  * Decorator for providing mock API context to stories
  */
-export const withMockAPI = (
-	errorScenario?: ErrorScenario,
-	delay?: number,
-): Decorator => {
+export const withMockAPI = (errorScenario?: ErrorScenario, delay?: number): Decorator => {
 	return (Story, context) => {
 		// Allow story-level control of error scenarios through parameters
-		const storyErrorScenario =
-			context.parameters?.mockAPI?.errorScenario || errorScenario;
+		const storyErrorScenario = context.parameters?.mockAPI?.errorScenario || errorScenario;
 		const storyDelay = context.parameters?.mockAPI?.delay || delay;
 
 		return (
@@ -83,10 +76,7 @@ export const withMockAPI = (
 /**
  * Decorator for providing theme context (light/dark mode)
  */
-export const withTheme: Decorator = (
-	Story: React.ComponentType,
-	context: StoryContext,
-) => {
+export const withTheme: Decorator = (Story: React.ComponentType, context: StoryContext) => {
 	const theme = context.parameters?.theme || context.globals?.theme || "light";
 
 	return (
@@ -101,10 +91,7 @@ export const withTheme: Decorator = (
 /**
  * Decorator for providing responsive viewport context
  */
-export const withResponsive: Decorator = (
-	Story: React.ComponentType,
-	context: StoryContext,
-) => {
+export const withResponsive: Decorator = (Story: React.ComponentType, context: StoryContext) => {
 	const viewport = context.parameters?.viewport?.defaultViewport;
 
 	return (
@@ -155,24 +142,14 @@ export const withCommonDecorators = (
 		padding?: string;
 		centered?: boolean;
 		fullscreen?: boolean;
-	} = {},
+	} = {}
 ): Decorator => {
 	return (Story) => (
 		<div className={options.fullscreen ? "w-screen h-screen" : ""}>
-			<div
-				className={
-					options.centered
-						? "flex items-center justify-center min-h-screen"
-						: ""
-				}
-			>
+			<div className={options.centered ? "flex items-center justify-center min-h-screen" : ""}>
 				<div className={options.padding || "p-4"}>
 					<div
-						className={
-							options.theme === false
-								? ""
-								: "min-h-screen bg-background text-foreground"
-						}
+						className={options.theme === false ? "" : "min-h-screen bg-background text-foreground"}
 					>
 						{options.mockAPI ? (
 							<MockAPIProvider errorScenario={options.errorScenario}>

@@ -39,8 +39,7 @@ describe("Analysis Validation Utilities", () => {
 		});
 
 		it("should flag non-compliant text", () => {
-			const nonCompliantText =
-				"Basic proposal without any compliance information";
+			const nonCompliantText = "Basic proposal without any compliance information";
 
 			const results = validateFARDFARS(nonCompliantText);
 
@@ -180,8 +179,7 @@ describe("Analysis Validation Utilities", () => {
 		});
 
 		it("should detect standards and policies", () => {
-			const textWithStandards =
-				"We follow industry standards and company policies";
+			const textWithStandards = "We follow industry standards and company policies";
 			expect(hasBasicComplianceElements(textWithStandards)).toBe(true);
 		});
 
@@ -198,8 +196,7 @@ describe("Analysis Validation Utilities", () => {
 
 	describe("extractRegulatoryReferences", () => {
 		it("should extract FAR references", () => {
-			const textWithFAR =
-				"According to FAR 52.204-21 and FAR 15.306, we must comply";
+			const textWithFAR = "According to FAR 52.204-21 and FAR 15.306, we must comply";
 			const references = extractRegulatoryReferences(textWithFAR);
 
 			expect(references).toContain("FAR 52.204-21");
@@ -207,8 +204,7 @@ describe("Analysis Validation Utilities", () => {
 		});
 
 		it("should extract DFARS references", () => {
-			const textWithDFARS =
-				"DFARS 252.204-7012 requires cybersecurity measures";
+			const textWithDFARS = "DFARS 252.204-7012 requires cybersecurity measures";
 			const references = extractRegulatoryReferences(textWithDFARS);
 
 			expect(references).toContain("DFARS 252.204-7012");
@@ -229,13 +225,10 @@ describe("Analysis Validation Utilities", () => {
 		});
 
 		it("should remove duplicate references", () => {
-			const textWithDuplicates =
-				"FAR 52.204-21 is important. FAR 52.204-21 must be followed.";
+			const textWithDuplicates = "FAR 52.204-21 is important. FAR 52.204-21 must be followed.";
 			const references = extractRegulatoryReferences(textWithDuplicates);
 
-			const farCount = references.filter(
-				(ref) => ref === "FAR 52.204-21",
-			).length;
+			const farCount = references.filter((ref) => ref === "FAR 52.204-21").length;
 			expect(farCount).toBe(1);
 		});
 

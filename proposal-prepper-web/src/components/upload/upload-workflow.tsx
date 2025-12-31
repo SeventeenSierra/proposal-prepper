@@ -22,8 +22,8 @@ import type { WebSocketMessage } from 'proposal-prepper-services/ai-router-clien
 import { aiRouterClient } from 'proposal-prepper-services/ai-router-client';
 import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
+import type { ConnectionMode } from '@/services/config/app';
 import type { UploadSession } from '@/types/app';
-import { type ConnectionMode } from '@/services/config/app';
 import { SimulationControls } from './simulation-controls';
 import { UploadManager } from './upload-manager';
 import { useRealTimeUpdates } from './use-real-time-updates';

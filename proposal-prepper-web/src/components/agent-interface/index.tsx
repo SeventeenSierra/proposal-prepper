@@ -100,7 +100,7 @@ const AgentInterface: React.FC<AgentInterfaceProps> = ({
               data.integration_status === 'fallback' || data.integration_status === 'unavailable',
           });
         }
-      } catch (err) {
+      } catch (_err) {
         console.warn('Could not fetch health status, using default mock state');
       }
     };
@@ -176,11 +176,12 @@ const AgentInterface: React.FC<AgentInterfaceProps> = ({
         : selectedFile;
 
       await startAnalysis(targetFile, selectedSeedPdf);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Analysis failed:', err);
       setIsUploading(false);
-      setUploadError(err.message || 'Workflow execution failed');
-      onAnalysisError(err.message || 'Workflow execution failed');
+      const errorMsg = err instanceof Error ? err.message : 'Workflow execution failed';
+      setUploadError(errorMsg);
+      onAnalysisError(errorMsg);
     }
   };
 

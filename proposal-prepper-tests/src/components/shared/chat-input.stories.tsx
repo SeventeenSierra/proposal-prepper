@@ -59,7 +59,7 @@ export default meta;
 type Story = StoryObj<typeof ChatInput>;
 
 // Wrapper component to handle state
-const ChatInputWrapper = (args: any) => {
+const ChatInputWrapper = (args: React.ComponentProps<typeof ChatInput>) => {
 	const [value, setValue] = useState(args.value || "");
 
 	return (
@@ -67,8 +67,7 @@ const ChatInputWrapper = (args: any) => {
 			<div className="p-4">
 				<h3 className="text-lg font-semibold mb-2">Chat Interface</h3>
 				<p className="text-gray-600 mb-4">
-					This is a demo of the chat input component. Try typing a message
-					below.
+					This is a demo of the chat input component. Try typing a message below.
 				</p>
 			</div>
 			<ChatInput

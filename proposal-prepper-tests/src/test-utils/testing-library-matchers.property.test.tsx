@@ -17,14 +17,7 @@ describe("Testing Library Matcher Availability", () => {
 		fc.assert(
 			fc.property(
 				fc.record({
-					tagName: fc.constantFrom(
-						"div",
-						"span",
-						"button",
-						"p",
-						"h1",
-						"section",
-					), // Exclude input to avoid void element issues
+					tagName: fc.constantFrom("div", "span", "button", "p", "h1", "section"), // Exclude input to avoid void element issues
 					textContent: fc
 						.string({ minLength: 1, maxLength: 50 })
 						.filter((s) => s.trim().length > 0),
@@ -32,12 +25,10 @@ describe("Testing Library Matcher Availability", () => {
 						nil: undefined,
 					}),
 					className: fc.option(
-						fc
-							.string({ minLength: 1, maxLength: 30 })
-							.filter((s) => s.trim().length > 0),
+						fc.string({ minLength: 1, maxLength: 30 }).filter((s) => s.trim().length > 0),
 						{
 							nil: undefined,
-						},
+						}
 					),
 					disabled: fc.option(fc.boolean(), { nil: undefined }),
 				}),
@@ -46,21 +37,13 @@ describe("Testing Library Matcher Availability", () => {
 					const TestComponent = () => {
 						const props: any = {};
 						if (elementProps.id) props.id = elementProps.id;
-						if (elementProps.className)
-							props.className = elementProps.className;
-						if (
-							elementProps.disabled !== undefined &&
-							elementProps.tagName === "button"
-						) {
+						if (elementProps.className) props.className = elementProps.className;
+						if (elementProps.disabled !== undefined && elementProps.tagName === "button") {
 							props.disabled = elementProps.disabled;
 						}
 
 						// Use React.createElement to avoid JSX issues with dynamic tag names
-						return React.createElement(
-							elementProps.tagName,
-							props,
-							elementProps.textContent,
-						);
+						return React.createElement(elementProps.tagName, props, elementProps.textContent);
 					};
 
 					const { container } = render(<TestComponent />);
@@ -72,9 +55,7 @@ describe("Testing Library Matcher Availability", () => {
 					// Test that toHaveTextContent matcher is available and works
 					// Test that toHaveTextContent matcher is available and works
 					// Note: HTML collapses whitespace, so we expect normalized spacing
-					const normalizedText = elementProps.textContent
-						.trim()
-						.replace(/\s+/g, " ");
+					const normalizedText = elementProps.textContent.trim().replace(/\s+/g, " ");
 					expect(element).toHaveTextContent(normalizedText);
 
 					// Test conditional matchers based on element properties
@@ -86,10 +67,7 @@ describe("Testing Library Matcher Availability", () => {
 						expect(element).toHaveClass(elementProps.className);
 					}
 
-					if (
-						elementProps.disabled !== undefined &&
-						elementProps.tagName === "button"
-					) {
+					if (elementProps.disabled !== undefined && elementProps.tagName === "button") {
 						if (elementProps.disabled) {
 							expect(element).toBeDisabled();
 						} else {
@@ -99,9 +77,9 @@ describe("Testing Library Matcher Availability", () => {
 
 					// Test that the element is visible (not hidden)
 					expect(element).toBeVisible();
-				},
+				}
 			),
-			{ numRuns: 100 },
+			{ numRuns: 100 }
 		);
 	});
 
@@ -109,14 +87,7 @@ describe("Testing Library Matcher Availability", () => {
 		fc.assert(
 			fc.property(
 				fc.record({
-					inputType: fc.constantFrom(
-						"text",
-						"email",
-						"password",
-						"number",
-						"checkbox",
-						"radio",
-					),
+					inputType: fc.constantFrom("text", "email", "password", "number", "checkbox", "radio"),
 					value: fc.string({ minLength: 0, maxLength: 20 }),
 					checked: fc.boolean(),
 					required: fc.boolean(),
@@ -126,10 +97,7 @@ describe("Testing Library Matcher Availability", () => {
 				}),
 				(formProps) => {
 					// Skip edge cases that browsers handle inconsistently
-					if (
-						formProps.inputType !== "checkbox" &&
-						formProps.inputType !== "radio"
-					) {
+					if (formProps.inputType !== "checkbox" && formProps.inputType !== "radio") {
 						if (formProps.value !== formProps.value.trim()) {
 							return true; // Skip values with leading/trailing whitespace
 						}
@@ -140,23 +108,18 @@ describe("Testing Library Matcher Availability", () => {
 							<input
 								type={formProps.inputType}
 								value={
-									formProps.inputType === "checkbox" ||
-									formProps.inputType === "radio"
+									formProps.inputType === "checkbox" || formProps.inputType === "radio"
 										? undefined
 										: formProps.value
 								}
 								checked={
-									formProps.inputType === "checkbox" ||
-									formProps.inputType === "radio"
+									formProps.inputType === "checkbox" || formProps.inputType === "radio"
 										? formProps.checked
 										: undefined
 								}
 								required={formProps.required}
 								placeholder={formProps.placeholder}
-								readOnly={
-									formProps.inputType !== "checkbox" &&
-									formProps.inputType !== "radio"
-								}
+								readOnly={formProps.inputType !== "checkbox" && formProps.inputType !== "radio"}
 							/>
 						</form>
 					);
@@ -167,10 +130,7 @@ describe("Testing Library Matcher Availability", () => {
 					// Test that form-specific matchers are available
 					expect(input).toBeInTheDocument();
 
-					if (
-						formProps.inputType === "checkbox" ||
-						formProps.inputType === "radio"
-					) {
+					if (formProps.inputType === "checkbox" || formProps.inputType === "radio") {
 						if (formProps.checked) {
 							expect(input).toBeChecked();
 						} else {
@@ -203,17 +163,16 @@ describe("Testing Library Matcher Availability", () => {
 					// Test that the input is valid only if it's not a required checkbox/radio that's unchecked
 					if (
 						formProps.required &&
-						(formProps.inputType === "checkbox" ||
-							formProps.inputType === "radio") &&
+						(formProps.inputType === "checkbox" || formProps.inputType === "radio") &&
 						!formProps.checked
 					) {
 						expect(input).toBeInvalid();
 					} else {
 						expect(input).toBeValid();
 					}
-				},
+				}
 			),
-			{ numRuns: 100 },
+			{ numRuns: 100 }
 		);
 	});
 
@@ -221,34 +180,21 @@ describe("Testing Library Matcher Availability", () => {
 		fc.assert(
 			fc.property(
 				fc.record({
-					role: fc.constantFrom(
-						"button",
-						"link",
-						"heading",
-						"textbox",
-						"checkbox",
-						"radio",
-					),
+					role: fc.constantFrom("button", "link", "heading", "textbox", "checkbox", "radio"),
 					ariaLabel: fc.option(
-						fc
-							.string({ minLength: 1, maxLength: 50 })
-							.filter((s) => s.trim().length > 0),
-						{ nil: undefined },
+						fc.string({ minLength: 1, maxLength: 50 }).filter((s) => s.trim().length > 0),
+						{ nil: undefined }
 					),
-					ariaDescribedBy: fc.option(
-						fc.string({ minLength: 1, maxLength: 20 }),
-						{
-							nil: undefined,
-						},
-					),
+					ariaDescribedBy: fc.option(fc.string({ minLength: 1, maxLength: 20 }), {
+						nil: undefined,
+					}),
 					ariaExpanded: fc.option(fc.boolean(), { nil: undefined }),
 				}),
 				(ariaProps) => {
 					const TestComponent = () => {
 						const props: any = { role: ariaProps.role };
 						if (ariaProps.ariaLabel) props["aria-label"] = ariaProps.ariaLabel;
-						if (ariaProps.ariaDescribedBy)
-							props["aria-describedby"] = ariaProps.ariaDescribedBy;
+						if (ariaProps.ariaDescribedBy) props["aria-describedby"] = ariaProps.ariaDescribedBy;
 						if (ariaProps.ariaExpanded !== undefined)
 							props["aria-expanded"] = ariaProps.ariaExpanded;
 
@@ -264,28 +210,20 @@ describe("Testing Library Matcher Availability", () => {
 
 					if (ariaProps.ariaLabel) {
 						// Accessible names normalize whitespace (multiple spaces become single spaces)
-						const normalizedLabel = ariaProps.ariaLabel
-							.trim()
-							.replace(/\s+/g, " ");
+						const normalizedLabel = ariaProps.ariaLabel.trim().replace(/\s+/g, " ");
 						expect(element).toHaveAccessibleName(normalizedLabel);
 					}
 
 					if (ariaProps.ariaDescribedBy) {
-						expect(element).toHaveAttribute(
-							"aria-describedby",
-							ariaProps.ariaDescribedBy,
-						);
+						expect(element).toHaveAttribute("aria-describedby", ariaProps.ariaDescribedBy);
 					}
 
 					if (ariaProps.ariaExpanded !== undefined) {
-						expect(element).toHaveAttribute(
-							"aria-expanded",
-							ariaProps.ariaExpanded.toString(),
-						);
+						expect(element).toHaveAttribute("aria-expanded", ariaProps.ariaExpanded.toString());
 					}
-				},
+				}
 			),
-			{ numRuns: 100 },
+			{ numRuns: 100 }
 		);
 	});
 });

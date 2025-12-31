@@ -87,9 +87,7 @@ describe("AIRouterIntegration", () => {
 
 		it("should handle service health check errors", async () => {
 			const client = manager.getClient();
-			vi.mocked(client.getServiceStatus).mockRejectedValue(
-				new Error("Connection failed"),
-			);
+			vi.mocked(client.getServiceStatus).mockRejectedValue(new Error("Connection failed"));
 
 			const status = await manager.checkServiceHealth();
 
@@ -167,9 +165,7 @@ describe("AIRouterIntegration", () => {
 			expect(manager.getStatusMessage()).toContain("Service healthy");
 
 			// Test unhealthy status
-			vi.mocked(client.getServiceStatus).mockRejectedValue(
-				new Error("Connection failed"),
-			);
+			vi.mocked(client.getServiceStatus).mockRejectedValue(new Error("Connection failed"));
 
 			await manager.checkServiceHealth();
 			expect(manager.getStatusMessage()).toContain("Service unavailable");
@@ -212,9 +208,7 @@ describe("AIRouterIntegrationUtils", () => {
 
 			const result = await AIRouterIntegrationUtils.ensureServiceReady();
 			expect(result.ready).toBe(false);
-			expect(result.message).toContain(
-				"analysis service is currently unavailable",
-			);
+			expect(result.message).toContain("analysis service is currently unavailable");
 		});
 	});
 

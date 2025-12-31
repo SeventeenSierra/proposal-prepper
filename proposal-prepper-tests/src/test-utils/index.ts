@@ -9,13 +9,14 @@
  */
 
 import {
+	createMockAnalysisEngineApiClient,
+	type MockAnalysisEngineApiClient,
+} from "./mock-analysis-engine-api";
+import {
 	MockAnalysisEngineAPIEnhanced,
 	mockAnalysisEngineAPIEnhanced,
 } from "./mock-analysis-engine-api-enhanced";
-import {
-	type MockAnalysisEngineApiClient,
-	createMockAnalysisEngineApiClient,
-} from "./mock-analysis-engine-api";
+
 export * from "./property-testing";
 
 /**

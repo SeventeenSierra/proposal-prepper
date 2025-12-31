@@ -40,11 +40,7 @@ export class PDFUploadDemo {
 			return PDFUploadDemo.pdfFiles;
 		}
 
-		const seedDataPath = join(
-			process.cwd(),
-			"../proposal-prepper-web/src",
-			"seed-data",
-		);
+		const seedDataPath = join(process.cwd(), "../proposal-prepper-web/src", "seed-data");
 		const files = readdirSync(seedDataPath);
 		const pdfFiles = files.filter((file) => file.endsWith(".pdf"));
 
@@ -53,9 +49,7 @@ export class PDFUploadDemo {
 			const buffer = readFileSync(filePath);
 
 			// Extract metadata from filename
-			const match = filename.match(
-				/^(.+?)_(\d{4})_([a-f0-9-]+)_PROPOSAL_(\d+)\.pdf$/i,
-			);
+			const match = filename.match(/^(.+?)_(\d{4})_([a-f0-9-]+)_PROPOSAL_(\d+)\.pdf$/i);
 			const author = match ? match[1].replace(/_/g, " ") : "Unknown";
 			const year = match ? parseInt(match[2], 10) : 0;
 			const uuid = match ? match[3] : "";
@@ -106,9 +100,7 @@ export class PDFUploadDemo {
 	/**
 	 * Get files by category
 	 */
-	static async getFilesByCategory(
-		category: "small" | "medium" | "large",
-	): Promise<PDFDemoFile[]> {
+	static async getFilesByCategory(category: "small" | "medium" | "large"): Promise<PDFDemoFile[]> {
 		const files = await PDFUploadDemo.loadDemoFiles();
 		return files.filter((f) => f.metadata.category === category);
 	}
@@ -118,9 +110,7 @@ export class PDFUploadDemo {
 	 */
 	static async getFilesByAuthor(author: string): Promise<PDFDemoFile[]> {
 		const files = await PDFUploadDemo.loadDemoFiles();
-		return files.filter((f) =>
-			f.author.toLowerCase().includes(author.toLowerCase()),
-		);
+		return files.filter((f) => f.author.toLowerCase().includes(author.toLowerCase()));
 	}
 
 	/**
@@ -157,7 +147,7 @@ export class PDFUploadDemo {
 		});
 
 		const multipleProposalAuthors = Array.from(authorCounts.entries()).filter(
-			([_, proposals]) => proposals.length > 1,
+			([_, proposals]) => proposals.length > 1
 		);
 
 		// Get recent proposals (2020+)
@@ -227,9 +217,9 @@ export class PDFUploadDemo {
 		files.forEach((f) => {
 			authorCounts.set(f.author, (authorCounts.get(f.author) || 0) + 1);
 		});
-		const authorsWithMultipleProposals = Array.from(
-			authorCounts.values(),
-		).filter((count) => count > 1).length;
+		const authorsWithMultipleProposals = Array.from(authorCounts.values()).filter(
+			(count) => count > 1
+		).length;
 
 		return {
 			totalFiles: files.length,

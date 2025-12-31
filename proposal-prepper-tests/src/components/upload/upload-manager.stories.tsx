@@ -69,8 +69,7 @@ export const SlowNetwork: Story = {
 	parameters: {
 		docs: {
 			description: {
-				story:
-					"Demonstrates upload behavior with slow network conditions (2 second delay).",
+				story: "Demonstrates upload behavior with slow network conditions (2 second delay).",
 			},
 		},
 	},
@@ -148,8 +147,7 @@ export const InvalidFileType: Story = {
 	parameters: {
 		docs: {
 			description: {
-				story:
-					"Demonstrates upload behavior when invalid file types are selected.",
+				story: "Demonstrates upload behavior when invalid file types are selected.",
 			},
 		},
 	},
@@ -166,8 +164,7 @@ export const SuccessfulUpload: Story = {
 	parameters: {
 		docs: {
 			description: {
-				story:
-					"Demonstrates successful upload completion with realistic mock data.",
+				story: "Demonstrates successful upload completion with realistic mock data.",
 			},
 		},
 	},
@@ -184,8 +181,7 @@ export const UploadInProgress: Story = {
 	parameters: {
 		docs: {
 			description: {
-				story:
-					"Demonstrates upload progress tracking with realistic progress updates.",
+				story: "Demonstrates upload progress tracking with realistic progress updates.",
 			},
 		},
 	},
@@ -202,8 +198,7 @@ export const UploadFailed: Story = {
 	parameters: {
 		docs: {
 			description: {
-				story:
-					"Demonstrates upload failure handling with error recovery options.",
+				story: "Demonstrates upload failure handling with error recovery options.",
 			},
 		},
 	},

@@ -35,13 +35,7 @@ describe("AnalysisFooter", () => {
 	});
 
 	it("should show upload progress when uploading", () => {
-		render(
-			<AnalysisFooter
-				{...defaultProps}
-				isUploading={true}
-				uploadProgress={50}
-			/>,
-		);
+		render(<AnalysisFooter {...defaultProps} isUploading={true} uploadProgress={50} />);
 		expect(screen.getByText("Scrutinizing Proposal...")).toBeInTheDocument();
 		expect(screen.getByText("50%")).toBeInTheDocument();
 	});
@@ -74,11 +68,7 @@ describe("AnalysisFooter", () => {
 		const onStartAnalysis = vi.fn();
 		const file = new File(["test"], "test.pdf", { type: "application/pdf" });
 		render(
-			<AnalysisFooter
-				{...defaultProps}
-				selectedFile={file}
-				onStartAnalysis={onStartAnalysis}
-			/>,
+			<AnalysisFooter {...defaultProps} selectedFile={file} onStartAnalysis={onStartAnalysis} />
 		);
 
 		const button = screen.getByText("Start Analysis");
@@ -89,9 +79,7 @@ describe("AnalysisFooter", () => {
 
 	it("should call onReset when reset button clicked", () => {
 		const onReset = vi.fn();
-		render(
-			<AnalysisFooter {...defaultProps} isComplete={true} onReset={onReset} />,
-		);
+		render(<AnalysisFooter {...defaultProps} isComplete={true} onReset={onReset} />);
 
 		const button = screen.getByText("Analyze Another Document");
 		fireEvent.click(button);

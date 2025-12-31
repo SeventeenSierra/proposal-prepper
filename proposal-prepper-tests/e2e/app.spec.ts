@@ -16,7 +16,5 @@ test("loads main interface", async ({ page }) => {
 	await expect(page.getByText("Recent Checks")).toBeVisible();
 
 	// Expect the "New Compliance Check" button to be visible
-	await expect(
-		page.getByRole("button", { name: "New Compliance Check" }),
-	).toBeVisible();
+	await expect(page.getByRole("button", { name: "New Compliance Check" })).toBeVisible();
 });

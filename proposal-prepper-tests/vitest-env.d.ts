@@ -18,9 +18,7 @@ import type { TestingLibraryMatchers } from "@testing-library/jest-dom/matchers"
 declare module "vitest" {
 	// biome-ignore lint/suspicious/noExplicitAny: Testing types require any
 	interface Assertion<T = any> extends TestingLibraryMatchers<T, void> {}
-	// biome-ignore lint/suspicious/noExplicitAny: Testing types require any
-	interface AsymmetricMatchersContaining
-		extends TestingLibraryMatchers<any, void> {}
+	interface AsymmetricMatchersContaining extends TestingLibraryMatchers<any, void> {}
 }
 
 declare global {
@@ -31,7 +29,6 @@ declare global {
 
 	// Ensure expect is properly typed with Testing Library matchers
 	namespace jest {
-		interface Matchers<R>
-			extends TestingLibraryMatchers<typeof expect.stringContaining, R> {}
+		interface Matchers<R> extends TestingLibraryMatchers<typeof expect.stringContaining, R> {}
 	}
 }

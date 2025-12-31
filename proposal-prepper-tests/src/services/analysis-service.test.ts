@@ -10,15 +10,9 @@
  */
 
 import { aiRouterClient } from "proposal-prepper-services/ai-router-client";
-import {
-	type AnalysisRequest,
-	AnalysisService,
-} from "proposal-prepper-services/analysis-service";
+import { type AnalysisRequest, AnalysisService } from "proposal-prepper-services/analysis-service";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-	type AnalysisSession,
-	AnalysisStatus,
-} from "@/components/analysis/types";
+import { type AnalysisSession, AnalysisStatus } from "@/components/analysis/types";
 
 // Mock the AI Router client with all needed methods
 vi.mock("proposal-prepper-services/ai-router-client", () => ({
@@ -147,7 +141,7 @@ describe("AnalysisService", () => {
 				"doc-456",
 				undefined, // filename
 				undefined, // s3Key
-				undefined, // provider
+				undefined // provider
 			);
 		});
 
@@ -176,9 +170,7 @@ describe("AnalysisService", () => {
 				proposalId: "proposal-123",
 			};
 
-			mockAiRouterClient.startAnalysis.mockRejectedValueOnce(
-				new Error("Network error"),
-			);
+			mockAiRouterClient.startAnalysis.mockRejectedValueOnce(new Error("Network error"));
 
 			const result = await analysisService.startAnalysis(request);
 
@@ -396,12 +388,8 @@ describe("AnalysisService", () => {
 	describe("Real-time Updates", () => {
 		it("should subscribe to WebSocket updates", async () => {
 			mockAiRouterClient.connectWebSocket.mockResolvedValueOnce(undefined);
-			mockAiRouterClient.subscribeToAnalysisProgress.mockImplementationOnce(
-				() => {},
-			);
-			mockAiRouterClient.subscribeToAnalysisComplete.mockImplementationOnce(
-				() => {},
-			);
+			mockAiRouterClient.subscribeToAnalysisProgress.mockImplementationOnce(() => {});
+			mockAiRouterClient.subscribeToAnalysisComplete.mockImplementationOnce(() => {});
 			mockAiRouterClient.subscribeToErrors.mockImplementationOnce(() => {});
 
 			await analysisService.subscribeToRealTimeUpdates();
@@ -413,14 +401,10 @@ describe("AnalysisService", () => {
 		});
 
 		it("should handle WebSocket connection errors", async () => {
-			mockAiRouterClient.connectWebSocket.mockRejectedValueOnce(
-				new Error("Connection failed"),
-			);
+			mockAiRouterClient.connectWebSocket.mockRejectedValueOnce(new Error("Connection failed"));
 
 			// Should not throw
-			await expect(
-				analysisService.subscribeToRealTimeUpdates(),
-			).resolves.toBeUndefined();
+			await expect(analysisService.subscribeToRealTimeUpdates()).resolves.toBeUndefined();
 		});
 
 		it("should unsubscribe from WebSocket updates", () => {

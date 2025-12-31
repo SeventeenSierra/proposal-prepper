@@ -39,7 +39,7 @@ describe("AnalysisCoordinator", () => {
 	const defaultProps = {
 		proposalId: "test-proposal-123",
 		fileContent: createMockFile(
-			"Test proposal content with basic safeguarding and cybersecurity measures",
+			"Test proposal content with basic safeguarding and cybersecurity measures"
 		),
 	};
 
@@ -47,16 +47,12 @@ describe("AnalysisCoordinator", () => {
 		vi.clearAllMocks();
 
 		// Setup default mock responses
-		(
-			analysisService.startAnalysis as unknown as ReturnType<typeof vi.fn>
-		).mockResolvedValue({
+		(analysisService.startAnalysis as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
 			success: true,
 			sessionId: "test-session-123",
 		});
 
-		(
-			analysisService.getAnalysisStatus as unknown as ReturnType<typeof vi.fn>
-		).mockResolvedValue({
+		(analysisService.getAnalysisStatus as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
 			id: "test-session-123",
 			proposalId: "test-proposal-123",
 			status: AnalysisStatus.QUEUED,
@@ -66,55 +62,41 @@ describe("AnalysisCoordinator", () => {
 		});
 
 		(
-			analysisService.validateAnalysisRequest as unknown as ReturnType<
-				typeof vi.fn
-			>
+			analysisService.validateAnalysisRequest as unknown as ReturnType<typeof vi.fn>
 		).mockReturnValue({
 			isValid: true,
 		});
 
 		// Mock setEventHandlers to simulate dynamic progress
-		(
-			analysisService.setEventHandlers as unknown as ReturnType<typeof vi.fn>
-		).mockImplementation((handlers: unknown) => {
-			// Simulate analysis progression after a short delay
-			setTimeout(() => {
-				// Progress through states: QUEUED → EXTRACTING → ANALYZING → COMPLETED
-				handlers.onProgress?.(
-					"test-session-123",
-					25,
-					"Extracting text content",
-				);
-
+		(analysisService.setEventHandlers as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+			(handlers: unknown) => {
+				// Simulate analysis progression after a short delay
 				setTimeout(() => {
-					handlers.onProgress?.(
-						"test-session-123",
-						50,
-						"Analyzing FAR/DFARS compliance",
-					);
+					// Progress through states: QUEUED → EXTRACTING → ANALYZING → COMPLETED
+					handlers.onProgress?.("test-session-123", 25, "Extracting text content");
 
 					setTimeout(() => {
-						handlers.onProgress?.(
-							"test-session-123",
-							75,
-							"Validating compliance requirements",
-						);
+						handlers.onProgress?.("test-session-123", 50, "Analyzing FAR/DFARS compliance");
 
 						setTimeout(() => {
-							handlers.onComplete?.("test-session-123", {
-								id: "test-session-123",
-								proposalId: "test-proposal-123",
-								status: AnalysisStatus.COMPLETED,
-								progress: 100,
-								startedAt: new Date(),
-								completedAt: new Date(),
-								currentStep: "Analysis complete",
-							});
+							handlers.onProgress?.("test-session-123", 75, "Validating compliance requirements");
+
+							setTimeout(() => {
+								handlers.onComplete?.("test-session-123", {
+									id: "test-session-123",
+									proposalId: "test-proposal-123",
+									status: AnalysisStatus.COMPLETED,
+									progress: 100,
+									startedAt: new Date(),
+									completedAt: new Date(),
+									currentStep: "Analysis complete",
+								});
+							}, 100);
 						}, 100);
 					}, 100);
 				}, 100);
-			}, 100);
-		});
+			}
+		);
 	});
 
 	describe("Component Rendering", () => {
@@ -126,12 +108,10 @@ describe("AnalysisCoordinator", () => {
 
 		it("should render with custom className", () => {
 			const { container } = render(
-				<AnalysisCoordinator {...defaultProps} className="custom-class" />,
+				<AnalysisCoordinator {...defaultProps} className="custom-class" />
 			);
 
-			expect(container.firstChild).toHaveClass(
-				"analysis-coordinator custom-class",
-			);
+			expect(container.firstChild).toHaveClass("analysis-coordinator custom-class");
 		});
 
 		it("should disable start button when no file content provided", () => {
@@ -145,12 +125,7 @@ describe("AnalysisCoordinator", () => {
 	describe("Analysis Process (Requirements 2.1, 2.2, 2.4)", () => {
 		it("should start analysis when start button is clicked", async () => {
 			const onAnalysisStart = vi.fn();
-			render(
-				<AnalysisCoordinator
-					{...defaultProps}
-					onAnalysisStart={onAnalysisStart}
-				/>,
-			);
+			render(<AnalysisCoordinator {...defaultProps} onAnalysisStart={onAnalysisStart} />);
 
 			const startButton = screen.getByText("Start Analysis");
 			fireEvent.click(startButton);
@@ -161,7 +136,7 @@ describe("AnalysisCoordinator", () => {
 						proposalId: "test-proposal-123",
 						status: AnalysisStatus.QUEUED,
 						progress: 0,
-					}),
+					})
 				);
 			});
 		});
@@ -182,12 +157,7 @@ describe("AnalysisCoordinator", () => {
 
 		it("should complete analysis and show results", async () => {
 			const onAnalysisComplete = vi.fn();
-			render(
-				<AnalysisCoordinator
-					{...defaultProps}
-					onAnalysisComplete={onAnalysisComplete}
-				/>,
-			);
+			render(<AnalysisCoordinator {...defaultProps} onAnalysisComplete={onAnalysisComplete} />);
 
 			const startButton = screen.getByText("Start Analysis");
 			fireEvent.click(startButton);
@@ -196,7 +166,7 @@ describe("AnalysisCoordinator", () => {
 				() => {
 					expect(screen.getByText("COMPLETED")).toBeInTheDocument();
 				},
-				{ timeout: 3000 },
+				{ timeout: 3000 }
 			);
 
 			expect(onAnalysisComplete).toHaveBeenCalledWith(
@@ -205,18 +175,14 @@ describe("AnalysisCoordinator", () => {
 					status: expect.stringMatching(/pass|fail|warning/),
 					overallScore: expect.any(Number),
 					issues: expect.any(Array),
-				}),
+				})
 			);
 		});
 
 		it("should auto-start analysis when autoStart is true", async () => {
 			const onAnalysisStart = vi.fn();
 			render(
-				<AnalysisCoordinator
-					{...defaultProps}
-					autoStart={true}
-					onAnalysisStart={onAnalysisStart}
-				/>,
+				<AnalysisCoordinator {...defaultProps} autoStart={true} onAnalysisStart={onAnalysisStart} />
 			);
 
 			await waitFor(() => {
@@ -227,16 +193,8 @@ describe("AnalysisCoordinator", () => {
 
 	describe("Text Extraction (Requirement 2.2)", () => {
 		it("should extract text from file content", async () => {
-			const fileContent = createMockFile(
-				"Sample proposal text for extraction testing",
-			);
-			render(
-				<AnalysisCoordinator
-					proposalId="test"
-					fileContent={fileContent}
-					autoStart={true}
-				/>,
-			);
+			const fileContent = createMockFile("Sample proposal text for extraction testing");
+			render(<AnalysisCoordinator proposalId="test" fileContent={fileContent} autoStart={true} />);
 
 			await waitFor(() => {
 				expect(screen.getByText(/Extracting text content/)).toBeInTheDocument();
@@ -246,11 +204,7 @@ describe("AnalysisCoordinator", () => {
 		it("should handle string content for text extraction", async () => {
 			const stringContent = "Direct string content for analysis";
 			render(
-				<AnalysisCoordinator
-					proposalId="test"
-					fileContent={stringContent}
-					autoStart={true}
-				/>,
+				<AnalysisCoordinator proposalId="test" fileContent={stringContent} autoStart={true} />
 			);
 
 			await waitFor(() => {
@@ -270,11 +224,7 @@ describe("AnalysisCoordinator", () => {
       `);
 
 			render(
-				<AnalysisCoordinator
-					proposalId="test"
-					fileContent={compliantContent}
-					autoStart={true}
-				/>,
+				<AnalysisCoordinator proposalId="test" fileContent={compliantContent} autoStart={true} />
 			);
 
 			// Should complete analysis successfully
@@ -287,23 +237,17 @@ describe("AnalysisCoordinator", () => {
 		});
 
 		it("should flag missing compliance requirements", async () => {
-			const nonCompliantContent = createMockFile(
-				"Basic proposal without compliance information",
-			);
+			const nonCompliantContent = createMockFile("Basic proposal without compliance information");
 
 			render(
-				<AnalysisCoordinator
-					proposalId="test"
-					fileContent={nonCompliantContent}
-					autoStart={true}
-				/>,
+				<AnalysisCoordinator proposalId="test" fileContent={nonCompliantContent} autoStart={true} />
 			);
 
 			await waitFor(
 				() => {
 					expect(screen.getByText("COMPLETED")).toBeInTheDocument();
 				},
-				{ timeout: 3000 },
+				{ timeout: 3000 }
 			);
 
 			// Should show issues found
@@ -319,20 +263,21 @@ describe("AnalysisCoordinator", () => {
 			const onAnalysisError = vi.fn();
 
 			// Mock analysis service to fail
-			(
-				analysisService.startAnalysis as unknown as ReturnType<typeof vi.fn>
-			).mockRejectedValue(new Error("File read error"));
+			(analysisService.startAnalysis as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
+				new Error("File read error")
+			);
 
 			// Override setEventHandlers to simulate error
-			(
-				analysisService.setEventHandlers as unknown as ReturnType<typeof vi.fn>
-			).mockImplementation((handlers: unknown) => {
-				setTimeout(() => {
-					(
-						handlers as { onError?: (sessionId: string, error: string) => void }
-					).onError?.("test-session-123", "File read error");
-				}, 100);
-			});
+			(analysisService.setEventHandlers as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+				(handlers: unknown) => {
+					setTimeout(() => {
+						(handlers as { onError?: (sessionId: string, error: string) => void }).onError?.(
+							"test-session-123",
+							"File read error"
+						);
+					}, 100);
+				}
+			);
 
 			// Create invalid file content that will cause extraction to fail
 			const invalidFile = new File([""], "empty.pdf", {
@@ -348,38 +293,39 @@ describe("AnalysisCoordinator", () => {
 					fileContent={invalidFile}
 					onAnalysisError={onAnalysisError}
 					autoStart={true}
-				/>,
+				/>
 			);
 
 			await waitFor(
 				() => {
 					expect(screen.getByText("FAILED")).toBeInTheDocument();
 				},
-				{ timeout: 3000 },
+				{ timeout: 3000 }
 			);
 
 			expect(onAnalysisError).toHaveBeenCalledWith(
 				expect.stringContaining("error"),
-				expect.any(Object),
+				expect.any(Object)
 			);
 		});
 
 		it("should show retry button after failure", async () => {
 			// Mock analysis service to fail
-			(
-				analysisService.startAnalysis as unknown as ReturnType<typeof vi.fn>
-			).mockRejectedValue(new Error("File read error"));
+			(analysisService.startAnalysis as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
+				new Error("File read error")
+			);
 
 			// Override setEventHandlers to simulate error
-			(
-				analysisService.setEventHandlers as unknown as ReturnType<typeof vi.fn>
-			).mockImplementation((handlers: unknown) => {
-				setTimeout(() => {
-					(
-						handlers as { onError?: (sessionId: string, error: string) => void }
-					).onError?.("test-session-123", "File read error");
-				}, 100);
-			});
+			(analysisService.setEventHandlers as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+				(handlers: unknown) => {
+					setTimeout(() => {
+						(handlers as { onError?: (sessionId: string, error: string) => void }).onError?.(
+							"test-session-123",
+							"File read error"
+						);
+					}, 100);
+				}
+			);
 
 			const invalidFile = new File([""], "empty.pdf", {
 				type: "application/pdf",
@@ -388,19 +334,13 @@ describe("AnalysisCoordinator", () => {
 				value: vi.fn().mockRejectedValue(new Error("File read error")),
 			});
 
-			render(
-				<AnalysisCoordinator
-					proposalId="test"
-					fileContent={invalidFile}
-					autoStart={true}
-				/>,
-			);
+			render(<AnalysisCoordinator proposalId="test" fileContent={invalidFile} autoStart={true} />);
 
 			await waitFor(
 				() => {
 					expect(screen.getByText("FAILED")).toBeInTheDocument();
 				},
-				{ timeout: 3000 },
+				{ timeout: 3000 }
 			);
 
 			expect(screen.getByText("Retry Analysis")).toBeInTheDocument();
@@ -408,20 +348,21 @@ describe("AnalysisCoordinator", () => {
 
 		it("should display error messages clearly", async () => {
 			// Mock analysis service to fail with custom error
-			(
-				analysisService.startAnalysis as unknown as ReturnType<typeof vi.fn>
-			).mockRejectedValue(new Error("Custom error message"));
+			(analysisService.startAnalysis as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
+				new Error("Custom error message")
+			);
 
 			// Override setEventHandlers to simulate custom error
-			(
-				analysisService.setEventHandlers as unknown as ReturnType<typeof vi.fn>
-			).mockImplementation((handlers: unknown) => {
-				setTimeout(() => {
-					(
-						handlers as { onError?: (sessionId: string, error: string) => void }
-					).onError?.("test-session-123", "Custom error message");
-				}, 100);
-			});
+			(analysisService.setEventHandlers as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+				(handlers: unknown) => {
+					setTimeout(() => {
+						(handlers as { onError?: (sessionId: string, error: string) => void }).onError?.(
+							"test-session-123",
+							"Custom error message"
+						);
+					}, 100);
+				}
+			);
 
 			const invalidFile = new File([""], "empty.pdf", {
 				type: "application/pdf",
@@ -430,19 +371,13 @@ describe("AnalysisCoordinator", () => {
 				value: vi.fn().mockRejectedValue(new Error("Custom error message")),
 			});
 
-			render(
-				<AnalysisCoordinator
-					proposalId="test"
-					fileContent={invalidFile}
-					autoStart={true}
-				/>,
-			);
+			render(<AnalysisCoordinator proposalId="test" fileContent={invalidFile} autoStart={true} />);
 
 			await waitFor(
 				() => {
 					expect(screen.getByText("Custom error message")).toBeInTheDocument();
 				},
-				{ timeout: 3000 },
+				{ timeout: 3000 }
 			);
 		});
 	});
@@ -455,7 +390,7 @@ describe("AnalysisCoordinator", () => {
 					{...defaultProps}
 					onProgressUpdate={onProgressUpdate}
 					autoStart={true}
-				/>,
+				/>
 			);
 
 			await waitFor(() => {
@@ -463,7 +398,7 @@ describe("AnalysisCoordinator", () => {
 					expect.objectContaining({
 						progress: expect.any(Number),
 						currentStep: expect.any(String),
-					}),
+					})
 				);
 			});
 		});
@@ -474,8 +409,8 @@ describe("AnalysisCoordinator", () => {
 			await waitFor(() => {
 				expect(
 					screen.getByText(
-						/Initializing analysis|Extracting text content|Analyzing FAR\/DFARS compliance/,
-					),
+						/Initializing analysis|Extracting text content|Analyzing FAR\/DFARS compliance/
+					)
 				).toBeInTheDocument();
 			});
 		});
@@ -497,7 +432,7 @@ describe("AnalysisCoordinator", () => {
 				() => {
 					expect(screen.getByText("COMPLETED")).toBeInTheDocument();
 				},
-				{ timeout: 3000 },
+				{ timeout: 3000 }
 			);
 
 			await waitFor(() => {
@@ -516,7 +451,7 @@ describe("AnalysisCoordinator", () => {
 				() => {
 					expect(screen.getByText("COMPLETED")).toBeInTheDocument();
 				},
-				{ timeout: 3000 },
+				{ timeout: 3000 }
 			);
 
 			await waitFor(() => {

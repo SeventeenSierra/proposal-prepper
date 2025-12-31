@@ -53,12 +53,9 @@ export class ErrorMessagingDemo {
 		});
 
 		const progressUpdates: number[] = [];
-		const successResult = await this.mockClient.uploadDocument(
-			validFile,
-			(progress) => {
-				progressUpdates.push(progress);
-			},
-		);
+		const successResult = await this.mockClient.uploadDocument(validFile, (progress) => {
+			progressUpdates.push(progress);
+		});
 
 		console.log(`   ✅ Upload successful: ${successResult.data?.filename}`);
 		console.log(`   📊 Progress updates: ${progressUpdates.join("% → ")}%`);
@@ -80,16 +77,10 @@ export class ErrorMessagingDemo {
 				const issue = issues[0];
 				console.log(`       Title: ${issue.title}`);
 				console.log(`       Severity: ${issue.severity}`);
-				console.log(
-					`       Regulation: ${issue.regulation.framework} ${issue.regulation.section}`,
-				);
-				console.log(
-					`       Location: Page ${issue.location?.page}, ${issue.location?.section}`,
-				);
+				console.log(`       Regulation: ${issue.regulation.framework} ${issue.regulation.section}`);
+				console.log(`       Location: Page ${issue.location?.page}, ${issue.location?.section}`);
 			}
-			console.log(
-				"   💡 User sees: Detailed compliance analysis with actionable feedback\n",
-			);
+			console.log("   💡 User sees: Detailed compliance analysis with actionable feedback\n");
 		}
 
 		console.log("=== DEMONSTRATION COMPLETE ===\n");
@@ -173,21 +164,13 @@ export class ErrorMessagingDemo {
 		console.log("Step 4: Analysis & Results");
 		console.log("   - Process uploaded document for compliance");
 		console.log("   - Show analysis progress with step descriptions");
-		console.log(
-			"   - Present detailed results with actionable recommendations\n",
-		);
+		console.log("   - Present detailed results with actionable recommendations\n");
 
 		console.log("Key Improvements:");
-		console.log(
-			"   ✅ User-friendly error messages instead of technical jargon",
-		);
-		console.log(
-			"   ✅ Specific file details (size, type, name) in error messages",
-		);
+		console.log("   ✅ User-friendly error messages instead of technical jargon");
+		console.log("   ✅ Specific file details (size, type, name) in error messages");
 		console.log("   ✅ Actionable guidance for resolving issues");
-		console.log(
-			"   ✅ Automatic fallback to mock mode when server unavailable",
-		);
+		console.log("   ✅ Automatic fallback to mock mode when server unavailable");
 		console.log("   ✅ Progress feedback throughout the entire process");
 		console.log("   ✅ Comprehensive logging for debugging support\n");
 
