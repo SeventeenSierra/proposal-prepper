@@ -43,7 +43,7 @@ services:
       - ../../proposal-prepper-middleware:/app/proposal-prepper-middleware
     command: pnpm dev
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:3000/api/health" ]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
       interval: 30s
       timeout: 10s
       start_period: 60s
@@ -96,7 +96,7 @@ services:
       - ../../proposal-prepper-web/src/seed-data:/app/src/seed-data:ro
     command: python startup.py
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080/api/health" ]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
       interval: 30s
       timeout: 10s
       start_period: 60s
@@ -121,13 +121,10 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ../database/init.sql:/docker-entrypoint-initdb.d/01-init-db.sql:ro
-      - ../database/keycloak-schema.sql:/docker-entrypoint-initdb.d/02-keycloak-schema.sql:ro
-      - ../database/migrate-schema.sql:/docker-entrypoint-initdb.d/03-migrate-schema.sql:ro
-      - ../database/seed-documents.sql:/docker-entrypoint-initdb.d/04-seed-documents.sql:ro
-    security_opt:
-      - no-new-privileges:true
+      - ../database/migrate-schema.sql:/docker-entrypoint-initdb.d/02-migrate-schema.sql:ro
+      - ../database/seed-documents.sql:/docker-entrypoint-initdb.d/03-seed-documents.sql:ro
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d proposal_prepper" ]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d proposal_prepper"]
       interval: 10s
       timeout: 5s
       start_period: 30s
@@ -152,10 +149,8 @@ services:
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
-    security_opt:
-      - no-new-privileges:true
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
       timeout: 20s
       start_period: 30s
@@ -189,13 +184,8 @@ services:
     ports:
       - "9200:9200"
       - "9600:9600"
-    security_opt:
-      - no-new-privileges:true
-    read_only: true
-    tmpfs:
-      - /tmp
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9200/_cluster/health?local=true" ]
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health?local=true"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -237,13 +227,8 @@ services:
       - redis_data:/data
       - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
     command: redis-server /usr/local/etc/redis/redis.conf
-    security_opt:
-      - no-new-privileges:true
-    read_only: true
-    tmpfs:
-      - /tmp
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 3s
       start_period: 10s

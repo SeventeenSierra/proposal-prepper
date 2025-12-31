@@ -37,11 +37,8 @@ const config: TestRunnerConfig = {
 			});
 		} catch (error) {
 			// Log accessibility violations but don't fail the test
-			// nosemgrep: javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring
 			console.warn(
-				"Accessibility violations found in story: %s/%s",
-				storyContext.title,
-				storyContext.name,
+				`Accessibility violations found in story: ${storyContext.title}/${storyContext.name}`,
 				error
 			);
 		}

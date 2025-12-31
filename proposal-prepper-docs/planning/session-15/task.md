@@ -5,17 +5,14 @@ Implement self-hosted authentication using Keycloak as a microservice with role-
 
 ---
 
-## Section 1: Auth Microservice Setup ✅ COMPLETE
-**Scope**: `auth`  
-**Branch**: `feature/auth`  
-**Commit**: `0b19dd0` - feat(auth): add Keycloak microservice
+## Section 1: Auth Microservice Setup
+**Scope**: `auth`
 
-- [x] 1.1 Create `proposal-prepper-auth/` directory
-- [x] 1.2 Add Keycloak Dockerfile
-- [x] 1.3 Create docker-compose.yml for auth service
-- [x] 1.4 Add to main docker-compose (external service)
-- [x] 1.5 Configure networking between services
-- [x] 1.6 Create test.sh validation script
+- [ ] 1.1 Create `proposal-prepper-auth/` directory
+- [ ] 1.2 Add Keycloak Dockerfile
+- [ ] 1.3 Create docker-compose.yml for auth service
+- [ ] 1.4 Add to main docker-compose (external service)
+- [ ] 1.5 Configure networking between services
 
 ---
 
@@ -93,11 +90,10 @@ Implement self-hosted authentication using Keycloak as a microservice with role-
 ## Success Criteria
 
 - [x] Implementation plan finalized
-- [x] **Section 1 complete** (branch: feature/auth) - Auth microservice running
-- [ ] Section 2: Realm configured and verified
-- [ ] Section 3: CAPTCHA integration
-- [ ] Section 4: NextAuth integration
-- [ ] Section 5: Database schema with user tables
-- [ ] Section 6: Protected API routes
-- [ ] Section 7: Role-based UI
+- [ ] Auth microservice running (localhost:8180)
+- [ ] Realm configured via realm-export.json
+- [ ] Demo mode with CAPTCHA working
+- [ ] Users can sign up with roles
+- [ ] API routes protected
+- [ ] Data isolated per user
 - [ ] All tests passing

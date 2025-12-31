@@ -227,8 +227,6 @@ export function findIssueLocations(
 
   lines.forEach((line, lineIndex) => {
     // Use global flag to find all matches in the line
-    // nosemgrep: javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
-    // Patterns are from hardcoded CRITICAL/WARNING_VIOLATION_PATTERNS, not user input
     const globalPattern = new RegExp(
       searchPattern.source,
       searchPattern.flags.includes('g') ? searchPattern.flags : `${searchPattern.flags}g`

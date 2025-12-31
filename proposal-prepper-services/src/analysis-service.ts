@@ -123,7 +123,7 @@ export class AnalysisService {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Analysis start failed';
-      console.error('[AnalysisService] Exception in startAnalysis: %s', errorMessage, error);
+      console.error(`[AnalysisService] Exception in startAnalysis: ${errorMessage}`, error);
       return { success: false, sessionId: '', error: errorMessage };
     }
   }
