@@ -1,0 +1,22 @@
+# Keycloak data
+data/
+h2/
+
+# Environment files
+.env
+.env.local
+
+# Logs
+logs/
+*.log
+
+# macOS
+.DS_Store
+
+# IDEs
+.idea/
+.vscode/
+
+# Temporary files
+*.tmp
+*.swp

@@ -164,7 +164,7 @@ class HttpClient {
         }
 
         const rawData = await response.json();
-        console.log(`[AIRouterClient] ${options.method || 'GET'} ${endpoint} Raw:`, JSON.stringify(rawData));
+        console.log('[AIRouterClient] %s %s Raw:', options.method || 'GET', endpoint, JSON.stringify(rawData));
 
         // Recursive unwrapping logic for multi-layered middleware responses
         let data = rawData;
@@ -173,7 +173,7 @@ class HttpClient {
           data = data.data;
         }
 
-        console.log(`[AIRouterClient] ${options.method || 'GET'} ${endpoint} Unwrapped:`, JSON.stringify(data));
+        console.log('[AIRouterClient] %s %s Unwrapped:', options.method || 'GET', endpoint, JSON.stringify(data));
 
         // Cache successful GET responses
         if (options.method === 'GET' && cacheKey && data) {

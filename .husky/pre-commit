@@ -1,0 +1,94 @@
+#!/bin/sh
+# SPDX-License-Identifier: PolyForm-Perimeter-1.0.0
+# SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
+#
+# Pre-commit hook for Proposal Prepper
+# Runs security scanning, lint and typecheck before allowing commits
+#
+# AI agents (Jules, Renovate, etc.) should set HUSKY=0 to skip hooks
+# See .agent/config.yaml and AI_CONTRIBUTOR_POLICY.md
+
+# Skip if HUSKY=0 (for bots)
+if [ "$HUSKY" = "0" ]; then
+  echo "⏭️  Skipping pre-commit hooks (HUSKY=0)"
+  exit 0
+fi
+
+# Helper to run commands in nix environment if available
+run_in_nix() {
+  if [ -f "flake.nix" ] && command -v nix >/dev/null 2>&1; then
+    nix develop --command "$@" 2>/dev/null
+  else
+    "$@"
+  fi
+}
+
+# Detect pnpm - try multiple locations
+if command -v pnpm >/dev/null 2>&1; then
+  PNPM="pnpm"
+elif command -v npx >/dev/null 2>&1; then
+  PNPM="npx pnpm"
+else
+  echo "⚠️  pnpm not found. Run from nix develop shell or install pnpm globally."
+  echo "   Skipping pre-commit checks..."
+  exit 0
+fi
+
+echo "🔍 Running pre-commit checks..."
+
+# Security scanning with Trivy (via nix if needed)
+echo "🔒 Scanning for secrets with Trivy..."
+if command -v trivy >/dev/null 2>&1; then
+  trivy fs --scanners secret --exit-code 1 --quiet .
+  TRIVY_RESULT=$?
+elif [ -f "flake.nix" ] && command -v nix >/dev/null 2>&1; then
+  nix develop --command trivy fs --scanners secret --exit-code 1 --quiet . 2>/dev/null
+  TRIVY_RESULT=$?
+else
+  echo "⚠️  Trivy not available, skipping"
+  TRIVY_RESULT=0
+fi
+if [ $TRIVY_RESULT -ne 0 ]; then
+  echo "❌ Trivy found hardcoded secrets. Remove them before committing."
+  exit 1
+fi
+echo "✓ Trivy: No secrets found"
+
+# Security scanning with Gitleaks (via nix if needed)
+echo "🔐 Scanning for secrets with Gitleaks..."
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks detect --source . --no-banner --redact -v 2>/dev/null
+  GITLEAKS_RESULT=$?
+elif [ -f "flake.nix" ] && command -v nix >/dev/null 2>&1; then
+  nix develop --command gitleaks detect --source . --no-banner --redact -v 2>/dev/null
+  GITLEAKS_RESULT=$?
+else
+  echo "⚠️  Gitleaks not available, skipping"
+  GITLEAKS_RESULT=0
+fi
+if [ $GITLEAKS_RESULT -ne 0 ]; then
+  echo "❌ Gitleaks found secrets. Remove them before committing."
+  exit 1
+fi
+echo "✓ Gitleaks: No secrets found"
+
+# Run lint
+echo "📝 Linting..."
+$PNPM run lint
+if [ $? -ne 0 ]; then
+  echo "❌ Lint failed. Fix errors before committing."
+  exit 1
+fi
+
+# Run typecheck
+echo "🔎 Type checking..."
+$PNPM run typecheck
+if [ $? -ne 0 ]; then
+  echo "❌ Typecheck failed. Fix errors before committing."
+  exit 1
+fi
+
+echo "✅ Pre-commit checks passed!"
+
+
+

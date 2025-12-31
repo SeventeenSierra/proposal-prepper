@@ -1,0 +1,15 @@
+# Semgrep ignore file for false positives and intentional patterns
+# See: https://semgrep.dev/docs/ignoring-code
+
+# Hardcoded patterns in test and validation code (not user-controlled)
+# These RegExp usages are for validating FAR/DFARS compliance rules
+proposal-prepper-tests/src/utils/analysis-validation.test.ts
+proposal-prepper-web/src/utils/compliance-detection.ts:findIssueLocations
+
+# Mock/testing server - CSRF not required (see @WARNING in file)
+proposal-prepper-middleware/src/express-adapter.ts:createExpressServer
+
+# Postgres and Minio cannot run read_only - they need to write data
+# Security hardened with no-new-privileges only
+# proposal-prepper-infra/containers/compose.yaml:postgres
+# proposal-prepper-infra/containers/compose.yaml:minio
