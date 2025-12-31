@@ -55,6 +55,7 @@ export default {
         "api", // API routes and endpoints
         "components", // UI components
         "docs", // Documentation
+        "planning", // Planning and session records
         "config", // Configuration files
         "security", // Security and secrets
         "tests", // Testing
