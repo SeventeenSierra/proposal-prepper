@@ -83,7 +83,7 @@ describe("TopBar Status Component", () => {
 		// Manually trigger the healthy status
 		act(() => {
 			(
-				aiRouterIntegration as {
+				aiRouterIntegration as unknown as {
 					_triggerStatusChange: (status: AIRouterStatus) => void;
 				}
 			)._triggerStatusChange({
@@ -108,7 +108,7 @@ describe("TopBar Status Component", () => {
 		// Manually trigger unhealthy status
 		act(() => {
 			(
-				aiRouterIntegration as {
+				aiRouterIntegration as unknown as {
 					_triggerStatusChange: (status: AIRouterStatus) => void;
 				}
 			)._triggerStatusChange({

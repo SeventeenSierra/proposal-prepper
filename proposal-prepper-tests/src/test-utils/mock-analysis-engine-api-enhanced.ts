@@ -7,13 +7,51 @@ import type { AnalysisResult, AnalysisSession } from "@/components/analysis/type
 import { AnalysisStatus } from "@/components/analysis/types";
 // NOTE: These imports are commented out because the grant data was migrated to FAR.
 // These grant functions need to be recreated for FAR documents.
-// import {
-//   getRandomSeedGrant,
-//   getSeedGrantByIdOrRandom,
-//   seedGrantToAnalysisResult,
-//   seedGrantToUploadSession,
-// } from '@/seed-data';
+// Stub implementations below until FAR versions are created:
 import type { UploadSession } from "@/types/app";
+import { UploadStatus } from "@/types/app";
+
+function getRandomSeedGrant(): { id: string; title: string; author: string } {
+	return {
+		id: `stub-grant-${Date.now()}`,
+		title: "Stub Grant Title (FAR migration pending)",
+		author: "Stub Author",
+	};
+}
+
+function getSeedGrantByIdOrRandom(_id: string): { id: string; title: string; author: string } {
+	return getRandomSeedGrant();
+}
+
+function seedGrantToUploadSession(grant: { id: string; title: string }): UploadSession {
+	return {
+		id: grant.id,
+		filename: `${grant.title}.pdf`,
+		fileSize: 1024 * 100,
+		mimeType: "application/pdf",
+		status: UploadStatus.COMPLETED,
+		progress: 100,
+		startedAt: new Date(),
+		completedAt: new Date(),
+	};
+}
+
+function seedGrantToAnalysisResult(_grant: { id: string }): AnalysisResult {
+	return {
+		sessionId: `result-${Date.now()}`,
+		proposalId: _grant.id,
+		status: "pass",
+		overallScore: 85,
+		issues: [],
+		analysisMetadata: {
+			totalPages: 10,
+			processingTime: 1000,
+			rulesChecked: ["FAR 15.204-1"],
+			completedAt: new Date(),
+		},
+	};
+}
+
 import { generateUUID } from "@/utils/crypto";
 import { ErrorScenario } from "./error-scenarios";
 
