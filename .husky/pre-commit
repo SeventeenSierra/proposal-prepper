@@ -1,0 +1,47 @@
+#!/bin/sh
+# SPDX-License-Identifier: PolyForm-Perimeter-1.0.0
+# SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
+#
+# Pre-commit hook for Proposal Prepper
+# Runs lint and typecheck before allowing commits
+#
+# AI agents (Jules, Renovate, etc.) should set HUSKY=0 to skip hooks
+# See .agent/config.yaml and AI_CONTRIBUTOR_POLICY.md
+
+# Skip if HUSKY=0 (for bots)
+if [ "$HUSKY" = "0" ]; then
+  echo "⏭️  Skipping pre-commit hooks (HUSKY=0)"
+  exit 0
+fi
+
+# Detect pnpm - try multiple locations
+if command -v pnpm >/dev/null 2>&1; then
+  PNPM="pnpm"
+elif command -v npx >/dev/null 2>&1; then
+  PNPM="npx pnpm"
+else
+  echo "⚠️  pnpm not found. Run from nix develop shell or install pnpm globally."
+  echo "   Skipping pre-commit checks..."
+  exit 0
+fi
+
+echo "🔍 Running pre-commit checks..."
+
+# Run lint
+echo "📝 Linting..."
+$PNPM run lint
+if [ $? -ne 0 ]; then
+  echo "❌ Lint failed. Fix errors before committing."
+  exit 1
+fi
+
+# Run typecheck
+echo "🔎 Type checking..."
+$PNPM run typecheck
+if [ $? -ne 0 ]; then
+  echo "❌ Typecheck failed. Fix errors before committing."
+  exit 1
+fi
+
+echo "✅ Pre-commit checks passed!"
+
