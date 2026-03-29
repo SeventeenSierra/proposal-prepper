@@ -21,7 +21,7 @@
         "esbuild-register": "^3.6.0",
         "nodemon": "^3.1.9",
         "typescript": "^5.9.3",
-        "next": "^16.0.10",
+        "next": "^16.1.5",
         "multer": "^1.4.5-lts.1",
         "@types/multer": "^1.4.12"
     }
